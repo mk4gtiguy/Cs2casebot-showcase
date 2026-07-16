@@ -293,6 +293,42 @@
 
 
 
+                <!-- CASE POWER-UPS -->
+
+                <div style="display:flex;gap:10px;margin-bottom:15px;flex-wrap:wrap;">
+
+                    <div id="guaranteeToggle" onclick="toggleGuarantee()" style="flex:1;min-width:220px;display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border:1px solid rgba(255,255,255,0.06);border-radius:10px;background:rgba(255,255,255,0.03);cursor:pointer;transition:all 0.2s;">
+
+                        <div>
+
+                            <div style="font-size:13px;font-weight:700;color:#e0d8f0;">⭐ Rarity Guarantee</div>
+
+                            <div style="font-size:11px;color:#888;margin-top:2px;">2 tickets — guaranteed Purple+, Blues rerolled</div>
+
+                        </div>
+
+                        <div id="guaranteeStatus" style="font-size:12px;font-weight:700;color:#555;margin-left:12px;flex-shrink:0;">OFF</div>
+
+                    </div>
+
+                    <div id="insuranceToggle" onclick="toggleInsurance()" style="flex:1;min-width:220px;display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border:1px solid rgba(255,255,255,0.06);border-radius:10px;background:rgba(255,255,255,0.03);cursor:pointer;transition:all 0.2s;">
+
+                        <div>
+
+                            <div style="font-size:13px;font-weight:700;color:#e0d8f0;">🛡️  Unboxing Insurance</div>
+
+                            <div style="font-size:11px;color:#888;margin-top:2px;">1 ticket — any Blue result refunds case cost</div>
+
+                        </div>
+
+                        <div id="insuranceStatus" style="font-size:12px;font-weight:700;color:#555;margin-left:12px;flex-shrink:0;">OFF</div>
+
+                    </div>
+
+                </div>
+
+
+
                 <!-- FAVORITE CASES SECTION -->
 
                 <div id="favoriteSection" class="favorite-section hidden">
@@ -750,50 +786,6 @@
                 </button>
 
                 <div id="ticketCaseResult" style="margin-top:12px;"></div>
-
-            </div>
-
-
-
-            <!-- CASE POWER-UPS -->
-
-            <div class="card" style="margin-bottom:16px;">
-
-                <h3 style="margin-bottom:8px;">🛡️  Case Power-ups</h3>
-
-                <p style="color:#888;font-size:13px;margin-bottom:14px;">Toggle before opening any case. Tickets are deducted automatically when you open and power-ups reset after each open.</p>
-
-
-
-                <div id="guaranteeToggle" onclick="toggleGuarantee()" style="display:flex;align-items:center;justify-content:space-between;padding:14px;border:1px solid rgba(255,255,255,0.06);border-radius:10px;background:rgba(255,255,255,0.03);cursor:pointer;margin-bottom:10px;transition:all 0.2s;">
-
-                    <div>
-
-                        <div style="font-size:14px;font-weight:700;color:#e0d8f0;">⭐ Rarity Guarantee</div>
-
-                        <div style="font-size:12px;color:#888;margin-top:3px;">2 tickets per open — guaranteed Purple or better, Blues rerolled</div>
-
-                    </div>
-
-                    <div id="guaranteeStatus" style="font-size:12px;font-weight:700;color:#555;margin-left:16px;flex-shrink:0;">OFF</div>
-
-                </div>
-
-
-
-                <div id="insuranceToggle" onclick="toggleInsurance()" style="display:flex;align-items:center;justify-content:space-between;padding:14px;border:1px solid rgba(255,255,255,0.06);border-radius:10px;background:rgba(255,255,255,0.03);cursor:pointer;transition:all 0.2s;">
-
-                    <div>
-
-                        <div style="font-size:14px;font-weight:700;color:#e0d8f0;">🛡️  Unboxing Insurance</div>
-
-                        <div style="font-size:12px;color:#888;margin-top:3px;">1 ticket per open — any Blue result refunds your case cost</div>
-
-                    </div>
-
-                    <div id="insuranceStatus" style="font-size:12px;font-weight:700;color:#555;margin-left:16px;flex-shrink:0;">OFF</div>
-
-                </div>
 
             </div>
 
