@@ -928,6 +928,7 @@ async def _init_all_tables(pool):
             "ALTER TABLE users ADD COLUMN IF NOT EXISTS last_seen TIMESTAMPTZ",
             "ALTER TABLE users ADD COLUMN IF NOT EXISTS last_agent_egg_claim TIMESTAMP",
             "ALTER TABLE users ADD COLUMN IF NOT EXISTS agent_phrases_seen INTEGER DEFAULT 0",
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS last_daily_spin TIMESTAMP",
             "ALTER TABLE users ADD COLUMN IF NOT EXISTS login_count INTEGER NOT NULL DEFAULT 0",
         ]:
             try:
@@ -2676,6 +2677,79 @@ async def claim_daily(request: Request):
                 WHERE user_id=$1 AND quest_type='daily_streak' AND progress >= required AND completed=FALSE
             """, user_id)
     return {"success": True, "reward": reward, "streak": streak, "jackpot": jackpot}
+
+# ── Daily Spin — a bonus ticket wheel unlocked right after claiming the
+# Daily reward above. Gated on last_daily being today (so it can't be spun
+# without claiming first) and last_daily_spin not being today (once/day).
+# Independent of VIP's flat daily ticket grant (routes/premium.py's midnight
+# cron) -- VIP members keep getting that grant regardless, and also still
+# get this spin, since the two are unrelated reward paths. ──
+DAILY_SPIN_SEGMENTS = [1, 2, 3, 5, 8, 10, 15, 25]
+DAILY_SPIN_WEIGHTS  = [30, 25, 18, 12, 8, 4, 2, 1]  # sums to 100, heavier on small amounts
+
+def _daily_spin_state(row: dict) -> tuple:
+    """Returns (claimed_daily_today, spun_today) from a users row."""
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
+    last_daily = row["last_daily"]
+    if last_daily and last_daily.tzinfo is not None:
+        last_daily = last_daily.replace(tzinfo=None)
+    last_spin = row["last_daily_spin"]
+    if last_spin and last_spin.tzinfo is not None:
+        last_spin = last_spin.replace(tzinfo=None)
+    claimed_daily_today = bool(last_daily and last_daily.date() == now.date())
+    spun_today = bool(last_spin and last_spin.date() == now.date())
+    return claimed_daily_today, spun_today
+
+@app.get("/api/daily/spin/status")
+async def daily_spin_status(request: Request):
+    user_id = await require_auth(request)
+    pool = await get_db()
+    async with pool.acquire() as conn:
+        row = await conn.fetchrow(
+            "SELECT last_daily, last_daily_spin FROM users WHERE user_id = $1", user_id
+        )
+    if not row:
+        raise HTTPException(404, "User not found")
+    claimed_daily_today, spun_today = _daily_spin_state(row)
+    return {
+        "available": claimed_daily_today and not spun_today,
+        "spun_today": spun_today,
+        "segments": DAILY_SPIN_SEGMENTS,
+    }
+
+@app.post("/api/daily/spin")
+async def daily_spin(request: Request):
+    user_id = await require_auth(request)
+    await check_rate_limit(request, RATE_WRITE)
+    pool = await get_db()
+    async with pool.acquire() as conn:
+        async with conn.transaction():
+            row = await conn.fetchrow(
+                "SELECT last_daily, last_daily_spin FROM users WHERE user_id = $1 FOR UPDATE", user_id
+            )
+            if not row:
+                raise HTTPException(404, "User not found")
+            claimed_daily_today, spun_today = _daily_spin_state(row)
+            if not claimed_daily_today:
+                raise HTTPException(400, "Claim your Daily reward first")
+            if spun_today:
+                raise HTTPException(400, "Already spun today")
+            roll = shared.secure_randint(1, sum(DAILY_SPIN_WEIGHTS))
+            cumulative = 0
+            segment_index = 0
+            for i, w in enumerate(DAILY_SPIN_WEIGHTS):
+                cumulative += w
+                if roll <= cumulative:
+                    segment_index = i
+                    break
+            tickets_won = DAILY_SPIN_SEGMENTS[segment_index]
+            from routes.premium import grant_tickets
+            await grant_tickets(user_id, tickets_won, "daily_spin", {"segment": segment_index}, conn=conn)
+            await conn.execute(
+                "UPDATE users SET last_daily_spin = $1 WHERE user_id = $2",
+                datetime.now(timezone.utc).replace(tzinfo=None), user_id
+            )
+    return {"success": True, "tickets_won": tickets_won, "segment_index": segment_index, "segments": DAILY_SPIN_SEGMENTS}
 
 # ── Agent Easter Egg — a fixed agent shown as a corner decoration on the
 # main hub pages; clicking it grants a small reward once per 24h. Clicking it

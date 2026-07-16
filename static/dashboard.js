@@ -263,6 +263,7 @@
             try { await loadGameStats(); } catch(e) { console.warn('GameStats:', e); }
             try { await loadLeaderboardData('money'); } catch(e) { console.warn('Leaderboard:', e); }
             try { await loadGoalData(); } catch(e) { console.warn('Goals:', e); }
+            try { await maybeOpenDailySpin(); } catch(e) { console.warn('DailySpin:', e); }
             return true;
         } catch (e) {
             console.error('Auth check error:', e);
@@ -2523,11 +2524,96 @@ window.setInvTypeFilter = setInvTypeFilter;
                 await loadBalance();
                 await loadStats();
                 await loadQuests();
+                try { await maybeOpenDailySpin(); } catch(e) {}
             } else {
                 resultDiv.innerHTML = `<span class="error">❌ ${esc(data.error || 'Failed to claim daily')}</span>`;
             }
         } catch (e) {
             resultDiv.innerHTML = '<span class="error">❌ Error claiming daily</span>';
+        }
+    }
+
+    // ── Daily Spin — bonus ticket wheel unlocked after claiming Daily above.
+    // VIP members' flat daily ticket grant (routes/premium.py's midnight cron)
+    // is separate and unaffected; this wheel is an additional reward everyone
+    // (VIP or not) gets once they've claimed their Daily.
+    const DAILY_SPIN_COLORS = ['#4488ff','#aa44ff','#ff69b4','#ff3333','#ffd700','#4488ff','#aa44ff','#ff69b4'];
+    let _dailySpinSegments = [];
+    let _dailySpinRotation = 0;
+
+    async function maybeOpenDailySpin() {
+        try {
+            const data = await apiCall('/api/daily/spin/status');
+            if (data && data.available) openDailySpinModal(data.segments);
+        } catch(e) {}
+    }
+
+    function openDailySpinModal(segments) {
+        _dailySpinSegments = segments;
+        _dailySpinRotation = 0;
+        document.getElementById('popupBody').innerHTML = `
+            <h3 style="color:#ffd700;text-align:center;margin-bottom:6px;">🎡 Daily Bonus Spin!</h3>
+            <p style="color:#888;font-size:12px;text-align:center;margin-bottom:16px;">Spin once a day for free bonus tickets — everyone gets one.</p>
+            <div style="position:relative;width:240px;height:240px;margin:0 auto;">
+                <div style="position:absolute;top:-8px;left:50%;transform:translateX(-50%);font-size:22px;color:#ffd700;z-index:2;">▼</div>
+                <div id="dailySpinWheel" style="width:240px;height:240px;border-radius:50%;border:4px solid #ffd700;position:relative;transition:transform 4.5s cubic-bezier(0.15,0.85,0.25,1);"></div>
+            </div>
+            <div style="text-align:center;margin-top:20px;">
+                <button class="btn btn-gold" id="dailySpinBtn" onclick="spinDailyWheel()">🎡 SPIN FOR TICKETS</button>
+            </div>
+            <div id="dailySpinResult" style="text-align:center;margin-top:12px;font-size:14px;min-height:20px;"></div>
+        `;
+        document.getElementById('popupOverlay').classList.add('show');
+        renderDailySpinWheel(segments);
+    }
+
+    function renderDailySpinWheel(segments) {
+        const wheel = document.getElementById('dailySpinWheel');
+        if (!wheel) return;
+        const n = segments.length;
+        const slice = 360 / n;
+        const stops = segments.map((_, i) => {
+            const color = DAILY_SPIN_COLORS[i % DAILY_SPIN_COLORS.length];
+            return `${color} ${i * slice}deg ${(i + 1) * slice}deg`;
+        }).join(', ');
+        wheel.style.background = `conic-gradient(${stops})`;
+        wheel.innerHTML = segments.map((amt, i) => {
+            const angle = i * slice + slice / 2;
+            return `<div style="position:absolute;top:50%;left:50%;width:0;height:0;transform:rotate(${angle}deg) translate(0,-92px) rotate(${-angle}deg);color:#fff;font-weight:bold;font-size:13px;text-shadow:0 1px 2px rgba(0,0,0,0.8);">${amt}🎟️</div>`;
+        }).join('');
+    }
+
+    async function spinDailyWheel() {
+        const btn = document.getElementById('dailySpinBtn');
+        const resultDiv = document.getElementById('dailySpinResult');
+        if (btn.disabled) return;
+        btn.disabled = true;
+        resultDiv.textContent = '';
+        try {
+            const data = await apiCall('/api/daily/spin', { method: 'POST', body: JSON.stringify({}) });
+            if (data.success) {
+                const n = _dailySpinSegments.length;
+                const slice = 360 / n;
+                const targetAngle = data.segment_index * slice + slice / 2;
+                const spins = 5;
+                _dailySpinRotation += spins * 360 + (360 - (_dailySpinRotation % 360) - targetAngle + 360) % 360;
+                document.getElementById('dailySpinWheel').style.transform = `rotate(${_dailySpinRotation}deg)`;
+                Sound.spin();
+                setTimeout(async () => {
+                    resultDiv.innerHTML = `<span class="success">🎉 You won ${data.tickets_won} 🎟️ ticket${data.tickets_won === 1 ? '' : 's'}!</span>`;
+                    Sound.win();
+                    spawnConfetti('Gold');
+                    await loadTicketBalance();
+                }, 4600);
+            } else {
+                resultDiv.innerHTML = `<span class="error">❌ ${esc(data.error || 'Could not spin')}</span>`;
+                btn.disabled = false;
+                Sound.error();
+            }
+        } catch (e) {
+            resultDiv.innerHTML = `<span class="error">❌ ${esc(e.message || 'Error spinning')}</span>`;
+            btn.disabled = false;
+            Sound.error();
         }
     }
     async function loadStats() {
