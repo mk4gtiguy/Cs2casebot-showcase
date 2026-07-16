@@ -1,0 +1,765 @@
+﻿<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+
+<title>🔴  Russian Roulette — CS2CaseBot</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+
+<style>
+
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+
+:root{--bg:#08040a;--blood:#cc0000;--gold:#ffd700;--green:#22c55e;--font:'Orbitron',monospace;}
+
+html,body{min-height:100vh;background:var(--bg);font-family:var(--font);overflow-x:hidden;color:#d8c8c0;}
+
+body{background-image:radial-gradient(ellipse 80% 50% at 50% 50%,rgba(204,0,0,0.04) 0%,transparent 70%);}
+
+.hdr{display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(8,4,10,0.98);border-bottom:1px solid rgba(204,0,0,0.15);position:sticky;top:0;z-index:50;}
+
+.back{display:flex;align-items:center;gap:5px;color:#2a1818;font-size:10px;letter-spacing:1px;text-decoration:none;transition:color .2s;}
+
+.back:hover{color:var(--blood);}
+
+.back svg{width:14px;height:14px;}
+
+.title{flex:1;font-size:14px;font-weight:900;letter-spacing:3px;background:linear-gradient(90deg,var(--blood),#ff4444);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+
+.bal{font-size:13px;font-weight:700;color:var(--gold);font-family:monospace;}
+
+.page{max-width:420px;margin:0 auto;padding:16px 14px 80px;}
+
+
+
+/* DUEL ARENA */
+
+.duel-arena{background:rgba(5,2,6,0.99);border:1px solid rgba(204,0,0,0.12);border-radius:20px;padding:20px 14px;margin-bottom:14px;position:relative;}
+
+.duel-arena::before{content:'';position:absolute;top:0;left:20%;right:20%;height:1px;background:linear-gradient(90deg,transparent,rgba(204,0,0,0.4),transparent);}
+
+
+
+/* Duelers */
+
+.duelers{display:grid;grid-template-columns:1fr 60px 1fr;gap:0;margin-bottom:18px;}
+
+.dueler{text-align:center;padding:14px 8px;}
+
+.dueler.you-side{border-right:none;}
+
+.dueler.bot-side{border-left:none;}
+
+.dueler-avatar{font-size:36px;margin-bottom:6px;line-height:1;}
+
+.dueler-name{font-size:10px;font-weight:900;letter-spacing:1px;}
+
+.you-side .dueler-name{color:var(--green);}
+
+.bot-side .dueler-name{color:var(--blood);}
+
+.dueler-status{font-size:8px;letter-spacing:1px;margin-top:3px;min-height:12px;}
+
+.you-side .dueler-status{color:#2a4a2a;}
+
+.bot-side .dueler-status{color:#3a1818;}
+
+.vs-divider{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:6px;}
+
+.vs-pipe{width:1px;height:20px;background:rgba(204,0,0,0.2);}
+
+.vs-txt{font-size:11px;font-weight:900;letter-spacing:2px;color:#3a1818;}
+
+
+
+/* GUN */
+
+.gun-wrap{text-align:center;margin-bottom:16px;}
+
+.gun-emoji{font-size:52px;display:inline-block;transition:transform .2s;}
+
+.gun-wrap.player-turn .gun-emoji{transform:scaleX(-1);}
+
+.gun-wrap.bot-turn .gun-emoji{transform:none;}
+
+.gun-wrap.FIRED .gun-emoji{animation:gun-recoil .25s ease;}
+
+@keyframes gun-recoil{0%{transform:translateY(0);}30%{transform:translateY(-12px) rotate(-10deg);}100%{transform:translateY(0) rotate(0deg);}}
+
+.turn-label{font-size:9px;letter-spacing:2px;color:#3a1818;margin-top:6px;}
+
+
+
+/* Chamber display */
+
+.chambers-display{display:flex;justify-content:center;gap:5px;margin-bottom:14px;}
+
+.ch-dot{width:16px;height:16px;border-radius:50%;border:1.5px solid rgba(255,255,255,0.1);background:rgba(10,10,15,0.9);transition:all .3s;}
+
+.ch-dot.safe{background:rgba(34,197,94,0.3);border-color:rgba(34,197,94,0.5);}
+
+.ch-dot.current{border-color:var(--gold);box-shadow:0 0 8px rgba(255,215,0,0.4);}
+
+.ch-dot.loaded{background:rgba(204,0,0,0.5);border-color:var(--blood);}
+
+
+
+/* TAUNT */
+
+.taunt-bubble{background:rgba(30,10,10,0.9);border:1px solid rgba(204,0,0,0.15);border-radius:14px;padding:10px 14px;margin-bottom:14px;min-height:42px;font-size:11px;line-height:1.4;font-style:italic;color:#888;text-align:center;transition:all .3s;}
+
+.taunt-bubble.fresh{color:#c0a0a0;}
+
+
+
+/* Stats */
+
+.rr-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:12px;}
+
+.rrs{background:rgba(204,0,0,0.04);border:1px solid rgba(204,0,0,0.08);border-radius:10px;padding:7px;text-align:center;}
+
+.rrs .rv{font-size:13px;font-weight:900;font-family:monospace;color:var(--gold);}
+
+.rrs .rl{font-size:7px;color:#2a1818;letter-spacing:1px;margin-top:2px;}
+
+
+
+/* Result */
+
+.result-rr{text-align:center;min-height:28px;font-size:11px;font-weight:700;letter-spacing:2px;margin-bottom:12px;display:flex;align-items:center;justify-content:center;}
+
+.result-rr.win{color:var(--green);}
+
+.result-rr.dead{color:var(--blood);animation:dead-flash .15s ease 5;}
+
+@keyframes dead-flash{0%,100%{opacity:1;}50%{opacity:.2;}}
+
+.result-rr.idle{color:#2a1818;}
+
+
+
+/* Cashout */
+
+.rr-co{display:flex;gap:10px;align-items:center;margin-bottom:12px;}
+
+.rr-pot{text-align:center;}
+
+.rr-pot-v{font-size:16px;font-weight:900;color:var(--gold);font-family:monospace;}
+
+.rr-pot-l{font-size:8px;color:#2a1818;letter-spacing:1px;}
+
+.btn-rr-co{flex:1;padding:11px;border:1px solid rgba(255,215,0,0.25);border-radius:10px;background:rgba(255,215,0,0.06);color:var(--gold);font-family:var(--font);font-size:9px;font-weight:700;letter-spacing:1px;cursor:pointer;transition:all .2s;}
+
+.btn-rr-co:not(:disabled):hover{background:rgba(255,215,0,0.14);}
+
+.btn-rr-co:disabled{opacity:.3;cursor:not-allowed;}
+
+
+
+/* Personality selector */
+
+.pers-row{display:flex;gap:6px;margin-bottom:12px;}
+
+.prs{flex:1;padding:9px 4px;border-radius:10px;border:1px solid rgba(204,0,0,0.1);background:rgba(204,0,0,0.03);text-align:center;cursor:pointer;transition:all .15s;font-size:8px;letter-spacing:1px;color:#2a1818;}
+
+.prs:hover,.prs.active{border-color:var(--blood);color:var(--blood);background:rgba(204,0,0,0.1);}
+
+
+
+/* BET */
+
+.bet-ctrl{background:rgba(0,0,0,0.4);border:1px solid rgba(204,0,0,0.06);border-radius:14px;padding:14px;}
+
+.bl{font-size:8px;color:#2a1818;letter-spacing:2px;margin-bottom:8px;}
+
+.bet-row{display:flex;gap:8px;margin-bottom:8px;}
+
+.bet-inp{flex:1;background:rgba(0,0,0,0.5);border:1px solid rgba(204,0,0,0.1);border-radius:8px;padding:10px 12px;color:#d8c8c0;font-family:var(--font);font-size:13px;font-weight:700;outline:none;text-align:center;}
+
+.bet-inp:focus{border-color:rgba(204,0,0,0.3);}
+
+.adj{padding:10px 14px;background:rgba(204,0,0,0.04);border:1px solid rgba(204,0,0,0.08);border-radius:8px;color:#2a1818;font-family:var(--font);font-size:11px;cursor:pointer;transition:all .15s;}
+
+.adj:hover{color:var(--blood);}
+
+.qrow{display:flex;gap:5px;margin-bottom:10px;}
+
+.qb{flex:1;padding:7px 3px;background:rgba(204,0,0,0.04);border:1px solid rgba(204,0,0,0.08);border-radius:6px;color:#2a1818;font-size:8px;letter-spacing:1px;cursor:pointer;text-align:center;transition:all .15s;}
+
+.qb:hover{border-color:var(--blood);color:var(--blood);}
+
+.action-row{display:flex;gap:8px;}
+
+.btn-start-rr{flex:1;padding:14px;border:none;border-radius:10px;font-family:var(--font);font-size:11px;font-weight:900;letter-spacing:2px;cursor:pointer;transition:all .2s;background:rgba(204,0,0,0.12);border:1px solid rgba(204,0,0,0.3);color:var(--blood);}
+
+.btn-start-rr:not(:disabled):hover{background:rgba(204,0,0,0.2);}
+
+.btn-start-rr:disabled{opacity:.4;cursor:not-allowed;}
+
+.btn-pull-rr{flex:2;padding:14px;border:none;border-radius:10px;font-family:var(--font);font-size:12px;font-weight:900;letter-spacing:2px;cursor:pointer;transition:all .2s;background:linear-gradient(135deg,#550000,var(--blood));color:#fff;box-shadow:0 4px 20px rgba(204,0,0,0.35);}
+
+.btn-pull-rr:not(:disabled):hover{transform:translateY(-2px);box-shadow:0 6px 32px rgba(204,0,0,0.55);}
+
+.btn-pull-rr:disabled{opacity:.4;cursor:not-allowed;transform:none!important;}
+
+
+
+#bang{position:fixed;inset:0;pointer-events:none;opacity:0;z-index:200;background:radial-gradient(ellipse at 50% 30%,rgba(204,0,0,0.5),transparent 70%);}
+
+#bang.show{animation:bang-anim .4s ease;}
+
+@keyframes bang-anim{0%{opacity:0;}15%{opacity:1;}100%{opacity:0;}}
+
+</style>
+
+    <script src="/static/sound.js"></script>
+
+    <script src="/static/big-win.js"></script>
+
+
+    <script src="/static/balance-animation.js"></script>
+
+
+    <script src="/static/page-transitions.js"></script>
+
+
+    <script src="/static/autoplay.js"></script>
+
+
+<link rel="stylesheet" href="/static/games-shared.css"><script src="/static/js/csrf.js"></script>
+
+
+</head>
+
+<body>
+
+<div id="bang"></div>
+
+<header class="hdr">
+
+  <a class="back" href="/games"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>GAMES</a>
+
+  <span class="title">🔴  RUSSIAN ROULETTE</span>
+
+  <span class="bal" id="balDisplay">$—</span>
+
+</header>
+
+<div class="page">
+
+  <div class="duel-arena">
+
+    <div class="duelers">
+
+      <div class="dueler you-side">
+
+        <div class="dueler-avatar">😤</div>
+
+        <div class="dueler-name">YOU</div>
+
+        <div class="dueler-status" id="youStatus">ALIVE</div>
+
+      </div>
+
+      <div class="vs-divider"><div class="vs-pipe"></div><div class="vs-txt">VS</div><div class="vs-pipe"></div></div>
+
+      <div class="dueler bot-side">
+
+        <div class="dueler-avatar" id="botAvatar">🧊</div>
+
+        <div class="dueler-name" id="botName">THE ICEMAN</div>
+
+        <div class="dueler-status" id="botStatus">ALIVE</div>
+
+      </div>
+
+    </div>
+
+
+
+    <div class="gun-wrap player-turn" id="gunWrap">
+
+      <div class="gun-emoji">🔫</div>
+
+      <div class="turn-label" id="turnLabel">YOUR TURN — PULL THE TRIGGER</div>
+
+    </div>
+
+
+
+    <div class="chambers-display" id="chambersDisplay"></div>
+
+
+
+    <div class="taunt-bubble" id="tauntBubble">"Ready to meet your fate?"</div>
+
+
+
+    <div class="rr-stats">
+
+      <div class="rrs"><div class="rv" id="rrPulls">0</div><div class="rl">PULLS</div></div>
+
+      <div class="rrs"><div class="rv" id="rrMult">1.00×</div><div class="rl">MULTIPLIER</div></div>
+
+      <div class="rrs"><div class="rv" id="rrPot">$0</div><div class="rl">POT WIN</div></div>
+
+    </div>
+
+
+
+    <div class="result-rr idle" id="resultRR">CHOOSE YOUR OPPONENT AND PLAY</div>
+
+    <div class="rr-co">
+
+      <div class="rr-pot"><div class="rr-pot-v" id="rrPotVal">$0</div><div class="rr-pot-l">WALK AWAY</div></div>
+
+      <button class="btn-rr-co" id="rrCoBtn" onclick="rrCashout()" disabled>🏃  WALK AWAY</button>
+
+    </div>
+
+    <div id="rrHist" style="display:flex;gap:3px;flex-wrap:wrap;min-height:18px;padding:2px 0;"></div>
+
+  </div>
+
+
+
+  <div class="pers-row">
+
+    <div class="prs active" id="prsCalm" onclick="setPersonality('calm')">🧊  ICEMAN<br><span style="font-size:7px">Cool · 30% bluff</span></div>
+
+    <div class="prs" id="prsAggressive" onclick="setPersonality('aggressive')">😤  BERSERKER<br><span style="font-size:7px">Wild · 60% bluff</span></div>
+
+    <div class="prs" id="prsNervous" onclick="setPersonality('nervous')">😰  ROOKIE<br><span style="font-size:7px">Scared · 80% bluff</span></div>
+
+  </div>
+
+
+
+  <div class="bet-ctrl">
+
+    <div class="bl">BET AMOUNT</div>
+
+    <div class="bet-row">
+
+      <button class="adj" onclick="halveBet()">½</button>
+
+      <input class="bet-inp" id="betInp" type="number" value="500" min="50">
+
+      <button class="adj" onclick="doubleBet()">2×</button>
+
+    </div>
+
+    <div class="qrow">
+
+      <div class="qb" onclick="qb(100)">$100</div><div class="qb" onclick="qb(500)">$500</div>
+
+      <div class="qb" onclick="qb(1000)">$1K</div><div class="qb" onclick="qb(5000)">$5K</div><div class="qb" onclick="qb(10000)">$10K</div>
+
+    </div>
+
+    <div class="action-row">
+
+      <button class="btn-start-rr" id="startBtn" onclick="startRR()">⚙️  LOAD</button>
+
+      <button class="btn-pull-rr" id="pullRRBtn" onclick="pullTrigger()" disabled>🔫  PULL TRIGGER</button>
+
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+
+const BOT_NAMES={calm:{name:'THE ICEMAN',avatar:'🧊'},aggressive:{name:'THE BERSERKER',avatar:'😤'},nervous:{name:'THE ROOKIE',avatar:'😰'}};
+
+let personality='calm',balance=0,gameActive=false,acting=false,playerPulls=0,currentMult=1,waitingBotPull=false,rrHistory=[];
+
+async function init(){try{const d=await api('/api/user/me');balance=d.balance;updateBal();}catch(e){}drawChambers(6,0,false,-1);}
+
+function updateBal(){var e=document.getElementById('balDisplay'),c=e.textContent||'',n='$'+balance.toLocaleString(undefined,{maximumFractionDigits:0});if(c&&c!=='$—'&&c!==n){var p=parseFloat(c.replace(/[,$]/g,''));if(!isNaN(p)&&p!==balance){animateBalance(e,'$'+p.toLocaleString(undefined,{maximumFractionDigits:0}),n,balance>=p);return}}e.textContent=n}
+
+function setPersonality(p){
+
+
+  Sound.click();
+
+
+  personality=p;
+
+  document.querySelectorAll('.prs').forEach(el=>el.classList.remove('active'));
+
+  document.getElementById('prs'+p.charAt(0).toUpperCase()+p.slice(1)).classList.add('active');
+
+  const bot=BOT_NAMES[p];
+
+  document.getElementById('botName').textContent=bot.name;
+
+  document.getElementById('botAvatar').textContent=bot.avatar;
+
+}
+
+function qb(v){Sound.click();document.getElementById('betInp').value=v;}
+
+function halveBet(){Sound.click();document.getElementById('betInp').value=Math.max(50,Math.floor(parseInt(document.getElementById('betInp').value||500)/2));}
+
+function doubleBet(){Sound.click();document.getElementById('betInp').value=Math.min(balance,parseInt(document.getElementById('betInp').value||500)*2);}
+
+function drawChambers(total,safe,hasFired,firedAt){
+
+  const wrap=document.getElementById('chambersDisplay');wrap.innerHTML='';
+
+  for(let i=0;i<total;i++){
+
+    const d=document.createElement('div');d.className='ch-dot';
+
+    if(hasFired&&i===firedAt) d.classList.add('loaded');
+
+    else if(i<safe) d.classList.add('safe');
+
+    else if(i===safe&&!hasFired&&gameActive) d.classList.add('current');
+
+    wrap.appendChild(d);
+
+  }
+
+}
+
+async function startRR(){
+
+
+  Sound.click();
+
+
+  if(gameActive||acting) return;
+
+  const bet=parseInt(document.getElementById('betInp').value)||500;
+
+  if(bet>balance){setResult('❌ INSUFFICIENT BALANCE','idle');Sound.error();return;}
+
+  acting=true;document.getElementById('startBtn').disabled=true;
+
+  playerPulls=0;currentMult=1;waitingBotPull=false;
+
+  updateStats(0,1,bet);setResult('GAME BEGINS — YOUR TURN FIRST','idle');
+
+  document.getElementById('youStatus').textContent='ALIVE';
+
+  document.getElementById('botStatus').textContent='ALIVE';
+
+  document.getElementById('rrCoBtn').disabled=true;
+
+  setTaunt('"Ready to meet your fate?"');
+
+  setTurn('player');
+
+  try{
+
+    const d=await api('/api/games/hard/russian-roulette/start',{method:'POST',body:JSON.stringify({amount:bet,personality})});
+
+    gameActive=true;balance=await refreshBal();updateBal();
+
+    drawChambers(6,0,false,-1);
+
+    document.getElementById('pullRRBtn').disabled=false;
+
+    if(d.taunt) setTaunt('"'+d.taunt+'"');
+
+  }catch(e){setResult('ERROR: '+e.message,'idle');}
+
+  finally{acting=false;document.getElementById('startBtn').disabled=false;}
+
+}
+
+async function pullTrigger(){
+
+  if(!gameActive||acting||waitingBotPull) return;
+
+  acting=true;document.getElementById('pullRRBtn').disabled=true;
+
+  document.getElementById('rrCoBtn').disabled=true;
+
+  try{
+
+    const d=await api('/api/games/hard/russian-roulette/pull',{method:'POST'});
+
+    const bet=parseInt(document.getElementById('betInp').value)||500;
+
+    if(d.fired){
+
+
+      Sound.shoot();Sound.explosion();Sound.loss();
+
+
+      gameActive=false;
+
+
+      drawChambers(6,d.player_pulls,true,d.chamber);
+
+
+      doBang();document.getElementById('youStatus').textContent='💀  DEAD';
+
+
+      setResult('💥 BANG — CHAMBER '+d.chamber+' WAS LOADED','dead');
+
+
+      pushRRHist(false);
+
+
+      balance=await refreshBal();updateBal();
+
+    }else{
+
+
+      Sound.click();
+
+
+      playerPulls=d.player_pulls;currentMult=d.multiplier;
+
+
+      drawChambers(6,playerPulls,false,-1);
+
+
+      updateStats(playerPulls,currentMult,bet*currentMult);
+
+
+      if(d.taunt) setTaunt('"'+d.taunt+'"');
+
+
+      setResult('🔫 CLICK — SURVIVED '+playerPulls+' PULL'+(playerPulls>1?'S':'')+' · NOW BOT\'S TURN','idle');
+
+      setTurn('bot');
+
+      // Auto-trigger bot pull after delay
+
+      waitingBotPull=true;
+
+      await delay(d.bot_bluff?2200:1200);
+
+      if(gameActive) await doBotPull(bet);
+
+    }
+
+  }catch(e){setResult('ERROR','idle');document.getElementById('pullRRBtn').disabled=false;}
+
+  finally{acting=false;}
+
+}
+
+async function doBotPull(bet){
+
+  if(!gameActive) return;
+
+  try{
+
+    const d=await api('/api/games/hard/russian-roulette/bot-pull',{method:'POST'});
+
+    waitingBotPull=false;
+
+    if(d.bot_fired){
+
+
+      Sound.win();
+
+
+      gameActive=false;
+
+
+      const win=d.win||0;
+
+
+      doBang();document.getElementById('botStatus').textContent='💀  DEAD';
+
+
+      setResult('🏆 BOT FIRED! YOU WIN +$'+win.toLocaleString(undefined,{maximumFractionDigits:0}),'win');
+      if(window.maybeBigWin)maybeBigWin(bet,win);
+
+
+      pushRRHist(true);
+
+      if(d.taunt) setTaunt('"'+d.taunt+'"');
+
+      balance=await refreshBal();updateBal();
+
+    }else{
+
+      if(d.taunt) setTaunt('"'+d.taunt+'"');
+
+      setResult('Bot survived · Your turn again','idle');
+
+      setTurn('player');document.getElementById('pullRRBtn').disabled=false;
+
+      document.getElementById('rrCoBtn').disabled=false;
+
+    }
+
+  }catch(e){
+
+    waitingBotPull=false;
+
+    setResult('ERROR — network issue, try again','idle');
+
+    if(gameActive){
+
+      setTurn('bot');
+
+      document.getElementById('pullRRBtn').disabled=false;
+
+    }
+
+  }
+
+}
+
+async function rrCashout(){
+
+  if(!gameActive||acting||waitingBotPull) return;
+
+  acting=true;gameActive=false;document.getElementById('rrCoBtn').disabled=true;
+
+
+  try{
+
+
+    Sound.win();
+
+
+    const d=await api('/api/games/hard/russian-roulette/cashout',{method:'POST'});
+
+
+    balance=await refreshBal();updateBal();
+
+
+    pushRRHist(true);
+
+
+    setResult('🏃 WALKED AWAY · '+d.multiplier.toFixed(2)+'× · +$'+d.win.toLocaleString(undefined,{maximumFractionDigits:0}),'win');
+    if(window.maybeBigWin){const rrb=parseInt(document.getElementById('betInp').value)||500;maybeBigWin(rrb,d.win);}
+
+  }catch(e){setResult('ERROR','idle');}
+
+  finally{acting=false;}
+
+}
+
+function setTurn(who){
+
+  const wrap=document.getElementById('gunWrap');
+
+  const lbl=document.getElementById('turnLabel');
+
+  wrap.className='gun-wrap '+(who==='player'?'player-turn':'bot-turn');
+
+  if(who==='player'){
+
+    const pct=playerPulls<5?Math.round((5-playerPulls)/(6-playerPulls)*100):0;
+
+    lbl.textContent='YOUR TURN · SURVIVE: '+pct+'%';
+
+  }else{
+
+    lbl.textContent='BOT\'S TURN…';
+
+  }
+
+}
+
+
+
+function pushRRHist(won){
+
+  rrHistory.push(won);
+
+  if(rrHistory.length>20) rrHistory.shift();
+
+  const el=document.getElementById('rrHist');el.innerHTML='';
+
+  rrHistory.forEach(w=>{
+
+    const d=document.createElement('div');
+
+    d.style.cssText='width:14px;height:14px;border-radius:50%;background:'+(w?'rgba(34,197,94,0.4)':'rgba(204,0,0,0.4)')+';border:1px solid '+(w?'rgba(34,197,94,0.6)':'rgba(204,0,0,0.5)')+';flex-shrink:0;';
+
+    el.appendChild(d);
+
+  });
+
+}
+
+function setTaunt(text){
+
+  const el=document.getElementById('tauntBubble');el.className='taunt-bubble fresh';
+
+  el.textContent=text;setTimeout(()=>el.classList.remove('fresh'),100);
+
+}
+
+function updateStats(pulls,mult,pot){
+
+  document.getElementById('rrPulls').textContent=pulls;
+
+  document.getElementById('rrMult').textContent=parseFloat(mult).toFixed(2)+'×';
+
+  document.getElementById('rrPot').textContent='$'+parseFloat(pot).toLocaleString(undefined,{maximumFractionDigits:0});
+
+  document.getElementById('rrPotVal').textContent='$'+parseFloat(pot).toLocaleString(undefined,{maximumFractionDigits:0});
+
+}
+
+function setResult(t,c){const el=document.getElementById('resultRR');el.className='result-rr '+c;el.textContent=t;}
+
+function doBang(){
+
+  const el=document.getElementById('bang');el.classList.remove('show');void el.offsetWidth;el.classList.add('show');
+
+  document.getElementById('gunWrap').className='gun-wrap FIRED';
+
+}
+
+async function refreshBal(){try{const d=await api('/api/user/me');return d.balance;}catch(e){return balance;}}
+
+async function api(url,opts={}){const r=await fetch(url,{credentials:'include',headers:{'Content-Type':'application/json'},...opts});if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.detail||'Error');}return r.json();}
+
+function delay(ms){return new Promise(r=>setTimeout(r,ms));}
+
+init();
+
+</script>
+
+<script>if("serviceWorker"in navigator){navigator.serviceWorker.register("/static/sw.js").catch(function(){})}</script>
+
+
+<script src="/static/chat.js"></script>
+
+
+</body>
+
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

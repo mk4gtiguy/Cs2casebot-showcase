@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+
+<title>🧠 Memory Sequence — CS2CaseBot</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+
+<style>
+
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+
+:root{--bg:#060408;--cs:#ffd700;--green:#22c55e;--font:'Orbitron',monospace;}
+
+html,body{min-height:100vh;background:var(--bg);font-family:var(--font);overflow-x:hidden;color:#e8d8c0;}
+
+body{background-image:radial-gradient(ellipse 80% 40% at 50% 0%,rgba(255,215,0,0.04) 0%,transparent 70%);}
+
+.hdr{display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(6,4,8,0.98);border-bottom:1px solid rgba(255,215,0,0.1);position:sticky;top:0;z-index:50;}
+
+.back{display:flex;align-items:center;gap:5px;color:#2a2010;font-size:10px;letter-spacing:1px;text-decoration:none;transition:color .2s;}
+
+.back:hover{color:var(--cs);}
+
+.back svg{width:14px;height:14px;}
+
+.title{flex:1;font-size:14px;font-weight:900;letter-spacing:3px;background:linear-gradient(90deg,var(--cs),#ff9500);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+
+.tkts{font-size:12px;font-weight:700;color:var(--cs);font-family:monospace;}
+
+.page{max-width:420px;margin:0 auto;padding:16px 14px 80px;}
+
+.arena{background:rgba(4,2,6,0.99);border:1px solid rgba(255,215,0,0.08);border-radius:20px;padding:18px 14px 20px;margin-bottom:14px;position:relative;overflow:hidden;}
+
+.arena::before{content:'';position:absolute;top:0;left:15%;right:15%;height:1px;background:linear-gradient(90deg,transparent,rgba(255,215,0,0.3),transparent);}
+
+#memMsg{text-align:center;font-size:12px;letter-spacing:2px;color:#888;margin-bottom:10px;min-height:18px;}
+
+.round-bar{display:flex;gap:4px;margin-bottom:12px;}
+
+.round-pip{flex:1;height:4px;border-radius:2px;background:rgba(255,255,255,0.06);transition:background .3s;}
+
+.round-pip.done{background:var(--green);}
+
+.round-pip.active{background:var(--cs);}
+
+#memGrid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;max-width:300px;margin:0 auto 12px;}
+
+.mem-cell{
+
+  width:100%;aspect-ratio:1;border-radius:8px;
+
+  background:rgba(255,255,255,0.04);
+
+  border:2px solid;
+
+  cursor:not-allowed;
+
+  transition:background .15s,box-shadow .15s,transform .15s;
+
+}
+
+#memStatus{text-align:center;color:#444;font-size:10px;letter-spacing:1px;}
+
+.hist-row{display:flex;gap:4px;flex-wrap:wrap;align-items:center;min-height:14px;margin-top:14px;}
+
+.hist-lbl{font-size:8px;color:#2a2010;letter-spacing:1px;flex-shrink:0;margin-right:2px;}
+
+.hist-dot{width:12px;height:12px;border-radius:50%;}
+
+.bet-ctrl{background:rgba(0,0,0,0.4);border:1px solid rgba(255,215,0,0.06);border-radius:14px;padding:14px;}
+
+.bl{font-size:8px;color:#2a2010;letter-spacing:2px;margin-bottom:10px;}
+
+.btn-start{width:100%;padding:15px;border:none;border-radius:10px;font-family:var(--font);font-size:13px;font-weight:900;letter-spacing:3px;cursor:pointer;transition:all .2s;background:linear-gradient(135deg,#664400,var(--cs));color:#06040a;box-shadow:0 4px 20px rgba(255,215,0,0.3);}
+
+.btn-start:not(:disabled):hover{transform:translateY(-2px);}
+
+.btn-start:disabled{opacity:.4;cursor:not-allowed;}
+
+.result-card{text-align:center;padding:10px 0;}
+
+.r-icon{font-size:52px;margin-bottom:12px;}
+
+.r-score{font-size:30px;font-weight:900;margin-bottom:4px;font-family:monospace;}
+
+.r-lbl{color:#666;font-size:13px;margin-bottom:14px;}
+
+.r-tkt{font-size:18px;font-weight:700;margin-bottom:6px;}
+
+.r-tiers{color:#333;font-size:10px;letter-spacing:1px;margin-bottom:20px;}
+
+.btn-row{display:flex;gap:10px;justify-content:center;}
+
+.btn-again{padding:12px 22px;border:none;border-radius:10px;font-family:var(--font);font-size:10px;font-weight:700;letter-spacing:2px;cursor:pointer;background:linear-gradient(135deg,#664400,var(--cs));color:#06040a;}
+
+.btn-back{padding:12px 18px;border:1px solid rgba(255,215,0,0.15);border-radius:10px;font-family:var(--font);font-size:10px;font-weight:700;letter-spacing:1px;cursor:pointer;background:transparent;color:#2a2010;}
+
+.btn-back:hover{color:var(--cs);}
+
+@keyframes confettiDrop{to{transform:translateY(110vh) rotate(720deg);opacity:0;}}
+
+</style>
+
+    <script src="/static/sound.js"></script>
+
+
+    <script src="/static/page-transitions.js"></script>
+
+
+    <script src="/static/autoplay.js"></script>
+
+    <script src="/static/arcade-celebrate.js"></script>
+
+<link rel="stylesheet" href="/static/games-shared.css"><script src="/static/js/csrf.js"></script>
+
+
+</head>
+
+<body>
+
+<header class="hdr">
+
+  <a class="back" href="/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>BACK</a>
+
+  <span class="title">🧠  MEMORY SEQUENCE</span>
+
+  <span class="tkts">🎟️ <span id="tktBal">—</span></span>
+
+</header>
+
+<div class="page">
+
+  <div class="arena">
+
+    <div id="memMsg">Watch the pattern, then repeat it</div>
+
+    <div class="round-bar" id="roundBar"></div>
+
+    <div id="memGrid"></div>
+
+    <div id="memStatus">Press PLAY to start</div>
+
+    <div class="hist-row" id="histRow"><span class="hist-lbl">SESSION:</span></div>
+
+  </div>
+
+
+
+  <div id="startCtrl" class="bet-ctrl">
+
+    <div class="bl">TICKET ARCADE · MEMORY SEQUENCE</div>
+
+    <button class="btn-start" id="startBtn" onclick="startGame()">🧠 PLAY (1 🎟️)</button>
+
+    <div style="text-align:center;font-size:9px;color:#2a2010;letter-spacing:1px;margin-top:8px;">8+=6🎟️ · 6+=4🎟️ · 4+=3🎟️ · 2+=1🎟️ · 10 rounds</div>
+
+  </div>
+
+
+
+  <div id="resultWrap" style="display:none;padding:16px 0;"></div>
+
+  <div id="arcadeLbBox" style="margin-top:14px;"></div>
+
+</div>
+
+<script>
+
+const CELL_COLORS=['#ef4444','#f97316','#eab308','#22c55e','#14b8a6','#3b82f6','#8b5cf6','#ec4899','#dc2626','#ea580c','#ca8a04','#16a34a','#0d9488','#2563eb','#7c3aed','#db2777'];
+
+let _memState=null,_history=[];
+
+async function api(url,opts={}){const r=await fetch(url,{credentials:'include',headers:{'Content-Type':'application/json'},...opts});if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.detail||'Error');}return r.json();}
+
+async function loadBal(){try{const d=await api('/api/tickets/balance');document.getElementById('tktBal').textContent=d.balance??d.tickets??'?';}catch(e){}}
+
+function refreshLb(){
+  const box=document.getElementById('arcadeLbBox');
+  if(box&&window.renderArcadeLeaderboard) renderArcadeLeaderboard(box,'memory',s=>Math.round(s)+' correct');
+}
+
+loadBal();
+refreshLb();
+
+
+
+function buildGrid(){
+
+  const grid=document.getElementById('memGrid');
+
+  grid.innerHTML='';
+
+  for(let i=0;i<16;i++){
+
+    const c=document.createElement('div');
+
+    c.className='mem-cell';c.id='mc-'+i;
+
+    c.dataset.color=CELL_COLORS[i];
+
+    c.style.borderColor=CELL_COLORS[i]+'55';
+
+    c.onclick=()=>cellClick(i);
+
+    grid.appendChild(c);
+
+  }
+
+}
+
+
+
+function buildRoundBar(total,current){
+
+  const bar=document.getElementById('roundBar');
+
+  bar.innerHTML='';
+
+  for(let i=0;i<total;i++){
+
+    const pip=document.createElement('div');
+
+    pip.className='round-pip'+(i<current-1?' done':i===current-1?' active':'');
+
+    bar.appendChild(pip);
+
+  }
+
+}
+
+
+
+buildGrid();
+
+
+
+async function startGame(){
+
+
+  Sound.click();
+
+
+  if(_memState)return;
+
+
+  document.getElementById('startBtn').disabled=true;
+
+  document.getElementById('resultWrap').style.display='none';
+
+  try{
+
+    const data=await api('/api/ticket-games/memory/start',{method:'POST'});
+
+    loadBal();
+
+    _memState={token:data.token,serverSeq:data.sequence,phase:'watch',round:1,userInput:[]};
+
+    buildRoundBar(10,1);
+
+    nextRound();
+
+  }catch(e){
+
+    document.getElementById('startBtn').disabled=false;
+
+    const _rw=document.getElementById('resultWrap');_rw.innerHTML='';const _el=document.createElement('div');_el.style.cssText='color:#ef4444;font-size:12px;text-align:center;padding:10px;';_el.textContent=e.message||'Not enough tickets';_rw.appendChild(_el);
+
+    document.getElementById('resultWrap').style.display='';
+
+  }
+
+}
+
+
+
+function flashCell(idx,colorType,duration){
+
+  const c=document.getElementById('mc-'+idx);if(!c)return;
+
+  const bg=colorType==='show'?(c.dataset.color||'#ffd700'):colorType;
+
+  c.style.background=bg;
+
+  c.style.boxShadow=`0 0 20px ${bg}99`;
+
+  c.style.transform='scale(0.9)';
+
+  setTimeout(()=>{
+
+    c.style.background='rgba(255,255,255,0.04)';
+
+    c.style.boxShadow='none';
+
+    c.style.transform='scale(1)';
+
+  },duration);
+
+}
+
+
+
+function nextRound(){
+
+  if(!_memState)return;
+
+  const round=_memState.round;
+
+  document.getElementById('memMsg').textContent='Watch the sequence...';
+
+  document.getElementById('memStatus').textContent=`Round ${round} / 10`;
+
+  buildRoundBar(10,round);
+
+  const grid=document.getElementById('memGrid');
+
+  if(grid)grid.querySelectorAll('.mem-cell').forEach(c=>c.style.cursor='not-allowed');
+
+  const toShow=_memState.serverSeq.slice(0,round);
+
+  let delay=400;
+
+  for(const idx of toShow){
+
+    setTimeout(()=>flashCell(idx,'show',500),delay);
+
+    delay+=750;
+
+  }
+
+  setTimeout(()=>{
+
+    if(!_memState)return;
+
+    _memState.phase='input';_memState.userInput=[];
+
+    document.getElementById('memMsg').textContent=`Your turn — repeat ${round} cell${round>1?'s':''}`;
+
+    if(grid)grid.querySelectorAll('.mem-cell').forEach(c=>c.style.cursor='pointer');
+
+  },delay);
+
+}
+
+
+
+function cellClick(idx){
+
+
+  if(!_memState||_memState.phase!=='input')return;
+
+
+  Sound.click();
+
+
+  flashCell(idx,'#4caf50',280);
+
+
+  _memState.userInput.push(idx);
+
+  const expected=_memState.serverSeq.slice(0,_memState.round);
+
+  const pos=_memState.userInput.length-1;
+
+  if(_memState.userInput[pos]!==expected[pos]){
+
+
+    Sound.error();
+
+
+    flashCell(idx,'#ef4444',600);
+
+
+    // Shake
+
+    const wc=document.getElementById('mc-'+idx);
+
+    if(wc){[[-5,0],[5,0],[-3,0],[3,0],[0,0]].forEach(([x],si)=>setTimeout(()=>{if(wc)wc.style.transform=`translate(${x}px)`;},si*60));}
+
+    _memState.phase='done';
+
+    const roundsDone=_memState.round-1;
+
+    const token=_memState.token;
+
+    const seq=_memState.serverSeq;
+
+    _memState=null;
+
+    setTimeout(()=>submitMemory(token,seq,roundsDone),900);
+
+    return;
+
+  }
+
+  if(_memState.userInput.length===_memState.round){
+
+    if(_memState.round>=10){
+
+
+      const token=_memState.token;const seq=_memState.serverSeq;_memState=null;
+
+
+      Sound.levelup();
+
+
+      setTimeout(()=>submitMemory(token,seq,10),400);
+
+
+    }else{
+
+
+      _memState.round++;_memState.phase='watch';
+
+
+      Sound.levelup();
+
+
+      setTimeout(nextRound,700);
+
+
+    }
+
+  }
+
+}
+
+
+
+async function submitMemory(token,seq,correct){
+
+  try{
+
+    const res=await api('/api/ticket-games/memory/submit',{method:'POST',body:JSON.stringify({token,sequence:seq.slice(0,correct)})});
+
+    const won=res.tickets_won;
+
+    const c=res.correct;
+
+    pushHist(won>0);loadBal();
+
+    if(res.is_new_best&&window.celebrateHighScore) celebrateHighScore(won);
+    refreshLb();
+
+    showResult(`
+
+      <div class="result-card">
+
+        <div class="r-icon">${c>=8?'🏆':c>=4?'🥈':'💀'}</div>
+
+        <div class="r-score">${c}/10</div>
+
+        <div class="r-lbl">Rounds completed</div>
+
+        ${won>0?`<div class="r-tkt" style="color:var(--green);">+${won} tickets won!</div>`:`<div class="r-tkt" style="color:#555;">Complete more rounds!</div>`}
+
+        <div class="r-tiers">8+=6🎟️ · 6+=4🎟️ · 4+=3🎟️ · 2+=1🎟️</div>
+
+        <div class="btn-row">
+
+          <button class="btn-again" onclick="startGame()">🔄 PLAY AGAIN</button>
+
+          <button class="btn-back" onclick="location.href='/'">BACK</button>
+
+        </div>
+
+      </div>
+
+    `);
+
+    if(won>0)spawnConfetti();
+
+  }catch(e){showResult(`<div style="color:#ef4444;font-size:12px;text-align:center;">${e.message}</div>`);}
+
+  document.getElementById('startBtn').disabled=false;
+
+}
+
+
+
+function showResult(html){
+
+  document.getElementById('resultWrap').innerHTML=html;
+
+  document.getElementById('resultWrap').style.display='';
+
+}
+
+
+
+function pushHist(win){
+
+  _history.push(win);if(_history.length>20)_history.shift();
+
+  const el=document.getElementById('histRow');if(!el)return;
+
+  el.innerHTML='<span class="hist-lbl">SESSION:</span>';
+
+  _history.forEach(w=>{const d=document.createElement('div');d.className='hist-dot';d.style.background=w?'#22c55e':'#ef4444';el.appendChild(d);});
+
+}
+
+
+
+function spawnConfetti(){
+
+  const cols=['#ffd700','#22c55e','#3b82f6','#a855f7','#ec4899'];
+
+  for(let i=0;i<35;i++){
+
+    const el=document.createElement('div');
+
+    el.style.cssText=`position:fixed;width:7px;height:7px;border-radius:2px;background:${cols[i%cols.length]};left:${Math.random()*100}%;top:-10px;z-index:999;pointer-events:none;animation:confettiDrop ${0.9+Math.random()*1.2}s ease ${Math.random()*0.5}s forwards;`;
+
+    document.body.appendChild(el);setTimeout(()=>el.remove(),2500);
+
+  }
+
+}
+
+</script>
+
+<script>if("serviceWorker"in navigator){navigator.serviceWorker.register("/static/sw.js").catch(function(){})}</script>
+
+
+<script src="/static/chat.js"></script>
+
+
+</body>
+
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

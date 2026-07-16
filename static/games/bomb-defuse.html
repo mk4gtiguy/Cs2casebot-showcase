@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+
+<title>💣 Bomb Defuse — CS2CaseBot</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+
+<style>
+
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+
+:root{--bg:#060408;--cs:#ffd700;--green:#22c55e;--danger:#ef4444;--font:'Orbitron',monospace;}
+
+html,body{min-height:100vh;background:var(--bg);font-family:var(--font);overflow-x:hidden;color:#e8d8c0;}
+
+body{background-image:radial-gradient(ellipse 80% 40% at 50% 0%,rgba(255,215,0,0.04) 0%,transparent 70%);}
+
+.hdr{display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(6,4,8,0.98);border-bottom:1px solid rgba(255,215,0,0.1);position:sticky;top:0;z-index:50;}
+
+.back{display:flex;align-items:center;gap:5px;color:#2a2010;font-size:10px;letter-spacing:1px;text-decoration:none;transition:color .2s;}
+
+.back:hover{color:var(--cs);}
+
+.back svg{width:14px;height:14px;}
+
+.title{flex:1;font-size:14px;font-weight:900;letter-spacing:3px;background:linear-gradient(90deg,var(--cs),#ff9500);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+
+.tkts{font-size:12px;font-weight:700;color:var(--cs);font-family:monospace;}
+
+.page{max-width:420px;margin:0 auto;padding:16px 14px 80px;}
+
+.arena{background:rgba(4,2,6,0.99);border:1px solid rgba(255,215,0,0.08);border-radius:20px;padding:18px 14px 20px;margin-bottom:14px;position:relative;overflow:hidden;}
+
+.arena::before{content:'';position:absolute;top:0;left:15%;right:15%;height:1px;background:linear-gradient(90deg,transparent,rgba(255,215,0,0.3),transparent);}
+
+.timer-block{text-align:center;margin-bottom:18px;}
+
+#bombTimer{font-size:60px;font-weight:900;color:var(--danger);font-family:monospace;line-height:1;transition:color .3s,transform .15s;}
+
+.timer-sub{color:#333;font-size:10px;letter-spacing:2px;margin-top:3px;}
+
+.timer-bar-wrap{height:4px;background:rgba(239,68,68,0.1);border-radius:2px;margin-top:10px;overflow:hidden;}
+
+#bombBar{height:100%;width:100%;background:var(--danger);transition:width 0.95s linear;border-radius:2px;}
+
+.wires{display:flex;flex-direction:column;gap:8px;}
+
+.wire{
+
+  display:flex;align-items:center;gap:14px;padding:12px 16px;
+
+  border:2px solid;border-radius:10px;cursor:pointer;
+
+  background:rgba(0,0,0,0.12);
+
+  transition:background .12s,transform .1s;
+
+}
+
+.wire:hover{background:rgba(255,255,255,0.09);transform:scale(1.02);}
+
+.wire-cable{position:relative;width:46px;height:8px;flex-shrink:0;}
+
+.wire-cable-body{position:absolute;inset:0;border-radius:4px;}
+
+.wire-cable-shine{position:absolute;top:2px;left:5px;right:5px;height:2px;background:rgba(255,255,255,0.25);border-radius:2px;}
+
+.wire-name{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:2px;}
+
+.wire-scissors{margin-left:auto;color:#444;font-size:18px;}
+
+.guide{text-align:center;color:#2a2010;font-size:9px;letter-spacing:1px;margin-bottom:14px;}
+
+.hist-row{display:flex;gap:4px;flex-wrap:wrap;align-items:center;min-height:14px;margin-top:14px;}
+
+.hist-lbl{font-size:8px;color:#2a2010;letter-spacing:1px;flex-shrink:0;margin-right:2px;}
+
+.hist-dot{width:12px;height:12px;border-radius:50%;}
+
+.bet-ctrl{background:rgba(0,0,0,0.4);border:1px solid rgba(255,215,0,0.06);border-radius:14px;padding:14px;}
+
+.bl{font-size:8px;color:#2a2010;letter-spacing:2px;margin-bottom:10px;}
+
+.btn-start{width:100%;padding:15px;border:none;border-radius:10px;font-family:var(--font);font-size:13px;font-weight:900;letter-spacing:3px;cursor:pointer;transition:all .2s;background:linear-gradient(135deg,#664400,var(--cs));color:#06040a;box-shadow:0 4px 20px rgba(255,215,0,0.3);}
+
+.btn-start:not(:disabled):hover{transform:translateY(-2px);}
+
+.btn-start:disabled{opacity:.4;cursor:not-allowed;}
+
+.tier-note{text-align:center;font-size:9px;color:#2a2010;letter-spacing:1px;margin-top:8px;}
+
+.result-card{text-align:center;padding:10px 0;}
+
+.r-icon{font-size:52px;margin-bottom:12px;}
+
+.r-title{font-size:20px;font-weight:700;margin-bottom:8px;letter-spacing:2px;}
+
+.r-sub{color:#666;font-size:12px;margin-bottom:14px;}
+
+.r-tkt{font-size:18px;font-weight:700;margin-bottom:20px;}
+
+.btn-row{display:flex;gap:10px;justify-content:center;}
+
+.btn-again{padding:12px 22px;border:none;border-radius:10px;font-family:var(--font);font-size:10px;font-weight:700;letter-spacing:2px;cursor:pointer;background:linear-gradient(135deg,#664400,var(--cs));color:#06040a;}
+
+.btn-back{padding:12px 18px;border:1px solid rgba(255,215,0,0.15);border-radius:10px;font-family:var(--font);font-size:10px;font-weight:700;letter-spacing:1px;cursor:pointer;background:transparent;color:#2a2010;}
+
+.btn-back:hover{color:var(--cs);}
+
+@keyframes confettiDrop{to{transform:translateY(110vh) rotate(720deg);opacity:0;}}
+
+</style>
+
+    <script src="/static/sound.js"></script>
+
+
+    <script src="/static/page-transitions.js"></script>
+
+
+    <script src="/static/autoplay.js"></script>
+
+    <script src="/static/arcade-celebrate.js"></script>
+
+<link rel="stylesheet" href="/static/games-shared.css"><script src="/static/js/csrf.js"></script>
+
+
+</head>
+
+<body>
+
+<header class="hdr">
+
+  <a class="back" href="/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>BACK</a>
+
+  <span class="title">💣  BOMB DEFUSE</span>
+
+  <span class="tkts">🎟️ <span id="tktBal">—</span></span>
+
+</header>
+
+<div class="page">
+
+  <div class="arena">
+
+    <div class="guide">CUT THE CORRECT WIRE BEFORE TIME RUNS OUT · 3 TICKETS</div>
+
+    <div class="timer-block">
+
+      <div id="bombTimer">10</div>
+
+      <div class="timer-sub">SECONDS</div>
+
+      <div class="timer-bar-wrap"><div id="bombBar"></div></div>
+
+    </div>
+
+    <div class="wires" id="wiresWrap"></div>
+
+    <div class="hist-row" id="histRow"><span class="hist-lbl">SESSION:</span></div>
+
+  </div>
+
+
+
+  <div id="startCtrl" class="bet-ctrl">
+
+    <div class="bl">TICKET ARCADE · BOMB DEFUSE</div>
+
+    <button class="btn-start" id="startBtn" onclick="startGame()">💣 PLAY (1 🎟️)</button>
+
+    <div class="tier-note">Cut the right wire = 3 tickets · Wrong or timeout = 0</div>
+
+  </div>
+
+
+
+  <div id="resultWrap" style="display:none;padding:16px 0;"></div>
+
+</div>
+
+<script>
+
+const WIRE_COLORS={red:'#e74c3c',blue:'#3498db',green:'#2ecc71',yellow:'#f1c40f',white:'#ecf0f1'};
+
+let _bState=null,_history=[];
+
+async function api(url,opts={}){const r=await fetch(url,{credentials:'include',headers:{'Content-Type':'application/json'},...opts});if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.detail||'Error');}return r.json();}
+
+async function loadBal(){try{const d=await api('/api/tickets/balance');document.getElementById('tktBal').textContent=d.balance??d.tickets??'?';}catch(e){}}
+
+loadBal();
+
+
+
+async function startGame(){
+
+
+  Sound.click();
+
+
+  if(_bState)return;
+
+
+  document.getElementById('startBtn').disabled=true;
+
+  document.getElementById('resultWrap').style.display='none';
+
+  try{
+
+    const data=await api('/api/ticket-games/bomb/start',{method:'POST'});
+
+    loadBal();
+
+    _bState={token:data.token,countdown:10,timer:null,done:false};
+
+    // Build wires
+
+    const wrap=document.getElementById('wiresWrap');
+
+    wrap.innerHTML='';
+
+    data.wires.forEach(w=>{
+
+      const c=WIRE_COLORS[w]||'#888';
+
+      const div=document.createElement('div');
+
+      div.className='wire';div.id='wire-'+w;
+
+      div.style.borderColor=c;
+
+      div.innerHTML=`
+
+        <div class="wire-cable">
+
+          <div class="wire-cable-body" style="background:${c};box-shadow:0 0 14px ${c}88;"></div>
+
+          <div class="wire-cable-shine"></div>
+
+        </div>
+
+        <span class="wire-name" style="color:${c};">${w}</span>
+
+        <span class="wire-scissors">✂️</span>
+
+      `;
+
+      div.onclick=()=>cutWire(w);
+
+      div.onmouseenter=()=>{div.style.background='rgba(255,255,255,0.09)';div.style.transform='scale(1.02)';};
+
+      div.onmouseleave=()=>{div.style.background='';div.style.transform='';};
+
+      wrap.appendChild(div);
+
+    });
+
+    // Reset timer display
+
+    document.getElementById('bombTimer').textContent='10';
+
+    document.getElementById('bombTimer').style.color='var(--danger)';
+
+    document.getElementById('bombTimer').style.transform='';
+
+    document.getElementById('bombBar').style.width='100%';
+
+    _bState.timer=setInterval(tick,1000);
+
+  }catch(e){
+
+    document.getElementById('startBtn').disabled=false;
+
+    const _rw=document.getElementById('resultWrap');_rw.innerHTML='';const _el=document.createElement('div');_el.style.cssText='color:#ef4444;font-size:12px;text-align:center;padding:10px;';_el.textContent=e.message||'Not enough tickets';_rw.appendChild(_el);
+
+    document.getElementById('resultWrap').style.display='';
+
+  }
+
+}
+
+
+
+function tick(){
+
+
+  if(!_bState||_bState.done)return;
+
+
+  Sound.tick();
+
+
+  _bState.countdown--;
+
+  const el=document.getElementById('bombTimer');
+
+  const bar=document.getElementById('bombBar');
+
+  if(el){
+
+    el.textContent=_bState.countdown;
+
+    if(_bState.countdown<=5)el.style.color=_bState.countdown<=3?'#ff2020':'#f97316';
+
+    if(_bState.countdown<=3){
+
+      el.style.transform='scale(1.15)';
+
+      setTimeout(()=>{if(el)el.style.transform='scale(1)';},150);
+
+      const page=document.querySelector('.page');
+
+      if(page){page.style.transform='translateX(-3px)';setTimeout(()=>{if(page)page.style.transform='';},80);}
+
+    }
+
+  }
+
+  if(bar)bar.style.width=(_bState.countdown/10*100)+'%';
+
+  if(_bState.countdown<=0){clearInterval(_bState.timer);_bState.done=true;cutWire('__timeout__');}
+
+}
+
+
+
+async function cutWire(color){
+
+
+  if(!_bState||_bState.done)return;
+
+
+  Sound.click();
+
+
+  _bState.done=true;clearInterval(_bState.timer);
+
+  const token=_bState.token;_bState=null;
+
+  try{
+
+    const res=await api('/api/ticket-games/bomb/submit',{method:'POST',body:JSON.stringify({token,wire:color})});
+
+    pushHist(res.won);loadBal();
+
+    if(res.won){
+
+
+      Sound.win();
+      if(window.celebrateHighScore) celebrateHighScore(res.tickets_won,'BOMB DEFUSED!','💣');
+
+
+      showResult(`
+
+
+        <div class="result-card">
+
+
+          <div class="r-icon">🎉</div>
+
+
+          <div class="r-title" style="color:var(--green);">BOMB DEFUSED!</div>
+
+
+          <div class="r-sub">You cut the <strong>${esc(res.safe_wire)}</strong> wire — correct!</div>
+
+
+          <div class="r-tkt" style="color:var(--cs);">+3 tickets won!</div>
+
+
+          <div class="btn-row">
+
+
+            <button class="btn-again" onclick="startGame()">🔄 PLAY AGAIN</button>
+
+
+            <button class="btn-back" onclick="location.href='/'">BACK</button>
+
+
+          </div>
+
+
+        </div>
+
+
+      `);
+
+
+      spawnConfetti();
+
+
+    }else{
+
+
+      Sound.explosion();
+
+      const msg=color==='__timeout__'?"Time's up! ⏰":`Wrong wire! Cut ${esc(res.chose||color)} — was ${esc(res.safe_wire)}.`;
+
+      showResult(`
+
+        <div class="result-card">
+
+          <div class="r-icon">🎉</div>
+
+          <div class="r-title" style="color:var(--danger);">BOOM!</div>
+
+          <div class="r-sub">${msg}</div>
+
+          <div class="r-tkt" style="color:#555;">No tickets</div>
+
+          <div class="btn-row">
+
+            <button class="btn-again" onclick="startGame()">🔄 TRY AGAIN</button>
+
+            <button class="btn-back" onclick="location.href='/'">BACK</button>
+
+          </div>
+
+        </div>
+
+      `);
+
+    }
+
+  }catch(e){showResult(`<div style="color:#ef4444;font-size:12px;text-align:center;">${e.message}</div>`);}
+
+  document.getElementById('startBtn').disabled=false;
+
+}
+
+
+
+function showResult(html){
+
+  document.getElementById('resultWrap').innerHTML=html;
+
+  document.getElementById('resultWrap').style.display='';
+
+}
+
+
+
+function pushHist(win){
+
+  _history.push(win);if(_history.length>20)_history.shift();
+
+  const el=document.getElementById('histRow');if(!el)return;
+
+  el.innerHTML='<span class="hist-lbl">SESSION:</span>';
+
+  _history.forEach(w=>{const d=document.createElement('div');d.className='hist-dot';d.style.background=w?'#22c55e':'#ef4444';el.appendChild(d);});
+
+}
+
+
+
+function esc(s){return String(s||'').replace(/[<>&"]/g,c=>({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c]));}
+
+
+
+function spawnConfetti(){
+
+  const cols=['#ffd700','#22c55e','#3b82f6','#a855f7','#ec4899'];
+
+  for(let i=0;i<35;i++){
+
+    const el=document.createElement('div');
+
+    el.style.cssText=`position:fixed;width:7px;height:7px;border-radius:2px;background:${cols[i%cols.length]};left:${Math.random()*100}%;top:-10px;z-index:999;pointer-events:none;animation:confettiDrop ${0.9+Math.random()*1.2}s ease ${Math.random()*0.5}s forwards;`;
+
+    document.body.appendChild(el);setTimeout(()=>el.remove(),2500);
+
+  }
+
+}
+
+</script>
+
+<script>if("serviceWorker"in navigator){navigator.serviceWorker.register("/static/sw.js").catch(function(){})}</script>
+
+
+<script src="/static/chat.js"></script>
+
+
+</body>
+
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

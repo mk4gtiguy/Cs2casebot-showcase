@@ -1,0 +1,566 @@
+﻿<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+
+<title>🪜  Ladder Climb — CS2CaseBot</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+
+<style>
+
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+
+:root{--bg:#060409;--ladder:#9b4dff;--gold:#ffd700;--red:#ef4444;--green:#22c55e;--font:'Orbitron',monospace;}
+
+html,body{min-height:100vh;background:var(--bg);font-family:var(--font);overflow-x:hidden;color:#d0c0f0;}
+
+body{background-image:radial-gradient(ellipse 80% 60% at 50% 100%,rgba(155,77,255,0.07) 0%,transparent 60%);}
+
+.hdr{display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(6,4,9,0.98);border-bottom:1px solid rgba(155,77,255,0.12);position:sticky;top:0;z-index:50;}
+
+.back{display:flex;align-items:center;gap:5px;color:#2a1a4a;font-size:10px;letter-spacing:1px;text-decoration:none;transition:color .2s;}
+
+.back:hover{color:var(--ladder);}
+
+.back svg{width:14px;height:14px;}
+
+.title{flex:1;font-size:14px;font-weight:900;letter-spacing:3px;background:linear-gradient(90deg,var(--ladder),var(--gold));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+
+.bal{font-size:13px;font-weight:700;color:var(--gold);font-family:monospace;}
+
+.page{max-width:420px;margin:0 auto;padding:16px 14px 80px;}
+
+
+
+/* LADDER VISUAL */
+
+.ladder-arena{background:rgba(4,2,8,0.99);border:1px solid rgba(155,77,255,0.1);border-radius:20px;padding:16px 12px;margin-bottom:14px;position:relative;overflow:hidden;}
+
+.ladder-arena::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--ladder),transparent);opacity:.4;}
+
+
+
+/* Stats row */
+
+.lad-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;}
+
+.ls{background:rgba(155,77,255,0.04);border:1px solid rgba(155,77,255,0.08);border-radius:10px;padding:8px;text-align:center;}
+
+.ls .lv{font-size:15px;font-weight:900;font-family:monospace;}
+
+.ls .ll{font-size:8px;color:#2a1a4a;letter-spacing:1px;margin-top:2px;}
+
+.ls.rung-st .lv{color:var(--ladder);}
+
+.ls.mult-st .lv{color:var(--gold);}
+
+.ls.pot-st .lv{color:var(--gold);}
+
+
+
+/* Ladder rungs */
+
+.rungs-wrap{display:flex;flex-direction:column;gap:4px;margin-bottom:14px;max-height:320px;overflow-y:auto;}
+
+.rungs-wrap::-webkit-scrollbar{width:3px;}
+
+.rungs-wrap::-webkit-scrollbar-thumb{background:rgba(155,77,255,0.2);}
+
+.rung-row{display:flex;align-items:center;gap:8px;padding:6px 8px;border-radius:8px;border:1px solid rgba(155,77,255,0.06);background:rgba(155,77,255,0.02);transition:all .3s;}
+
+.rung-row.current{border-color:rgba(155,77,255,0.35);background:rgba(155,77,255,0.1);box-shadow:0 0 12px rgba(155,77,255,0.1);}
+
+.rung-row.cleared{border-color:rgba(34,197,94,0.2);background:rgba(34,197,94,0.04);}
+
+.rung-row.failed{border-color:rgba(239,68,68,0.2);background:rgba(239,68,68,0.05);}
+
+.rung-num{font-size:9px;font-weight:700;font-family:monospace;min-width:20px;text-align:center;color:#2a1a4a;}
+
+.rung-icon{font-size:14px;min-width:20px;text-align:center;}
+
+.rung-info{flex:1;}
+
+.rung-mult{font-size:9px;font-weight:700;color:var(--ladder);font-family:monospace;}
+
+.rung-fail{font-size:8px;color:#3a2a5a;margin-top:1px;}
+
+.rung-status{font-size:9px;font-family:monospace;min-width:44px;text-align:right;}
+
+.rung-status.cleared-s{color:var(--green);}
+
+.rung-status.current-s{color:var(--gold);animation:pulse-s 1s infinite;}
+
+@keyframes pulse-s{0%,100%{opacity:1;}50%{opacity:.4;}}
+
+.rung-status.fail-s{color:var(--red);}
+
+
+
+/* Result */
+
+.result-ladder{text-align:center;min-height:28px;font-size:11px;font-weight:700;letter-spacing:2px;margin-bottom:12px;display:flex;align-items:center;justify-content:center;}
+
+.result-ladder.win{color:var(--green);}
+
+.result-ladder.bust{color:var(--red);}
+
+.result-ladder.idle{color:#2a1a4a;}
+
+.result-ladder.summit{color:var(--gold);text-shadow:0 0 16px rgba(255,215,0,0.4);}
+
+
+
+/* Cashout */
+
+.co-strip{display:flex;gap:10px;align-items:center;margin-bottom:12px;}
+
+.pot-d{text-align:center;}
+
+.pot-v{font-size:18px;font-weight:900;color:var(--gold);font-family:monospace;}
+
+.pot-l{font-size:8px;color:#2a1a4a;letter-spacing:1px;}
+
+.btn-co{flex:1;padding:13px;border:1px solid rgba(255,215,0,0.25);border-radius:10px;background:rgba(255,215,0,0.06);color:var(--gold);font-family:var(--font);font-size:10px;font-weight:700;letter-spacing:1px;cursor:pointer;transition:all .2s;}
+
+.btn-co:not(:disabled):hover{background:rgba(255,215,0,0.14);}
+
+.btn-co:disabled{opacity:.3;cursor:not-allowed;}
+
+
+
+/* BET */
+
+.bet-ctrl{background:rgba(0,0,0,0.4);border:1px solid rgba(155,77,255,0.06);border-radius:14px;padding:14px;}
+
+.bl{font-size:8px;color:#2a1a4a;letter-spacing:2px;margin-bottom:8px;}
+
+.bet-row{display:flex;gap:8px;margin-bottom:8px;}
+
+.bet-inp{flex:1;background:rgba(0,0,0,0.5);border:1px solid rgba(155,77,255,0.1);border-radius:8px;padding:10px 12px;color:#d0c0f0;font-family:var(--font);font-size:13px;font-weight:700;outline:none;text-align:center;}
+
+.bet-inp:focus{border-color:rgba(155,77,255,0.3);}
+
+.adj{padding:10px 14px;background:rgba(155,77,255,0.04);border:1px solid rgba(155,77,255,0.08);border-radius:8px;color:#2a1a4a;font-family:var(--font);font-size:11px;cursor:pointer;transition:all .15s;}
+
+.adj:hover{color:var(--ladder);}
+
+.qrow{display:flex;gap:5px;margin-bottom:10px;}
+
+.qb{flex:1;padding:7px 3px;background:rgba(155,77,255,0.04);border:1px solid rgba(155,77,255,0.08);border-radius:6px;color:#2a1a4a;font-size:8px;letter-spacing:1px;cursor:pointer;text-align:center;transition:all .15s;}
+
+.qb:hover{border-color:var(--ladder);color:var(--ladder);}
+
+.action-row{display:flex;gap:8px;}
+
+.btn-start-l{flex:1;padding:14px;border:none;border-radius:10px;font-family:var(--font);font-size:12px;font-weight:900;letter-spacing:2px;cursor:pointer;transition:all .2s;background:linear-gradient(135deg,#4a0eaa,var(--ladder));color:#fff;box-shadow:0 4px 20px rgba(155,77,255,0.3);}
+
+.btn-start-l:not(:disabled):hover{transform:translateY(-2px);}
+
+.btn-start-l:disabled{opacity:.4;cursor:not-allowed;transform:none!important;}
+
+.btn-climb{flex:2;padding:14px;border:none;border-radius:10px;font-family:var(--font);font-size:13px;font-weight:900;letter-spacing:2px;cursor:pointer;transition:all .2s;background:linear-gradient(135deg,#664400,var(--gold));color:#060409;box-shadow:0 4px 20px rgba(255,215,0,0.3);}
+
+.btn-climb:not(:disabled):hover{transform:translateY(-2px);box-shadow:0 6px 32px rgba(255,215,0,0.5);}
+
+.btn-climb:disabled{opacity:.4;cursor:not-allowed;transform:none!important;}
+
+
+
+#burstFlash{position:fixed;inset:0;pointer-events:none;opacity:0;z-index:200;}
+
+#burstFlash.r{background:radial-gradient(ellipse at 50% 50%,rgba(239,68,68,0.3),transparent 70%);}
+
+#burstFlash.g{background:radial-gradient(ellipse at 50% 30%,rgba(255,215,0,0.25),transparent 70%);}
+
+#burstFlash.show{animation:bf .4s ease;}
+
+@keyframes bf{0%,100%{opacity:0;}25%{opacity:1;}}
+
+</style>
+
+    <script src="/static/sound.js"></script>
+
+    <script src="/static/big-win.js"></script>
+
+
+    <script src="/static/balance-animation.js"></script>
+
+
+    <script src="/static/page-transitions.js"></script>
+
+
+    <script src="/static/autoplay.js"></script>
+
+
+<link rel="stylesheet" href="/static/games-shared.css"><script src="/static/js/csrf.js"></script>
+
+
+</head>
+
+<body>
+
+<div id="burstFlash"></div>
+
+<header class="hdr">
+
+  <a class="back" href="/games"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>GAMES</a>
+
+  <span class="title">🪜  LADDER CLIMB</span>
+
+  <span class="bal" id="balDisplay">$—</span>
+
+</header>
+
+<div class="page">
+
+  <div class="ladder-arena">
+
+    <div class="lad-stats">
+
+      <div class="ls rung-st"><div class="lv" id="rungDisp">0/15</div><div class="ll">RUNG</div></div>
+
+      <div class="ls mult-st"><div class="lv" id="multDisp">1.00×</div><div class="ll">MULTIPLIER</div></div>
+
+      <div class="ls pot-st"><div class="lv" id="potDisp">$0</div><div class="ll">POT</div></div>
+
+    </div>
+
+    <div class="rungs-wrap" id="rungsWrap"></div>
+
+    <div class="result-ladder idle" id="resultLadder">START AND CLIMB THE RUNGS</div>
+
+    <div class="co-strip">
+
+      <div class="pot-d"><div class="pot-v" id="potVal">$0</div><div class="pot-l">CASH OUT NOW</div></div>
+
+      <button class="btn-co" id="coBtn" onclick="cashout()" disabled>💰  CASH OUT</button>
+
+    </div>
+
+  </div>
+
+
+
+  <div class="bet-ctrl">
+
+    <div class="bl">BET AMOUNT</div>
+
+    <div class="bet-row">
+
+      <button class="adj" onclick="halveBet()">½</button>
+
+      <input class="bet-inp" id="betInp" type="number" value="500" min="50">
+
+      <button class="adj" onclick="doubleBet()">2×</button>
+
+    </div>
+
+    <div class="qrow">
+
+      <div class="qb" onclick="qb(100)">$100</div><div class="qb" onclick="qb(500)">$500</div>
+
+      <div class="qb" onclick="qb(1000)">$1K</div><div class="qb" onclick="qb(5000)">$5K</div><div class="qb" onclick="qb(10000)">$10K</div>
+
+    </div>
+
+    <div class="action-row">
+
+      <button class="btn-start-l" id="startBtn" onclick="startLadder()">🪜  START</button>
+
+      <button class="btn-climb" id="climbBtn" onclick="climb()" disabled>⬆️  ATTEMPT RUNG</button>
+
+    </div>
+
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-top:8px;">
+
+      <label style="display:flex;align-items:center;gap:5px;font-size:8px;color:#2a1a4a;cursor:pointer;letter-spacing:1px;">
+
+        <input type="checkbox" id="autoClimbOn" style="accent-color:var(--ladder);cursor:pointer;"> AUTO CLIMB
+
+      </label>
+
+      <span style="font-size:8px;color:#2a1a4a;letter-spacing:1px;">BEST: <span id="bestRungDisp" style="color:var(--gold);">—</span></span>
+
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+
+// 15 rungs: [fail_chance, per_rung_mult]
+
+const RUNGS=[[.10,1.25],[.12,1.35],[.15,1.50],[.18,1.70],[.20,1.95],[.23,2.30],[.26,2.80],[.28,3.50],[.30,4.50],[.33,6.00],[.36,8.50],[.38,12.0],[.40,18.0],[.42,28.0],[.45,50.0]];
+
+let balance=0,gameActive=false,acting=false,currentRung=0,currentMult=1,bestRung=0;
+
+async function init(){try{const d=await api('/api/user/me');balance=d.balance;updateBal();}catch(e){}buildRungs(0,-1);}
+
+function updateBal(){var e=document.getElementById('balDisplay'),c=e.textContent||'',n='$'+balance.toLocaleString(undefined,{maximumFractionDigits:0});if(c&&c!=='$—'&&c!==n){var p=parseFloat(c.replace(/[,$]/g,''));if(!isNaN(p)&&p!==balance){animateBalance(e,'$'+p.toLocaleString(undefined,{maximumFractionDigits:0}),n,balance>=p);return}}e.textContent=n}
+
+function qb(v){document.getElementById('betInp').value=v;}
+
+function halveBet(){document.getElementById('betInp').value=Math.max(50,Math.floor(parseInt(document.getElementById('betInp').value||500)/2));}
+
+function doubleBet(){document.getElementById('betInp').value=Math.min(balance,parseInt(document.getElementById('betInp').value||500)*2);}
+
+
+
+function buildRungs(cleared,bustedAt){
+
+  const wrap=document.getElementById('rungsWrap');wrap.innerHTML='';
+
+  for(let i=RUNGS.length-1;i>=0;i--){
+
+    const [fail,mult]=RUNGS[i];
+
+    const row=document.createElement('div');
+
+    let cls='rung-row';let statusText='';let icon='?';
+
+    if(i<cleared){cls+=' cleared';icon='✅';statusText='CLEARED';}
+
+    else if(i===cleared&&gameActive){cls+=' current';icon='🎯';statusText='CURRENT';}
+
+    else if(i===bustedAt){cls+=' failed';icon='💀';statusText='FELL';}
+
+    row.className=cls;
+
+    row.innerHTML=`<div class="rung-num">${i+1}</div><div class="rung-icon">${icon}</div>
+
+      <div class="rung-info"><div class="rung-mult">${mult}× per rung</div><div class="rung-fail">Fail: ${Math.round(fail*100)}%</div></div>
+
+      <div class="rung-status ${i<cleared?'cleared-s':i===cleared&&gameActive?'current-s':i===bustedAt?'fail-s':''}">${statusText}</div>`;
+
+    wrap.appendChild(row);
+
+  }
+
+  // Scroll to current rung
+
+  if(gameActive){
+
+    const currentEl=wrap.querySelector('.current');
+
+    if(currentEl)currentEl.scrollIntoView({behavior:'smooth',block:'center'});}
+
+}
+
+
+
+async function startLadder(){
+
+  if(gameActive||acting) return;
+
+  const bet=parseInt(document.getElementById('betInp').value)||500;
+
+  if(bet>balance){setResult('❌ INSUFFICIENT BALANCE','idle');Sound.error();return;}
+
+  Sound.click();acting=true;document.getElementById('startBtn').disabled=true;
+
+
+  currentRung=0;currentMult=1;
+
+  updateStats(0,1,bet);setResult('CLIMB THE RUNGS — CASH OUT ANYTIME','idle');
+
+  try{
+
+    await api('/api/games/medium/ladder/start',{method:'POST',body:JSON.stringify({amount:bet})});
+
+    gameActive=true;balance=await refreshBal();updateBal();
+
+    buildRungs(0,-1);document.getElementById('climbBtn').disabled=false;
+
+    document.getElementById('coBtn').disabled=true;
+
+  }catch(e){setResult('ERROR: '+e.message,'idle');}
+
+  finally{acting=false;document.getElementById('startBtn').disabled=false;}
+
+}
+
+
+
+async function climb(){
+
+  if(!gameActive||acting) return;
+
+  Sound.click();acting=true;document.getElementById('climbBtn').disabled=true;
+
+
+  try{
+
+
+    const d=await api('/api/games/medium/ladder/climb',{method:'POST'});
+
+    const bet=parseInt(document.getElementById('betInp').value)||500;
+
+    if(!d.climbed){
+
+
+      gameActive=false;
+
+
+      Sound.loss();
+
+
+      buildRungs(currentRung,currentRung);
+
+
+      setResult('💀 FELL AT RUNG '+(currentRung+1)+' — LOST EVERYTHING','bust');
+
+      flash('r');document.getElementById('coBtn').disabled=true;
+
+      balance=await refreshBal();updateBal();
+
+    }else{
+
+      currentRung=d.rung;currentMult=d.multiplier;
+
+
+      Sound.step();
+
+
+      buildRungs(currentRung,-1);
+
+      updateStats(currentRung,currentMult,d.potential_win||bet*currentMult);
+
+      if(d.at_top){
+
+        gameActive=false;
+
+
+        Sound.win();
+
+
+        setResult('🏆 SUMMIT! +$'+d.auto_win.toLocaleString(undefined,{maximumFractionDigits:0}),'summit');
+
+        flash('g');balance=await refreshBal();updateBal();
+
+        document.getElementById('coBtn').disabled=true;
+
+      }else{
+
+        setResult('✅ RUNG '+currentRung+' CLEARED · '+currentMult.toFixed(2)+'× ACCUMULATED','win');
+
+        flash('g');document.getElementById('coBtn').disabled=false;
+
+        document.getElementById('climbBtn').disabled=false;
+
+        if(currentRung>bestRung){bestRung=currentRung;document.getElementById('bestRungDisp').textContent='RUNG '+bestRung;}
+
+        if(document.getElementById('autoClimbOn').checked&&gameActive) setTimeout(()=>climb(),600);
+
+      }
+
+    }
+
+  }catch(e){setResult('ERROR','idle');document.getElementById('climbBtn').disabled=false;}
+
+  finally{acting=false;}
+
+}
+
+
+
+async function cashout(){
+
+  if(!gameActive||acting) return;
+
+  Sound.cashout();acting=true;gameActive=false;document.getElementById('coBtn').disabled=true;
+
+
+  try{
+
+
+    const d=await api('/api/games/medium/ladder/cashout',{method:'POST'});
+
+    balance=await refreshBal();updateBal();
+
+
+    Sound.win();
+
+
+    setResult('💰 CASHED OUT RUNG '+d.rungs+' · '+d.multiplier.toFixed(2)+'× · +$'+d.win.toLocaleString(undefined,{maximumFractionDigits:0}),'win');
+    if(window.maybeBigWin){const lcb=parseInt(document.getElementById('betInp').value)||500;maybeBigWin(lcb,d.win);}
+
+  }catch(e){
+
+    gameActive=true;
+
+    document.getElementById('coBtn').disabled=false;
+
+    document.getElementById('climbBtn').disabled=false;
+
+    setResult('ERROR: '+e.message,'idle');
+
+  }
+
+  finally{acting=false;}
+
+}
+
+
+
+function updateStats(rung,mult,pot){
+
+  document.getElementById('rungDisp').textContent=rung+'/15';
+
+  document.getElementById('multDisp').textContent=parseFloat(mult).toFixed(2)+'×';
+
+  document.getElementById('potDisp').textContent='$'+parseFloat(pot).toLocaleString(undefined,{maximumFractionDigits:0});
+
+  document.getElementById('potVal').textContent='$'+parseFloat(pot).toLocaleString(undefined,{maximumFractionDigits:0});
+
+}
+
+function setResult(t,c){const el=document.getElementById('resultLadder');el.className='result-ladder '+c;el.textContent=t;}
+
+function flash(c){const el=document.getElementById('burstFlash');el.className=c;void el.offsetWidth;el.classList.add('show');}
+
+async function refreshBal(){try{const d=await api('/api/user/me');return d.balance;}catch(e){return balance;}}
+
+async function api(url,opts={}){const r=await fetch(url,{credentials:'include',headers:{'Content-Type':'application/json'},...opts});if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.detail||'Error');}return r.json();}
+
+init();
+
+</script>
+
+<script>if("serviceWorker"in navigator){navigator.serviceWorker.register("/static/sw.js").catch(function(){})}</script>
+
+
+<script src="/static/chat.js"></script>
+
+
+</body>
+
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

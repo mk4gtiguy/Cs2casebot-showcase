@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+
+<title>🎲  Dice — CS2CaseBot</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+
+<style>
+
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+
+:root{--bg:#060a0f;--accent:#00e5ff;--green:#22c55e;--red:#ef4444;--font:'Orbitron',monospace;--mono:'Share Tech Mono',monospace;}
+
+html,body{min-height:100vh;background:var(--bg);font-family:var(--font);overflow-x:hidden;color:#c8d8e8;}
+
+body{background-image:radial-gradient(ellipse 80% 40% at 50% 0%,rgba(0,229,255,0.05) 0%,transparent 70%);}
+
+
+
+/* Number texture bg */
+
+.num-bg{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden;opacity:0.06;}
+
+.num-bg span{position:absolute;font-family:var(--mono);font-size:11px;color:var(--accent);
+
+  animation:num-drift linear infinite;}
+
+@keyframes num-drift{0%{transform:translateY(100vh);opacity:0;}10%{opacity:1;}90%{opacity:.5;}100%{transform:translateY(-20px);opacity:0;}}
+
+
+
+/* HEADER */
+
+.hdr{display:flex;align-items:center;gap:12px;padding:12px 16px;
+
+  background:rgba(6,10,15,0.97);border-bottom:1px solid rgba(0,229,255,0.1);
+
+  position:sticky;top:0;z-index:50;}
+
+.back{display:flex;align-items:center;gap:5px;color:#334;font-size:10px;letter-spacing:1px;
+
+  text-decoration:none;transition:color .2s;}
+
+.back:hover{color:var(--accent);}
+
+.back svg{width:14px;height:14px;}
+
+.title{flex:1;font-size:14px;font-weight:900;letter-spacing:3px;color:var(--accent);}
+
+.bal{font-size:13px;font-weight:700;color:var(--accent);font-family:var(--mono);}
+
+
+
+/* PAGE */
+
+.page{max-width:420px;margin:0 auto;padding:20px 16px 80px;position:relative;z-index:1;}
+
+
+
+/* ROLL RESULT DISPLAY */
+
+.roll-arena{
+
+  background:rgba(0,10,20,0.95);
+
+  border:1px solid rgba(0,229,255,0.12);
+
+  border-radius:20px;
+
+  padding:28px 20px;
+
+  text-align:center;
+
+  margin-bottom:20px;
+
+  position:relative;overflow:hidden;
+
+}
+
+.roll-arena::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;
+
+  background:linear-gradient(90deg,transparent,var(--accent),transparent);}
+
+
+
+.roll-num{
+
+  font-size:clamp(64px,20vw,96px);font-weight:900;font-family:var(--mono);
+
+  line-height:1;margin-bottom:8px;
+
+  transition:color .3s;color:#1a3a4a;
+
+}
+
+.roll-num.win{color:var(--green);text-shadow:0 0 30px rgba(34,197,94,0.5);}
+
+.roll-num.lose{color:var(--red);text-shadow:0 0 30px rgba(239,68,68,0.4);}
+
+.roll-num.rolling{color:var(--accent);animation:num-spin .08s steps(1) infinite;}
+
+@keyframes num-spin{0%{opacity:1;}50%{opacity:.3;}}
+
+
+
+.roll-verdict{font-size:13px;font-weight:900;letter-spacing:3px;min-height:20px;margin-bottom:4px;}
+
+.roll-verdict.win{color:var(--green);}
+
+.roll-verdict.lose{color:var(--red);}
+
+.roll-meta{font-size:10px;color:#334;letter-spacing:1px;}
+
+
+
+/* PROBABILITY BAR */
+
+.prob-bar{
+
+  height:6px;background:rgba(255,255,255,0.05);border-radius:3px;
+
+  margin:16px 0 8px;position:relative;overflow:hidden;
+
+}
+
+.prob-fill{
+
+  height:100%;border-radius:3px;
+
+  background:linear-gradient(90deg,var(--green),var(--accent));
+
+  transition:width .3s;
+
+}
+
+.prob-labels{display:flex;justify-content:space-between;font-size:9px;color:#334;}
+
+
+
+/* BET TYPE TOGGLE */
+
+.type-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px;}
+
+.type-btn{
+
+  padding:14px 12px;border-radius:12px;
+
+  border:2px solid rgba(255,255,255,0.07);
+
+  background:rgba(255,255,255,0.03);
+
+  cursor:pointer;text-align:center;transition:all .2s;
+
+}
+
+.type-btn .tb-icon{font-size:20px;margin-bottom:4px;}
+
+.type-btn .tb-name{font-size:10px;font-weight:700;letter-spacing:1px;color:#668;}
+
+.type-btn.over.active{border-color:var(--green);background:rgba(34,197,94,0.08);box-shadow:0 0 16px rgba(34,197,94,0.12);}
+
+.type-btn.over.active .tb-name{color:var(--green);}
+
+.type-btn.under.active{border-color:var(--red);background:rgba(239,68,68,0.08);box-shadow:0 0 16px rgba(239,68,68,0.1);}
+
+.type-btn.under.active .tb-name{color:var(--red);}
+
+
+
+/* TARGET SLIDER */
+
+.slider-section{background:rgba(0,0,0,0.4);border:1px solid rgba(0,229,255,0.08);
+
+  border-radius:14px;padding:16px;margin-bottom:16px;}
+
+.slider-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+
+.slider-label{font-size:9px;color:#334;letter-spacing:2px;}
+
+.slider-target{font-size:22px;font-weight:900;color:var(--accent);font-family:var(--mono);}
+
+
+
+input[type=range]{
+
+  -webkit-appearance:none;width:100%;height:6px;background:rgba(255,255,255,0.08);
+
+  border-radius:3px;outline:none;margin-bottom:12px;cursor:pointer;
+
+}
+
+input[type=range]::-webkit-slider-thumb{
+
+  -webkit-appearance:none;width:22px;height:22px;border-radius:50%;
+
+  background:var(--accent);box-shadow:0 0 12px rgba(0,229,255,0.5);cursor:pointer;
+
+}
+
+
+
+.odds-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:8px;}
+
+.odds-cell{background:rgba(0,229,255,0.04);border:1px solid rgba(0,229,255,0.08);
+
+  border-radius:8px;padding:8px;text-align:center;}
+
+.odds-cell .ov{font-size:14px;font-weight:700;font-family:var(--mono);color:var(--accent);}
+
+.odds-cell .ol{font-size:8px;color:#334;letter-spacing:1px;margin-top:2px;}
+
+
+
+/* BET CONTROLS */
+
+.bet-row{display:flex;gap:8px;margin-bottom:10px;}
+
+.bet-inp{flex:1;background:rgba(0,0,0,0.5);border:1px solid rgba(0,229,255,0.1);
+
+  border-radius:8px;padding:12px 14px;color:#c8d8e8;font-family:var(--font);
+
+  font-size:13px;font-weight:700;outline:none;text-align:center;}
+
+.bet-inp:focus{border-color:rgba(0,229,255,0.3);}
+
+.adj{padding:12px 14px;background:rgba(0,229,255,0.06);border:1px solid rgba(0,229,255,0.1);
+
+  border-radius:8px;color:#446;font-family:var(--font);font-size:12px;cursor:pointer;transition:all .15s;}
+
+.adj:hover{border-color:var(--accent);color:var(--accent);}
+
+.qrow{display:flex;gap:6px;margin-bottom:14px;}
+
+.qb{flex:1;padding:8px 4px;background:rgba(0,229,255,0.04);border:1px solid rgba(0,229,255,0.08);
+
+  border-radius:8px;color:#446;font-size:9px;letter-spacing:1px;cursor:pointer;text-align:center;transition:all .15s;}
+
+.qb:hover{border-color:var(--accent);color:var(--accent);}
+
+
+
+/* ROLL BUTTON */
+
+.btn-roll{
+
+  width:100%;padding:17px;border:none;border-radius:12px;
+
+  font-family:var(--font);font-size:13px;font-weight:900;letter-spacing:3px;
+
+  cursor:pointer;transition:all .2s;
+
+  background:linear-gradient(135deg,#005566,var(--accent));
+
+  color:#060a0f;box-shadow:0 4px 24px rgba(0,229,255,0.3);
+
+}
+
+.btn-roll:not(:disabled):hover{transform:translateY(-2px);box-shadow:0 6px 36px rgba(0,229,255,0.5);}
+
+.btn-roll:disabled{opacity:.4;cursor:not-allowed;transform:none!important;}
+
+
+
+/* STATS */
+
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:16px;}
+
+.stt{background:rgba(0,229,255,0.03);border:1px solid rgba(0,229,255,0.06);
+
+  border-radius:10px;padding:8px;text-align:center;}
+
+.stt .sv{font-size:13px;font-weight:700;color:var(--accent);font-family:var(--mono);}
+
+.stt .sl{font-size:8px;color:#334;letter-spacing:1px;margin-top:2px;}
+
+
+
+/* FLASH */
+
+#flash{position:fixed;inset:0;pointer-events:none;opacity:0;z-index:200;}
+
+#flash.g{background:radial-gradient(ellipse at 50% 30%,rgba(34,197,94,0.2),transparent 70%);}
+
+#flash.r{background:radial-gradient(ellipse at 50% 30%,rgba(239,68,68,0.2),transparent 70%);}
+
+#flash.show{animation:fl .4s ease;}
+
+@keyframes fl{0%,100%{opacity:0;}30%{opacity:1;}}
+
+</style>
+
+    <script src="/static/sound.js"></script>
+
+
+    <script src="/static/balance-animation.js"></script>
+
+
+    <script src="/static/big-win.js"></script>
+
+
+    <script src="/static/page-transitions.js"></script>
+
+
+    <script src="/static/autoplay.js"></script>
+
+
+<link rel="stylesheet" href="/static/games-shared.css"><script src="/static/js/csrf.js"></script>
+
+
+</head>
+
+<body>
+
+<div id="flash"></div>
+
+<!-- Number texture -->
+
+<div class="num-bg" id="numBg"></div>
+
+
+
+<header class="hdr">
+
+  <a class="back" href="/games"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>GAMES</a>
+
+  <span class="title">🎲  DICE</span>
+
+  <span class="bal" id="balDisplay">$—</span>
+
+</header>
+
+
+
+<div class="page">
+
+  <!-- ROLL DISPLAY -->
+
+  <div class="roll-arena">
+
+    <div class="roll-num" id="rollNum">—</div>
+
+    <div class="roll-verdict" id="rollVerdict"></div>
+
+    <div class="roll-meta" id="rollMeta">SET YOUR TARGET AND ROLL</div>
+
+    <div class="prob-bar"><div class="prob-fill" id="probFill" style="width:50%"></div></div>
+
+    <div class="prob-labels"><span id="probL">LOSE 50%</span><span id="probR">WIN 50%</span></div>
+
+  </div>
+
+
+
+  <!-- OVER / UNDER -->
+
+  <div class="type-row">
+
+    <div class="type-btn over active" id="btnOver" onclick="setType('over')">
+
+      <div class="tb-icon">📈</div>
+
+      <div class="tb-name">ROLL OVER</div>
+
+    </div>
+
+    <div class="type-btn under" id="btnUnder" onclick="setType('under')">
+
+      <div class="tb-icon">📈</div>
+
+      <div class="tb-name">ROLL UNDER</div>
+
+    </div>
+
+  </div>
+
+
+
+  <!-- SLIDER -->
+
+  <div class="slider-section">
+
+    <div class="slider-header">
+
+      <span class="slider-label">TARGET NUMBER</span>
+
+      <span class="slider-target" id="targetDisplay">50</span>
+
+    </div>
+
+    <input type="range" id="targetSlider" min="2" max="98" value="50" oninput="onSlider()">
+
+    <div class="odds-grid">
+
+      <div class="odds-cell"><div class="ov" id="oddsChance">50%</div><div class="ol">WIN CHANCE</div></div>
+
+      <div class="odds-cell"><div class="ov" id="oddsMult">1.92×</div><div class="ol">MULTIPLIER</div></div>
+
+      <div class="odds-cell"><div class="ov" id="oddsPayout">$960</div><div class="ol">POTENTIAL WIN</div></div>
+
+    </div>
+
+  </div>
+
+
+
+  <!-- BET -->
+
+  <div class="bet-row">
+
+    <button class="adj" onclick="halveBet()">½</button>
+
+    <input class="bet-inp" id="betInp" type="number" value="500" min="50" step="50">
+
+    <button class="adj" onclick="doubleBet()">2×</button>
+
+  </div>
+
+  <div class="qrow">
+
+    <div class="qb" onclick="qb(100)">$100</div>
+
+    <div class="qb" onclick="qb(500)">$500</div>
+
+    <div class="qb" onclick="qb(1000)">$1K</div>
+
+    <div class="qb" onclick="qb(5000)">$5K</div>
+
+    <div class="qb" onclick="qb(10000)">$10K</div>
+
+  </div>
+
+
+
+  <button class="btn-roll" id="rollBtn" onclick="roll()">🎲  ROLL THE DICE</button>
+
+
+
+  <div style="display:flex;gap:6px;margin-top:10px;align-items:center;">
+
+
+    <span style="font-size:8px;color:#334;letter-spacing:1px;flex-shrink:0;">AUTO</span>
+
+
+    <div class="qb" id="da5" onclick="diceSetAuto(5)">5×</div>
+
+
+    <div class="qb" id="da10" onclick="diceSetAuto(10)">10×</div>
+
+
+    <div class="qb" id="da25" onclick="diceSetAuto(25)">25×</div>
+
+
+    <button id="diceAutoBtn" onclick="diceToggleAuto()" style="flex:2;padding:8px 4px;background:rgba(0,229,255,0.04);border:1px solid rgba(0,229,255,0.1);border-radius:8px;color:#446;font-family:var(--font);font-size:8px;font-weight:700;letter-spacing:1px;cursor:pointer;">🔁 AUTO ROLL</button>
+
+
+    <button id="diceAutoAdv" onclick="diceToggleAdv()" style="padding:8px 6px;background:rgba(255,215,0,0.04);border:1px solid rgba(255,215,0,0.1);border-radius:8px;color:#446;font-family:var(--font);font-size:7px;cursor:pointer;">⚙️</button>
+
+
+  </div>
+
+
+  <div id="diceAutoPanel"></div>
+
+
+
+  <div class="stats">
+
+    <div class="stt"><div class="sv" id="stW">0</div><div class="sl">WINS</div></div>
+
+    <div class="stt"><div class="sv" id="stL">0</div><div class="sl">LOSSES</div></div>
+
+    <div class="stt"><div class="sv" id="stBest">$0</div><div class="sl">BEST WIN</div></div>
+
+  </div>
+
+</div>
+
+
+
+<script>
+
+let betType='over', target=50, balance=0, wins=0, losses=0, bestWin=0, rolling=false;
+
+let diceAutoCount=0,diceAutoRunning=false;
+
+
+
+// Number texture
+
+(function spawnNums(){
+
+  const bg=document.getElementById('numBg');
+
+  for(let i=0;i<40;i++){
+
+    const s=document.createElement('span');
+
+    s.textContent=Math.floor(Math.random()*100);
+
+    s.style.left=Math.random()*100+'%';
+
+    s.style.animationDuration=(8+Math.random()*12)+'s';
+
+    s.style.animationDelay=(Math.random()*10)+'s';
+
+    bg.appendChild(s);
+
+  }
+
+})();
+
+
+
+async function init(){
+
+  try{const d=await api('/api/user/me');balance=d.balance;updateBal();}catch(e){}
+
+  onSlider();
+
+}
+
+
+
+function updateBal(){var e=document.getElementById('balDisplay'),c=e.textContent||'',n='$'+balance.toLocaleString(undefined,{maximumFractionDigits:0});if(c&&c!=='$—'&&c!==n){var p=parseFloat(c.replace(/[,$]/g,''));if(!isNaN(p)&&p!==balance){animateBalance(e,'$'+p.toLocaleString(undefined,{maximumFractionDigits:0}),n,balance>=p);return}}e.textContent=n}
+
+
+
+function setType(t){
+
+
+  Sound.click();betType=t;
+
+  document.getElementById('btnOver').classList.toggle('active',t==='over');
+
+  document.getElementById('btnUnder').classList.toggle('active',t==='under');
+
+  onSlider();
+
+}
+
+
+
+function onSlider(){
+
+  target=parseInt(document.getElementById('targetSlider').value);
+
+  document.getElementById('targetDisplay').textContent=target;
+
+  const bet=parseInt(document.getElementById('betInp').value)||500;
+
+
+
+  let winChance, mult;
+
+  if(betType==='over'){
+
+    winChance=(100-target)/100;
+
+    mult=winChance>0?((1/winChance)*0.96):0;
+
+  } else {
+
+    winChance=(target-1)/100;
+
+    mult=winChance>0?((1/winChance)*0.96):0;
+
+  }
+
+  const pct=Math.round(winChance*100);
+
+  document.getElementById('oddsChance').textContent=pct+'%';
+
+  document.getElementById('oddsMult').textContent=mult.toFixed(2)+'×';
+
+  document.getElementById('oddsPayout').textContent='$'+(bet*mult).toLocaleString(undefined,{maximumFractionDigits:0});
+
+  document.getElementById('probFill').style.width=pct+'%';
+
+  document.getElementById('probL').textContent='LOSE '+(100-pct)+'%';
+
+  document.getElementById('probR').textContent='WIN '+pct+'%';
+
+}
+
+
+
+document.getElementById('betInp').addEventListener('input',onSlider);
+
+
+
+function qb(v){Sound.click();document.getElementById('betInp').value=v;onSlider();}
+
+
+function halveBet(){Sound.click();document.getElementById('betInp').value=Math.max(50,Math.floor(parseInt(document.getElementById('betInp').value||500)/2));onSlider();}
+
+
+function doubleBet(){Sound.click();document.getElementById('betInp').value=Math.min(balance,parseInt(document.getElementById('betInp').value||500)*2);onSlider();}
+
+
+
+async function roll(){
+
+
+  Sound.click();if(rolling) return;
+
+
+  const bet=parseInt(document.getElementById('betInp').value)||500;
+
+  if(bet>balance){document.getElementById('rollMeta').textContent='❌ INSUFFICIENT BALANCE';Sound.error();return;}
+
+  rolling=true;
+
+  document.getElementById('rollBtn').disabled=true;
+
+
+
+  // Animate rolling number
+
+  const numEl=document.getElementById('rollNum');
+
+  numEl.className='roll-num rolling';
+
+  document.getElementById('rollVerdict').textContent='';
+
+  document.getElementById('rollMeta').textContent='ROLLING…';
+
+
+  Sound.dice();let animInterval=setInterval(()=>{numEl.textContent=Math.floor(Math.random()*100)+1;},60);
+
+
+
+  try{
+
+    const d=await api('/api/games/easy/dice/roll',{method:'POST',
+
+      body:JSON.stringify({amount:bet,bet_type:betType,target})});
+
+
+
+    await delay(600);
+
+    clearInterval(animInterval);
+
+    numEl.textContent=d.roll;
+
+    balance=await refreshBal();
+
+    updateBal();
+
+
+
+    const won=d.user_wins;
+
+    numEl.className='roll-num '+(won?'win':'lose');
+
+    document.getElementById('rollVerdict').className='roll-verdict '+(won?'win':'lose');
+
+    document.getElementById('rollVerdict').textContent=won?'✅ YOU WIN':'❌ YOU LOSE';
+
+    document.getElementById('rollMeta').textContent=
+
+      (betType==='over'?`OVER ${target}`:`UNDER ${target}`) +
+
+      ` · ${d.mult.toFixed(2)}× · ${won?'+$'+d.win.toLocaleString(undefined,{maximumFractionDigits:0}):'-$'+bet.toLocaleString()}`;
+
+
+
+    if(won){Sound.win();wins++;if(d.win>bestWin){bestWin=d.win;document.getElementById('stBest').textContent='$'+bestWin.toLocaleString(undefined,{maximumFractionDigits:0});} flash('g');if(window.maybeBigWin)await maybeBigWin(bet,d.win);}
+
+
+    else{Sound.loss();losses++;flash('r');}
+
+    document.getElementById('stW').textContent=wins;
+
+    document.getElementById('stL').textContent=losses;
+
+  }catch(e){
+
+    clearInterval(animInterval);
+
+    numEl.textContent='!';
+
+    document.getElementById('rollMeta').textContent='ERROR: '+e.message;
+
+  }finally{
+
+    rolling=false;
+
+    document.getElementById('rollBtn').disabled=false;
+
+  }
+
+}
+
+
+
+function diceSetAuto(n){
+
+  diceAutoCount=n;
+
+  ['5','10','25'].forEach(v=>{
+
+    const el=document.getElementById('da'+v);
+
+    el.style.borderColor='';el.style.color='';
+
+  });
+
+  const sel=document.getElementById('da'+n);
+
+  if(sel){sel.style.borderColor='var(--accent)';sel.style.color='var(--accent)';}
+
+}
+
+
+
+async function diceToggleAuto(){
+
+  if(diceAutoRunning){
+
+    diceAutoRunning=false;
+
+    document.getElementById('diceAutoBtn').textContent='🔁 AUTO ROLL';
+
+    return;
+
+  }
+
+  if(!diceAutoCount) diceSetAuto(5);
+
+  diceAutoRunning=true;
+
+  document.getElementById('diceAutoBtn').textContent='⏹️ STOP';
+
+  let rem=diceAutoCount;
+
+  while(rem>0&&diceAutoRunning){
+
+    const bet=parseInt(document.getElementById('betInp').value)||500;
+
+    if(bet>balance) break;
+
+    await roll();
+
+    rem--;
+
+  }
+
+  diceAutoRunning=false;
+
+  document.getElementById('diceAutoBtn').textContent='🔁 AUTO ROLL';
+
+}
+
+
+
+// Advanced autoplay with stop conditions
+
+
+let diceAP=null;
+
+
+function diceToggleAdv(){
+
+
+  if(!diceAP){
+
+
+    diceAP=new AutoPlay({
+
+
+      onRound: async()=>{
+
+
+        const el=document.getElementById('rollNum');
+
+
+        el.className='roll-num rolling';
+
+
+        document.getElementById('rollVerdict').textContent='';
+
+
+        document.getElementById('rollMeta').textContent='AUTO ROLLING…';
+
+
+        Sound.dice();
+
+
+        let animInterval=setInterval(()=>{el.textContent=Math.floor(Math.random()*100)+1;},60);
+
+
+        try{
+
+
+          const bet=parseInt(document.getElementById('betInp').value)||500;
+
+
+          const d=await api('/api/games/easy/dice/roll',{method:'POST',
+
+
+            body:JSON.stringify({amount:bet,bet_type:betType,target})});
+
+
+          await delay(600);
+
+
+          clearInterval(animInterval);
+
+
+          el.textContent=d.roll;
+
+
+          const won=d.user_wins;
+
+
+          el.className='roll-num '+(won?'win':'lose');
+
+
+          document.getElementById('rollVerdict').className='roll-verdict '+(won?'win':'lose');
+
+
+          document.getElementById('rollVerdict').textContent=won?'✅ WIN':'❌ LOSE';
+
+
+          if(won){Sound.win();wins++;if(d.win>bestWin){bestWin=d.win;document.getElementById('stBest').textContent='$'+bestWin.toLocaleString();}flash('g');if(window.maybeBigWin)await maybeBigWin(bet,d.win);}
+
+
+          else{Sound.loss();losses++;flash('r');}
+
+
+          document.getElementById('stW').textContent=wins;
+
+
+          document.getElementById('stL').textContent=losses;
+
+
+          balance=d.balance;updateBal();
+
+
+          return {win:won, multiplier:d.mult, winAmount:d.win};
+
+
+        }catch(e){
+
+
+          clearInterval(animInterval);
+
+
+          el.textContent='!';
+
+
+          return null;
+
+
+        }
+
+
+      },
+
+
+      onStop: (reason)=>{
+
+
+        document.getElementById('diceAutoBtn').textContent='🔁 AUTO ROLL';
+
+
+        diceAutoRunning=false;
+
+
+      },
+
+
+      roundDelay: 800,
+
+
+    });
+
+
+    diceAP.setBalance(balance);
+
+
+  }
+
+
+  const panel=document.getElementById('diceAutoPanel');
+
+
+  if(panel.querySelector('.autoplay-panel')){
+
+
+    panel.innerHTML='';
+
+
+    return;
+
+
+  }
+
+
+  diceAP.bindUI(panel,{defaultRounds:10,getBalance:()=>balance});
+
+
+}
+
+
+
+
+
+function flash(c){
+
+
+  const el=document.getElementById('flash');
+
+
+  el.className=c;void el.offsetWidth;el.classList.add('show');
+
+
+}
+
+async function refreshBal(){try{const d=await api('/api/user/me');return d.balance;}catch(e){return balance;}}
+
+async function api(url,opts={}){
+
+  const r=await fetch(url,{credentials:'include',headers:{'Content-Type':'application/json'},...opts});
+
+  if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.detail||'Error');}
+
+  return r.json();
+
+}
+
+function delay(ms){return new Promise(r=>setTimeout(r,ms));}
+
+init();
+
+</script>
+
+<script>if("serviceWorker"in navigator){navigator.serviceWorker.register("/static/sw.js").catch(function(){})}</script>
+
+
+<script src="/static/chat.js"></script>
+
+
+</body>
+
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

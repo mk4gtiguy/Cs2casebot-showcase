@@ -1,0 +1,919 @@
+﻿<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+
+<title>🎰  Slots — CS2CaseBot</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+
+<style>
+
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+
+:root{
+
+  --bg:#0a0008;--amber:#ffb800;--cherry:#e8003d;--surface:rgba(20,8,18,0.97);
+
+  --text:#f0e8f0;--muted:#5a4a58;--font:'Orbitron',monospace;
+
+}
+
+html,body{min-height:100vh;background:var(--bg);color:var(--text);font-family:var(--font);overflow-x:hidden;}
+
+body{background-image:radial-gradient(ellipse 100% 60% at 50% 0%,rgba(255,184,0,0.08) 0%,transparent 70%),
+
+  radial-gradient(ellipse 60% 40% at 20% 100%,rgba(232,0,61,0.06) 0%,transparent 60%);}
+
+
+
+/* HEADER */
+
+.hdr{display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(10,0,8,0.97);
+
+  border-bottom:1px solid rgba(255,184,0,0.15);position:sticky;top:0;z-index:50;}
+
+.back{display:flex;align-items:center;gap:5px;color:var(--muted);font-size:10px;letter-spacing:1px;
+
+  text-decoration:none;transition:color .2s;}
+
+.back:hover{color:var(--amber);}
+
+.back svg{width:14px;height:14px;}
+
+.title{flex:1;font-size:14px;font-weight:900;letter-spacing:3px;
+
+  background:linear-gradient(90deg,var(--amber),var(--cherry));
+
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+
+.bal{font-size:13px;font-weight:700;color:var(--amber);font-family:monospace;}
+
+
+
+/* CABINET */
+
+.cabinet{max-width:400px;margin:24px auto;padding:0 16px 80px;}
+
+
+
+/* Neon border cabinet frame */
+
+.reel-cabinet{
+
+  background:rgba(8,0,6,0.98);
+
+  border:2px solid rgba(255,184,0,0.3);
+
+  border-radius:20px;
+
+  padding:20px 16px;
+
+  box-shadow:0 0 40px rgba(255,184,0,0.08),inset 0 0 60px rgba(0,0,0,0.5);
+
+  position:relative;
+
+  margin-bottom:20px;
+
+}
+
+/* neon strip top */
+
+.reel-cabinet::before{
+
+  content:'';position:absolute;top:-1px;left:20%;right:20%;height:2px;
+
+  background:linear-gradient(90deg,transparent,var(--amber),transparent);
+
+  border-radius:2px;
+
+  box-shadow:0 0 12px var(--amber);
+
+}
+
+
+
+/* REELS */
+
+.reels-row{display:flex;gap:8px;margin-bottom:16px;}
+
+.reel-window{
+
+  flex:1;height:100px;overflow:hidden;
+
+  background:rgba(0,0,0,0.6);
+
+  border:1px solid rgba(255,184,0,0.2);
+
+  border-radius:12px;
+
+  position:relative;
+
+}
+
+/* center highlight line */
+
+.reel-window::after{
+
+  content:'';position:absolute;top:50%;left:0;right:0;
+
+  height:2px;background:rgba(255,184,0,0.4);
+
+  transform:translateY(-50%);pointer-events:none;z-index:2;
+
+}
+
+.reel-strip{
+
+  display:flex;flex-direction:column;align-items:center;
+
+  gap:0;
+
+  will-change:transform;
+
+}
+
+.reel-cell{
+
+  height:100px;width:100%;
+
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+
+  font-size:40px;line-height:1;flex-shrink:0;
+
+}
+
+.reel-cell span{font-size:10px;color:var(--muted);letter-spacing:1px;margin-top:4px;}
+
+
+
+/* WIN OVERLAY on reel */
+
+.reel-window.win-glow{box-shadow:0 0 24px var(--amber);border-color:var(--amber);}
+
+
+
+/* COMBO RESULT */
+
+.combo-result{
+
+  text-align:center;min-height:36px;margin-bottom:16px;
+
+}
+
+.combo-text{
+
+  font-size:13px;font-weight:900;letter-spacing:2px;
+
+  animation:combo-pop .4s cubic-bezier(.34,1.56,.64,1) both;
+
+}
+
+@keyframes combo-pop{0%{opacity:0;transform:scale(0.5);}100%{opacity:1;transform:scale(1);}}
+
+.combo-text.win{color:var(--amber);}
+
+.combo-text.big{color:var(--cherry);font-size:18px;text-shadow:0 0 20px currentColor;}
+
+.combo-text.loss{color:var(--muted);}
+
+
+
+/* WIN FLASH */
+
+#winFlash{position:fixed;inset:0;pointer-events:none;opacity:0;z-index:100;
+
+  background:radial-gradient(ellipse at 50% 50%,rgba(255,184,0,0.25),transparent 70%);}
+
+#winFlash.flash{animation:flash-anim .5s ease;}
+
+@keyframes flash-anim{0%,100%{opacity:0;}30%{opacity:1;}}
+
+
+
+/* JACKPOT OVERLAY */
+
+#jackpotOv{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.88);
+
+  display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px;}
+
+#jackpotOv.show{display:flex;}
+
+.jp-title{font-size:clamp(28px,8vw,56px);font-weight:900;letter-spacing:6px;
+
+  background:linear-gradient(135deg,var(--amber),var(--cherry),var(--amber));
+
+  background-size:200%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;
+
+  animation:shimmer 2s linear infinite;}
+
+@keyframes shimmer{0%{background-position:0%}100%{background-position:200%}}
+
+.jp-prize{font-size:clamp(22px,6vw,42px);font-weight:900;color:#fff;font-family:monospace;}
+
+.jp-close{padding:12px 32px;background:var(--amber);color:#0a0008;
+
+  border:none;border-radius:24px;font-family:var(--font);font-size:11px;
+
+  font-weight:700;letter-spacing:2px;cursor:pointer;margin-top:8px;}
+
+
+
+/* STATS ROW */
+
+.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:16px;}
+
+.stat{background:rgba(255,184,0,0.05);border:1px solid rgba(255,184,0,0.1);
+
+  border-radius:10px;padding:8px;text-align:center;}
+
+.stat .sv{font-size:14px;font-weight:700;color:var(--amber);font-family:monospace;}
+
+.stat .sl{font-size:8px;color:var(--muted);letter-spacing:1px;margin-top:2px;}
+
+
+
+/* BET CONTROLS */
+
+.bet-section{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);
+
+  border-radius:14px;padding:14px;}
+
+.bet-label{font-size:9px;color:var(--muted);letter-spacing:2px;margin-bottom:8px;}
+
+.bet-display{font-size:22px;font-weight:900;color:var(--amber);font-family:monospace;
+
+  text-align:center;margin-bottom:10px;}
+
+.quick-bets{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
+
+.qb{flex:1;min-width:60px;padding:7px 4px;background:rgba(255,184,0,0.07);
+
+  border:1px solid rgba(255,184,0,0.15);border-radius:8px;
+
+  color:var(--amber);font-family:var(--font);font-size:9px;
+
+  letter-spacing:1px;cursor:pointer;text-align:center;transition:all .15s;}
+
+.qb:hover{background:rgba(255,184,0,0.15);border-color:var(--amber);}
+
+.qb.active{background:rgba(255,184,0,0.2);border-color:var(--amber);}
+
+
+
+/* SPIN BUTTON */
+
+.btn-spin{
+
+  width:100%;margin-top:14px;padding:16px;
+
+  background:linear-gradient(135deg,#c98000,var(--amber));
+
+  border:none;border-radius:12px;
+
+  font-family:var(--font);font-size:14px;font-weight:900;letter-spacing:3px;
+
+  color:#0a0008;cursor:pointer;
+
+  box-shadow:0 4px 20px rgba(255,184,0,0.35);
+
+  transition:all .2s;position:relative;overflow:hidden;
+
+}
+
+.btn-spin::after{content:'';position:absolute;inset:0;
+
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,0.15),transparent);
+
+  transform:translateX(-100%);transition:transform .5s;}
+
+.btn-spin:not(:disabled):hover{transform:translateY(-2px);box-shadow:0 6px 32px rgba(255,184,0,0.55);}
+
+.btn-spin:not(:disabled):hover::after{transform:translateX(100%);}
+
+.btn-spin:disabled{opacity:.4;cursor:not-allowed;transform:none!important;}
+
+
+
+/* PAYTABLE */
+
+.paytable{margin-top:20px;background:rgba(255,255,255,0.02);
+
+  border:1px solid rgba(255,255,255,0.05);border-radius:14px;padding:14px;}
+
+.pt-title{font-size:9px;letter-spacing:2px;color:var(--muted);margin-bottom:10px;}
+
+.pt-row{display:flex;justify-content:space-between;align-items:center;
+
+  padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.04);}
+
+.pt-row:last-child{border-bottom:none;}
+
+.pt-combo{font-size:16px;}
+
+.pt-name{font-size:9px;color:var(--muted);flex:1;margin-left:8px;}
+
+.pt-mult{font-size:11px;font-weight:700;color:var(--amber);font-family:monospace;}
+
+
+
+/* SESSION LOG */
+
+.session-log{max-height:80px;overflow-y:auto;margin-top:10px;}
+
+.session-log::-webkit-scrollbar{width:3px;}
+
+.session-log::-webkit-scrollbar-thumb{background:rgba(255,184,0,0.2);}
+
+.log-item{font-size:9px;color:var(--muted);padding:2px 0;display:flex;justify-content:space-between;}
+
+.log-item.win{color:var(--amber);}
+
+</style>
+
+    <script src="/static/sound.js"></script>
+
+    <script src="/static/big-win.js"></script>
+
+
+    <script src="/static/balance-animation.js"></script>
+
+
+    <script src="/static/page-transitions.js"></script>
+
+
+    <script src="/static/autoplay.js"></script>
+
+
+<link rel="stylesheet" href="/static/games-shared.css"><script src="/static/js/csrf.js"></script>
+
+
+</head>
+
+<body>
+
+<div id="winFlash"></div>
+
+<div id="jackpotOv">
+
+  <div style="font-size:52px;animation:combo-pop .5s both;">🎰</div>
+
+  <div class="jp-title">JACKPOT!</div>
+
+  <div class="jp-prize" id="jpPrize">$0</div>
+
+  <button class="jp-close" onclick="closeJP()">COLLECT</button>
+
+</div>
+
+
+
+<header class="hdr">
+
+  <a class="back" href="/games"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>GAMES</a>
+
+  <span class="title">🎰  CLASSIC SLOTS</span>
+
+  <span class="bal" id="balDisplay">$—</span>
+
+</header>
+
+
+
+<div class="cabinet">
+
+  <div class="reel-cabinet">
+
+    <div class="reels-row">
+
+      <div class="reel-window" id="rw0"><div class="reel-strip" id="rs0"></div></div>
+
+      <div class="reel-window" id="rw1"><div class="reel-strip" id="rs1"></div></div>
+
+      <div class="reel-window" id="rw2"><div class="reel-strip" id="rs2"></div></div>
+
+    </div>
+
+    <div class="combo-result"><div class="combo-text" id="comboText">PLACE YOUR BET</div></div>
+
+
+
+    <div class="stats-row">
+
+      <div class="stat"><div class="sv" id="sWins">0</div><div class="sl">WINS</div></div>
+
+      <div class="stat"><div class="sv" id="sSpins">0</div><div class="sl">SPINS</div></div>
+
+      <div class="stat"><div class="sv" id="sBest">$0</div><div class="sl">BEST WIN</div></div>
+
+      <div class="stat"><div class="sv" id="sStreak">0</div><div class="sl">STREAK</div></div>
+
+    </div>
+
+
+
+    <div class="bet-section">
+
+      <div class="bet-label">BET AMOUNT</div>
+
+      <div class="bet-display" id="betDisplay">$500</div>
+
+      <div class="quick-bets">
+
+        <div class="qb" onclick="setBet(100)">$100</div>
+
+        <div class="qb active" onclick="setBet(500)">$500</div>
+
+        <div class="qb" onclick="setBet(1000)">$1K</div>
+
+        <div class="qb" onclick="setBet(5000)">$5K</div>
+
+        <div class="qb" onclick="setBet(10000)">$10K</div>
+
+        <div class="qb" onclick="setMaxBet()">MAX</div>
+
+      </div>
+
+      <div style="display:flex;gap:8px;">
+
+        <button class="qb" style="flex:1" onclick="halveBet()">½</button>
+
+        <button class="qb" style="flex:1" onclick="doubleBet()">2×</button>
+
+      </div>
+
+      <button class="btn-spin" id="spinBtn" onclick="spin()">🎰  SPIN</button>
+
+      <button class="qb" style="width:100%;margin-top:8px;" onclick="toggleAutoPanel()">⚙️ AUTOPLAY</button>
+
+      <div id="slotsAutoPanel"></div>
+
+    </div>
+
+
+
+    <div class="session-log" id="sessionLog"></div>
+
+  </div>
+
+
+
+  <div class="paytable">
+
+    <div class="pt-title">PAYTABLE</div>
+
+    <div class="pt-row"><span class="pt-combo">🎰🎰🎰</span><span class="pt-name">Jackpot</span><span class="pt-mult">200×</span></div>
+
+    <div class="pt-row"><span class="pt-combo">7️⃣7️⃣7️⃣</span><span class="pt-name">Lucky Sevens</span><span class="pt-mult">60×</span></div>
+
+    <div class="pt-row"><span class="pt-combo">💎💎💎</span><span class="pt-name">Diamonds</span><span class="pt-mult">30×</span></div>
+
+    <div class="pt-row"><span class="pt-combo">🍇🍇🍇</span><span class="pt-name">Grapes</span><span class="pt-mult">12×</span></div>
+
+    <div class="pt-row"><span class="pt-combo">🍊🍊🍊</span><span class="pt-name">Oranges</span><span class="pt-mult">8×</span></div>
+
+    <div class="pt-row"><span class="pt-combo">🍋🍋🍋</span><span class="pt-name">Lemons</span><span class="pt-mult">5×</span></div>
+
+    <div class="pt-row"><span class="pt-combo">🍒🍒🍒</span><span class="pt-name">Cherries</span><span class="pt-mult">3×</span></div>
+
+    <div class="pt-row"><span class="pt-combo">🍒🍒</span><span class="pt-name">2 Cherries</span><span class="pt-mult">1.5×</span></div>
+
+  </div>
+
+</div>
+
+
+
+<script>
+
+const SYMBOLS = ['🍒','🍋','🍊','🍇','💎','7️⃣','🎰'];
+
+const NAMES   = ['Cherry','Lemon','Orange','Grape','Diamond','Seven','Jackpot'];
+
+let bet=500, balance=0, wins=0, spins=0, bestWin=0, spinning=false, streak=0;
+
+
+
+async function init(){
+
+  try{const d=await api('/api/user/me');balance=d.balance;updateBal();}catch(e){}
+
+  SYMBOLS.forEach((_,i)=>buildReel(i));
+
+}
+
+
+
+function buildReel(i){
+
+  const strip=document.getElementById('rs'+i);
+
+  // Build a long strip for animation
+
+  const pool=[];
+
+  for(let j=0;j<30;j++) pool.push(SYMBOLS[Math.floor(Math.random()*SYMBOLS.length)]);
+
+  strip.innerHTML='';
+
+  pool.forEach(s=>{
+
+    const c=document.createElement('div');
+
+    c.className='reel-cell';
+
+    c.innerHTML=s;
+
+    strip.appendChild(c);
+
+  });
+
+  // Start at middle
+
+  strip.style.transform=`translateY(-${15*100}px)`;
+
+}
+
+
+
+function updateBal(){
+
+
+  var e=document.getElementById('balDisplay'),c=e.textContent||'',n='$'+balance.toLocaleString(undefined,{maximumFractionDigits:0});
+
+
+  if(c&&c!=='$—'&&c!==n){var p=parseFloat(c.replace(/[,$]/g,''));if(!isNaN(p)&&p!==balance){animateBalance(e,'$'+p.toLocaleString(undefined,{maximumFractionDigits:0}),n,balance>=p);return}}
+
+
+  e.textContent=n
+
+
+}
+
+
+
+function setBet(v){
+
+
+  Sound.click();
+
+
+  bet=v;
+
+  document.getElementById('betDisplay').textContent='$'+bet.toLocaleString();
+
+  document.querySelectorAll('.qb').forEach(b=>b.classList.remove('active'));
+
+}
+
+function halveBet(){setBet(Math.max(100,Math.floor(bet/2/100)*100));}
+
+function doubleBet(){setBet(Math.min(balance,bet*2));}
+
+function setMaxBet(){setBet(Math.min(balance,750000));}
+
+
+
+async function spin(){
+
+
+  if(spinning||bet<=0) return {win:false,multiplier:0,winAmount:0};
+
+
+  if(bet>balance){showCombo('❌ INSUFFICIENT BALANCE','loss');return {win:false,multiplier:0,winAmount:0};}
+
+  spinning=true;
+  let roundResult={win:false,multiplier:0,winAmount:0};
+
+
+  Sound.spin();
+
+
+  document.getElementById('spinBtn').disabled=true;
+
+
+  document.getElementById('comboText').className='combo-text loss';
+
+
+  document.getElementById('comboText').textContent='SPINNING…';
+
+
+
+  // Start visual spin
+
+  startSpinAnim();
+
+
+
+  try{
+
+    const d=await api('/api/games/easy/slots/spin',{method:'POST',body:JSON.stringify({amount:bet})});
+
+    balance=await refreshBal();
+
+    spins++;
+
+    document.getElementById('sSpins').textContent=spins;
+
+
+
+    // Wait for reel to finish then land
+
+    await delay(1400);
+
+    landReels(d.symbols, d.win, d.combo, d.mult);
+
+    await delay(300);
+
+    await resolveResult(d.win, d.combo, d.mult);
+
+    roundResult={win:d.win>0, multiplier:d.mult||0, winAmount:d.win||0};
+
+  }catch(e){
+
+    showCombo('ERROR: '+e.message,'loss');
+
+  }finally{
+
+    spinning=false;
+
+    document.getElementById('spinBtn').disabled=false;
+
+    updateBal();
+
+    if(slotsAP)slotsAP.setBalance(balance);
+
+  }
+
+  return roundResult;
+
+}
+
+
+
+function startSpinAnim(){
+
+  [0,1,2].forEach(i=>{
+
+    const strip=document.getElementById('rs'+i);
+
+    const startY=15*100;
+
+    const endY=startY+2000+i*200;
+
+    strip.style.transition='none';
+
+    strip.style.transform=`translateY(-${startY}px)`;
+
+    setTimeout(()=>{
+
+      strip.style.transition=`transform ${1.2+i*0.15}s cubic-bezier(.25,.46,.45,.94)`;
+
+      strip.style.transform=`translateY(-${endY}px)`;
+
+    },30+i*40);
+
+  });
+
+}
+
+
+
+function landReels(symbols, win, combo, mult){
+
+  // Position each reel on the correct symbol
+
+  [0,1,2].forEach(i=>{
+
+    const strip=document.getElementById('rs'+i);
+
+    const symIdx=SYMBOLS.indexOf(symbols[i]);
+
+    if(symIdx<0) return;
+
+    // Rebuild strip ending on the correct symbol
+
+    const cells=[];
+
+    for(let j=0;j<20;j++) cells.push(SYMBOLS[Math.floor(Math.random()*SYMBOLS.length)]);
+
+    cells[15]=symbols[i]; // center cell is result
+
+    strip.innerHTML='';
+
+    cells.forEach(s=>{
+
+      const c=document.createElement('div');
+
+      c.className='reel-cell';
+
+      c.textContent=s;
+
+      strip.appendChild(c);
+
+    });
+
+    strip.style.transition='none';
+
+    strip.style.transform=`translateY(-${14*100}px)`; // shows index 14 = center
+
+    setTimeout(()=>{
+
+      strip.style.transition='transform .3s cubic-bezier(.34,1.56,.64,1)';
+
+      strip.style.transform=`translateY(-${(15)*100+0}px)`;
+
+    },20);
+
+    document.getElementById('rw'+i).classList.toggle('win-glow',win>0);
+
+  });
+
+
+
+  Sound.reelStop();
+
+}
+
+
+
+let _jpClaimResolve=null;
+
+async function resolveResult(win,combo,mult){
+
+  if(win>0 && mult>=200){
+
+    // Jackpot! Autoplay must pause here until the user clicks CLAIM --
+    // no auto-timeout, this is the game's own version of an item-won overlay.
+
+    Sound.jackpot();
+
+
+    wins++;streak++;document.getElementById('sWins').textContent=wins;document.getElementById('sStreak').textContent=streak;
+
+
+    if(win>bestWin){bestWin=win;document.getElementById('sBest').textContent='$'+bestWin.toLocaleString(undefined,{maximumFractionDigits:0});}
+
+
+    document.getElementById('jpPrize').textContent='$'+win.toLocaleString(undefined,{maximumFractionDigits:0});
+
+
+    document.getElementById('jackpotOv').classList.add('show');
+
+    await new Promise(resolve=>{_jpClaimResolve=resolve;});
+
+  } else if(win>0){
+
+
+    Sound.win();
+
+
+    showCombo(`${combo.toUpperCase()} · ${mult}× · +$${win.toLocaleString(undefined,{maximumFractionDigits:0})}`,
+
+      mult>=30?'big':'win');
+
+    flashWin();if(window.maybeBigWin)await maybeBigWin(bet,win);
+
+    wins++;streak++;
+
+    document.getElementById('sWins').textContent=wins;
+
+    document.getElementById('sStreak').textContent=streak;
+
+    if(win>bestWin){bestWin=win;document.getElementById('sBest').textContent='$'+bestWin.toLocaleString(undefined,{maximumFractionDigits:0});}
+
+  } else {
+
+
+    Sound.loss();
+
+
+    showCombo('NO MATCH','loss');
+
+    streak=0;document.getElementById('sStreak').textContent=0;
+
+  }
+
+  addLog(combo,win);
+
+}
+
+
+
+function showCombo(text,cls){
+
+  const el=document.getElementById('comboText');
+
+  el.className='combo-text '+cls;
+
+  el.textContent=text;
+
+}
+
+function flashWin(){
+
+  const el=document.getElementById('winFlash');
+
+  el.classList.remove('flash');void el.offsetWidth;el.classList.add('flash');
+
+}
+
+function closeJP(){document.getElementById('jackpotOv').classList.remove('show');flashWin();if(_jpClaimResolve){const r=_jpClaimResolve;_jpClaimResolve=null;r();}}
+
+
+
+function addLog(combo,win){
+
+  const log=document.getElementById('sessionLog');
+
+  const d=document.createElement('div');
+
+  d.className='log-item'+(win>0?' win':'');
+
+  const s1=document.createElement('span');s1.textContent=combo||'no match';
+
+  const s2=document.createElement('span');s2.textContent=win>0?'+$'+win.toLocaleString(undefined,{maximumFractionDigits:0}):'-$'+bet.toLocaleString();
+
+  d.appendChild(s1);d.appendChild(s2);
+
+  log.insertBefore(d,log.firstChild);
+
+  if(log.children.length>20) log.lastChild.remove();
+
+}
+
+
+
+let slotsAP=null;
+function toggleAutoPanel(){
+  if(!slotsAP){
+    slotsAP=new AutoPlay({
+      onRound: async()=>{ return await spin(); },
+      onStop: (reason)=>{},
+      roundDelay: 300,
+    });
+    slotsAP.setBalance(balance);
+  }
+  const panel=document.getElementById('slotsAutoPanel');
+  if(panel.querySelector('.autoplay-panel')){ panel.innerHTML=''; return; }
+  slotsAP.bindUI(panel,{defaultRounds:10,getBalance:()=>balance});
+}
+
+async function refreshBal(){
+
+  try{const d=await api('/api/user/me');return d.balance;}catch(e){return balance;}
+
+}
+
+async function api(url,opts={}){
+
+  const r=await fetch(url,{credentials:'include',headers:{'Content-Type':'application/json'},...opts});
+
+  if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.detail||'Error');}
+
+  return r.json();
+
+}
+
+function delay(ms){return new Promise(r=>setTimeout(r,ms));}
+
+init();
+
+</script>
+
+<script>if("serviceWorker"in navigator){navigator.serviceWorker.register("/static/sw.js").catch(function(){})}</script>
+
+
+<script src="/static/chat.js"></script>
+
+
+</body>
+
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

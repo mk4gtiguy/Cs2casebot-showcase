@@ -1,0 +1,751 @@
+﻿<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+
+<title>🎱 Keno — CS2CaseBot</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+
+<style>
+
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+
+:root{--bg:#050810;--purple:#7c3aed;--gold:#ffd700;--green:#22c55e;--font:'Orbitron',monospace;}
+
+html,body{min-height:100vh;background:var(--bg);font-family:var(--font);overflow-x:hidden;color:#c8c0e0;}
+
+body{background-image:radial-gradient(ellipse 100% 40% at 50% 0%,rgba(124,58,237,0.07) 0%,transparent 70%);}
+
+
+
+/* HEADER */
+
+.hdr{display:flex;align-items:center;gap:12px;padding:12px 16px;
+
+  background:rgba(5,8,16,0.97);border-bottom:1px solid rgba(124,58,237,0.15);
+
+  position:sticky;top:0;z-index:50;}
+
+.back{display:flex;align-items:center;gap:5px;color:#3a3050;font-size:10px;letter-spacing:1px;text-decoration:none;transition:color .2s;}
+
+.back:hover{color:var(--purple);}
+
+.back svg{width:14px;height:14px;}
+
+.title{flex:1;font-size:14px;font-weight:900;letter-spacing:3px;
+
+  background:linear-gradient(90deg,var(--purple),var(--gold));
+
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+
+.bal{font-size:13px;font-weight:700;color:var(--gold);font-family:monospace;}
+
+
+
+.page{max-width:480px;margin:0 auto;padding:16px 12px 80px;}
+
+
+
+/* PICK TRACKER */
+
+.pick-tracker{
+
+  display:flex;align-items:center;justify-content:space-between;
+
+  background:rgba(124,58,237,0.06);border:1px solid rgba(124,58,237,0.15);
+
+  border-radius:12px;padding:10px 14px;margin-bottom:14px;
+
+}
+
+.pt-picks{font-size:13px;font-weight:900;color:var(--purple);}
+
+.pt-label{font-size:9px;color:#3a3050;letter-spacing:2px;}
+
+.pt-clear{padding:6px 14px;background:rgba(255,51,51,0.08);border:1px solid rgba(255,51,51,0.2);
+
+  border-radius:8px;color:#ff6666;font-size:9px;cursor:pointer;font-family:var(--font);
+
+  letter-spacing:1px;transition:all .15s;}
+
+.pt-clear:hover{background:rgba(255,51,51,0.15);}
+
+
+
+/* DRAWN BALLS DISPLAY */
+
+.balls-row{
+
+  display:flex;flex-wrap:wrap;gap:4px;
+
+  min-height:40px;padding:8px 10px;
+
+  background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.04);
+
+  border-radius:12px;margin-bottom:14px;align-items:center;
+
+}
+
+.drawn-ball{
+
+  width:30px;height:30px;border-radius:50%;
+
+  display:flex;align-items:center;justify-content:center;
+
+  font-size:9px;font-weight:700;
+
+  animation:ball-pop .3s cubic-bezier(.34,1.56,.64,1) both;
+
+}
+
+@keyframes ball-pop{0%{transform:scale(0);opacity:0;}100%{transform:scale(1);opacity:1;}}
+
+.drawn-ball.hit{background:var(--gold);color:#050810;box-shadow:0 0 12px rgba(255,215,0,0.5);}
+
+.drawn-ball.miss{background:rgba(124,58,237,0.25);color:var(--purple);border:1px solid rgba(124,58,237,0.3);}
+
+.balls-placeholder{font-size:10px;color:#2a2040;letter-spacing:2px;}
+
+
+
+/* RESULT BANNER */
+
+.result-banner{
+
+  background:rgba(0,0,0,0.5);border:1px solid rgba(255,255,255,0.05);
+
+  border-radius:12px;padding:12px 14px;margin-bottom:14px;
+
+  text-align:center;min-height:48px;
+
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;
+
+}
+
+.rb-main{font-size:14px;font-weight:900;letter-spacing:2px;}
+
+.rb-main.win{color:var(--gold);}
+
+.rb-main.big{color:#fff;text-shadow:0 0 20px var(--gold);}
+
+.rb-main.lose{color:#3a3050;}
+
+.rb-sub{font-size:9px;color:#3a3050;letter-spacing:1px;}
+
+
+
+/* NUMBER GRID — the hero */
+
+.num-grid{
+
+  display:grid;grid-template-columns:repeat(10,1fr);
+
+  gap:4px;margin-bottom:16px;
+
+}
+
+.num-cell{
+
+  aspect-ratio:1;border-radius:8px;
+
+  display:flex;align-items:center;justify-content:center;
+
+  font-size:clamp(9px,2.5vw,12px);font-weight:700;
+
+  border:1px solid rgba(255,255,255,0.05);
+
+  background:rgba(255,255,255,0.03);
+
+  cursor:pointer;transition:all .15s;user-select:none;
+
+  -webkit-tap-highlight-color:transparent;
+
+  position:relative;
+
+}
+
+.num-cell:hover{border-color:rgba(124,58,237,0.4);background:rgba(124,58,237,0.1);}
+
+.num-cell.picked{
+
+  background:rgba(124,58,237,0.3);border-color:var(--purple);
+
+  color:#e0d0ff;box-shadow:0 0 10px rgba(124,58,237,0.3);
+
+}
+
+.num-cell.drawn-hit{
+
+  background:var(--gold)!important;border-color:var(--gold)!important;
+
+  color:#050810!important;box-shadow:0 0 16px rgba(255,215,0,0.6)!important;
+
+  animation:ball-pop .3s cubic-bezier(.34,1.56,.64,1);
+
+}
+
+.num-cell.drawn-miss{
+
+  background:rgba(124,58,237,0.1)!important;border-color:rgba(124,58,237,0.2)!important;
+
+  color:rgba(124,58,237,0.5)!important;
+
+}
+
+
+
+/* QUICK PICKS */
+
+.quick-picks{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;}
+
+.qp{padding:7px 12px;background:rgba(124,58,237,0.06);border:1px solid rgba(124,58,237,0.12);
+
+  border-radius:8px;font-size:9px;color:#5a4a80;cursor:pointer;transition:all .15s;letter-spacing:1px;}
+
+.qp:hover{border-color:var(--purple);color:var(--purple);}
+
+
+
+/* BET */
+
+.bet-section{background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.04);
+
+  border-radius:14px;padding:14px;margin-bottom:14px;}
+
+.bet-row{display:flex;gap:8px;margin-bottom:8px;}
+
+.bet-inp{flex:1;background:rgba(0,0,0,0.5);border:1px solid rgba(124,58,237,0.1);
+
+  border-radius:8px;padding:10px 12px;color:#c8c0e0;font-family:var(--font);
+
+  font-size:13px;font-weight:700;outline:none;text-align:center;}
+
+.bet-inp:focus{border-color:rgba(124,58,237,0.3);}
+
+.adj{padding:10px 12px;background:rgba(124,58,237,0.05);border:1px solid rgba(124,58,237,0.1);
+
+  border-radius:8px;color:#3a3050;font-family:var(--font);font-size:11px;cursor:pointer;transition:all .15s;}
+
+.adj:hover{color:var(--purple);border-color:rgba(124,58,237,0.3);}
+
+.qrow{display:flex;gap:5px;}
+
+.qb{flex:1;padding:7px 4px;background:rgba(124,58,237,0.04);border:1px solid rgba(124,58,237,0.08);
+
+  border-radius:6px;color:#3a3050;font-size:8px;letter-spacing:1px;cursor:pointer;text-align:center;transition:all .15s;}
+
+.qb:hover{border-color:var(--purple);color:var(--purple);}
+
+
+
+/* PLAY */
+
+.btn-play{
+
+  width:100%;padding:16px;border:none;border-radius:12px;
+
+  font-family:var(--font);font-size:13px;font-weight:900;letter-spacing:3px;
+
+  cursor:pointer;transition:all .2s;
+
+  background:linear-gradient(135deg,#4a0eaa,var(--purple));
+
+  color:#fff;box-shadow:0 4px 24px rgba(124,58,237,0.35);
+
+}
+
+.btn-play:not(:disabled):hover{transform:translateY(-2px);box-shadow:0 6px 36px rgba(124,58,237,0.55);}
+
+.btn-play:disabled{opacity:.4;cursor:not-allowed;transform:none!important;}
+
+
+
+/* PAYTABLE MINI */
+
+.paytable-mini{margin-top:12px;display:grid;grid-template-columns:repeat(2,1fr);gap:4px;}
+
+.pm-row{display:flex;justify-content:space-between;padding:4px 8px;
+
+  background:rgba(124,58,237,0.03);border-radius:6px;font-size:9px;}
+
+.pm-hits{color:#5a4a80;}
+
+.pm-mult{color:var(--gold);font-family:monospace;font-weight:700;}
+
+
+
+/* FLASH */
+
+#flash{position:fixed;inset:0;pointer-events:none;opacity:0;z-index:200;}
+
+#flash.g{background:radial-gradient(ellipse at 50% 40%,rgba(255,215,0,0.25),transparent 70%);}
+
+#flash.show{animation:fl .6s ease;}
+
+@keyframes fl{0%,100%{opacity:0;}30%{opacity:1;}}
+
+</style>
+
+    <script src="/static/sound.js"></script>
+
+    <script src="/static/big-win.js"></script>
+
+
+    <script src="/static/balance-animation.js"></script>
+
+
+    <script src="/static/page-transitions.js"></script>
+
+
+    <script src="/static/autoplay.js"></script>
+
+
+<link rel="stylesheet" href="/static/games-shared.css"><script src="/static/js/csrf.js"></script>
+
+
+</head>
+
+<body>
+
+<div id="flash"></div>
+
+<header class="hdr">
+
+  <a class="back" href="/games"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>GAMES</a>
+
+  <span class="title">🎱 KENO</span>
+
+  <span class="bal" id="balDisplay">$—</span>
+
+</header>
+
+
+
+<div class="page">
+
+  <div class="pick-tracker">
+
+    <div><div class="pt-picks"><span id="pickCount">0</span>/10 PICKED</div><div class="pt-label">TAP NUMBERS TO PICK</div></div>
+
+    <button class="pt-clear" onclick="clearPicks()">CLEAR</button>
+
+  </div>
+
+
+
+  <div class="balls-row" id="ballsRow"><div class="balls-placeholder">DRAWN NUMBERS APPEAR HERE</div></div>
+
+  <div class="result-banner"><div class="rb-main lose" id="rbMain">PICK 1–10 NUMBERS THEN PLAY</div><div class="rb-sub" id="rbSub"></div></div>
+
+
+
+  <div class="quick-picks">
+
+    <div class="qp" onclick="quickPick(1)">PICK 1</div>
+
+    <div class="qp" onclick="quickPick(3)">PICK 3</div>
+
+    <div class="qp" onclick="quickPick(5)">PICK 5</div>
+
+    <div class="qp" onclick="quickPick(7)">PICK 7</div>
+
+    <div class="qp" onclick="quickPick(10)">PICK 10</div>
+
+  </div>
+
+
+
+  <div class="num-grid" id="numGrid"></div>
+
+
+
+  <div class="bet-section">
+
+    <div class="bet-row">
+
+      <button class="adj" onclick="halveBet()">½</button>
+
+      <input class="bet-inp" id="betInp" type="number" value="500" min="50" step="50">
+
+      <button class="adj" onclick="doubleBet()">2×</button>
+
+    </div>
+
+    <div class="qrow">
+
+      <div class="qb" onclick="qb(100)">$100</div>
+
+      <div class="qb" onclick="qb(500)">$500</div>
+
+      <div class="qb" onclick="qb(1000)">$1K</div>
+
+      <div class="qb" onclick="qb(5000)">$5K</div>
+
+      <div class="qb" onclick="qb(10000)">$10K</div>
+
+    </div>
+
+  </div>
+
+
+
+  <button class="btn-play" id="playBtn" onclick="play()">📉 DRAW BALLS</button>
+
+
+
+  <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:10px;">
+
+    <label style="display:flex;align-items:center;gap:6px;font-size:9px;color:#5a4a80;cursor:pointer;letter-spacing:1px;">
+
+      <input type="checkbox" id="kenoAutoOn" onchange="kenoAutoChanged(this.checked)" style="width:14px;height:14px;accent-color:var(--purple);cursor:pointer;">
+
+      AUTO PLAY (SAME PICKS)
+
+    </label>
+
+  </div>
+
+
+
+  <div class="paytable-mini" id="ptMini"></div>
+
+</div>
+
+
+
+<script>
+
+const KENO_TABLE={1:{1:3.5},2:{1:1.5,2:10},3:{2:3,3:25},4:{2:1.5,3:6,4:60},5:{3:3,4:12,5:100},6:{3:2,4:6,5:30,6:250},7:{4:4,5:15,6:60,7:500},8:{4:3,5:8,6:30,7:200,8:1000},9:{4:2,5:5,6:15,7:80,8:500,9:2000},10:{5:4,6:10,7:40,8:200,9:1000,10:5000}};
+
+let picks=new Set(),balance=0,playing=false,kenoAutoEnabled=false;
+
+function kenoAutoChanged(on){kenoAutoEnabled=on;}
+
+
+
+async function init(){
+
+  try{const d=await api('/api/user/me');balance=d.balance;updateBal();}catch(e){}
+
+  buildGrid();
+
+  updatePaytable();
+
+}
+
+
+
+function updateBal(){var e=document.getElementById('balDisplay'),c=e.textContent||'',n='$'+balance.toLocaleString(undefined,{maximumFractionDigits:0});if(c&&c!=='$—'&&c!==n){var p=parseFloat(c.replace(/[,$]/g,''));if(!isNaN(p)&&p!==balance){animateBalance(e,'$'+p.toLocaleString(undefined,{maximumFractionDigits:0}),n,balance>=p);return}}e.textContent=n}
+
+
+
+function buildGrid(){
+
+  const grid=document.getElementById('numGrid');
+
+  grid.innerHTML='';
+
+  for(let i=1;i<=80;i++){
+
+    const cell=document.createElement('div');
+
+    cell.className='num-cell';
+
+    cell.id='nc'+i;
+
+    cell.textContent=i;
+
+    cell.onclick=()=>togglePick(i,cell);
+
+    grid.appendChild(cell);
+
+  }
+
+}
+
+
+
+function togglePick(n,cell){
+
+
+  Sound.click();if(playing) return;
+
+  if(picks.has(n)){picks.delete(n);cell.classList.remove('picked');}
+
+  else if(picks.size<10){picks.add(n);cell.classList.add('picked');}
+
+  document.getElementById('pickCount').textContent=picks.size;
+
+  updatePaytable();
+
+}
+
+
+
+function clearPicks(){
+
+
+  Sound.click();picks.clear();
+
+  document.querySelectorAll('.num-cell').forEach(c=>c.classList.remove('picked','drawn-hit','drawn-miss'));
+
+  document.getElementById('pickCount').textContent='0';
+
+  document.getElementById('ballsRow').innerHTML='<div class="balls-placeholder">DRAWN NUMBERS APPEAR HERE</div>';
+
+  document.getElementById('rbMain').className='rb-main lose';
+
+  document.getElementById('rbMain').textContent='PICK 1–10 NUMBERS THEN PLAY';
+
+  document.getElementById('rbSub').textContent='';
+
+  updatePaytable();
+
+}
+
+
+
+function quickPick(n){
+
+
+  Sound.click();clearPicks();
+
+  const pool=[];for(let i=1;i<=80;i++)pool.push(i);
+
+  // Secure shuffle using crypto.getRandomValues
+
+  for(let i=pool.length-1;i>0;i--){
+
+    const arr=new Uint32Array(1);crypto.getRandomValues(arr);
+
+    const j=arr[0]%(i+1);[pool[i],pool[j]]=[pool[j],pool[i]];
+
+  }
+
+  pool.slice(0,n).forEach(num=>{picks.add(num);document.getElementById('nc'+num).classList.add('picked');});
+
+  document.getElementById('pickCount').textContent=picks.size;
+
+  updatePaytable();
+
+}
+
+
+
+function updatePaytable(){
+
+  const n=picks.size;
+
+  const pm=document.getElementById('ptMini');
+
+  pm.innerHTML='';
+
+  if(!n||!KENO_TABLE[n]) return;
+
+  const tbl=KENO_TABLE[n];
+
+  Object.entries(tbl).sort((a,b)=>b[0]-a[0]).forEach(([hits,mult])=>{
+
+    const row=document.createElement('div');row.className='pm-row';
+
+    row.innerHTML=`<span class="pm-hits">${hits}/${n} HITS</span><span class="pm-mult">${mult}×</span>`;
+
+    pm.appendChild(row);
+
+  });
+
+}
+
+
+
+function qb(v){Sound.click();document.getElementById('betInp').value=v;}
+
+
+function halveBet(){Sound.click();document.getElementById('betInp').value=Math.max(50,Math.floor(parseInt(document.getElementById('betInp').value||500)/2));}
+
+
+function doubleBet(){Sound.click();document.getElementById('betInp').value=Math.min(balance,parseInt(document.getElementById('betInp').value||500)*2);}
+
+
+
+async function play(){
+
+
+  Sound.click();if(playing||picks.size<1) return;
+
+  const bet=parseInt(document.getElementById('betInp').value)||500;
+
+  if(bet>balance){document.getElementById('rbMain').textContent='❌ INSUFFICIENT BALANCE';document.getElementById('rbMain').className='rb-main lose';Sound.error();return;}
+
+  playing=true;
+
+  document.getElementById('playBtn').disabled=true;
+
+  document.getElementById('rbMain').className='rb-main lose';
+
+  document.getElementById('rbMain').textContent='DRAWING…';
+
+  document.getElementById('rbSub').textContent='';
+
+  // Reset cell states
+
+  document.querySelectorAll('.num-cell').forEach(c=>c.classList.remove('drawn-hit','drawn-miss'));
+
+  document.getElementById('ballsRow').innerHTML='';
+
+
+
+  try{
+
+    const d=await api('/api/games/easy/keno/play',{method:'POST',
+
+      body:JSON.stringify({amount:bet,picks:[...picks]})});
+
+
+
+    balance=await refreshBal();
+
+    updateBal();
+
+
+
+    // Animate drawn balls one by one
+
+    const hitSet=new Set(d.hits);
+
+    for(let i=0;i<d.drawn.length;i++){
+
+      const num=d.drawn[i];
+
+      const isHit=hitSet.has(num);
+
+      const cell=document.getElementById('nc'+num);
+
+      if(picks.has(num)){
+
+        cell.classList.add(isHit?'drawn-hit':'drawn-miss');
+
+      }
+
+      const ball=document.createElement('div');
+
+      ball.className='drawn-ball '+(isHit?'hit':'miss');
+
+      ball.textContent=num;
+
+      ball.style.animationDelay=(i*0.05)+'s';
+
+      document.getElementById('ballsRow').appendChild(ball);
+
+      Sound.reveal();if(isHit) await delay(80); else await delay(40);
+
+
+    }
+
+
+
+    const hitCount=d.hits.length;
+
+    const mult=d.mult||0;
+
+    if(mult>0){
+
+
+      Sound.win();document.getElementById('rbMain').className='rb-main '+(mult>=10?'big':'win');
+
+
+      document.getElementById('rbMain').textContent=`${hitCount} HITS · ${mult}× · +$${d.win.toLocaleString(undefined,{maximumFractionDigits:0})}`;
+      if(window.maybeBigWin)maybeBigWin(bet,d.win);
+
+
+      if(mult>=10) flash('g');
+
+
+    }else{
+
+
+      Sound.loss();document.getElementById('rbMain').className='rb-main lose';
+
+
+      document.getElementById('rbMain').textContent=`${hitCount} HITS — NO WIN`;
+
+
+    }
+
+    document.getElementById('rbSub').textContent=`${picks.size} NUMBERS PICKED · 20 DRAWN`;
+
+  }catch(e){
+
+    document.getElementById('rbMain').textContent='ERROR: '+e.message;
+
+  }finally{
+
+    playing=false;
+
+    document.getElementById('playBtn').disabled=false;
+
+    if(kenoAutoEnabled&&picks.size>0) setTimeout(()=>{if(kenoAutoEnabled)play();},1500);
+
+  }
+
+}
+
+
+
+function flash(c){const el=document.getElementById('flash');el.className=c;void el.offsetWidth;el.classList.add('show');}
+
+async function refreshBal(){try{const d=await api('/api/user/me');return d.balance;}catch(e){return balance;}}
+
+async function api(url,opts={}){
+
+  const r=await fetch(url,{credentials:'include',headers:{'Content-Type':'application/json'},...opts});
+
+  if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.detail||'Error');}
+
+  return r.json();
+
+}
+
+function delay(ms){return new Promise(r=>setTimeout(r,ms));}
+
+init();
+
+</script>
+
+<script>if("serviceWorker"in navigator){navigator.serviceWorker.register("/static/sw.js").catch(function(){})}</script>
+
+
+<script src="/static/chat.js"></script>
+
+
+</body>
+
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,988 @@
+﻿<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+
+<title>📉  Limbo — CS2CaseBot</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+
+<style>
+
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+
+:root{--bg:#04050a;--line:#1aedff;--win:#22c55e;--lose:#ff3333;--font:'Orbitron',monospace;--mono:'Share Tech Mono',monospace;}
+
+html,body{min-height:100vh;background:var(--bg);font-family:var(--font);overflow-x:hidden;color:#b0c0d0;}
+
+body{background-image:radial-gradient(ellipse 60% 50% at 50% 50%,rgba(26,237,255,0.03) 0%,transparent 70%);}
+
+
+
+/* HEADER */
+
+.hdr{display:flex;align-items:center;gap:12px;padding:12px 16px;
+
+  background:rgba(4,5,10,0.98);border-bottom:1px solid rgba(26,237,255,0.08);
+
+  position:sticky;top:0;z-index:50;}
+
+.back{display:flex;align-items:center;gap:5px;color:#2a3a4a;font-size:10px;letter-spacing:1px;text-decoration:none;transition:color .2s;}
+
+.back:hover{color:var(--line);}
+
+.back svg{width:14px;height:14px;}
+
+.title{flex:1;font-size:14px;font-weight:900;letter-spacing:3px;color:var(--line);}
+
+.bal{font-size:13px;font-weight:700;color:var(--line);font-family:var(--mono);}
+
+
+
+.page{max-width:420px;margin:0 auto;padding:20px 16px 80px;}
+
+
+
+/* THE HERO — climbing number */
+
+.limbo-hero{
+
+  position:relative;
+
+  background:rgba(4,5,10,0.99);
+
+  border:1px solid rgba(26,237,255,0.08);
+
+  border-radius:24px;
+
+  padding:40px 20px 32px;
+
+  text-align:center;
+
+  margin-bottom:20px;
+
+  overflow:hidden;
+
+}
+
+/* Subtle grid lines */
+
+.limbo-hero::before{
+
+  content:'';position:absolute;inset:0;
+
+  background-image:linear-gradient(rgba(26,237,255,0.03) 1px,transparent 1px),
+
+    linear-gradient(90deg,rgba(26,237,255,0.03) 1px,transparent 1px);
+
+  background-size:40px 40px;
+
+}
+
+.limbo-hero::after{
+
+  content:'';position:absolute;bottom:0;left:0;right:0;height:2px;
+
+  background:linear-gradient(90deg,transparent,var(--line),transparent);
+
+  opacity:0.3;
+
+}
+
+
+
+/* Live result number — the signature element */
+
+.result-num{
+
+  font-size:clamp(72px,22vw,110px);font-weight:900;font-family:var(--mono);
+
+  line-height:1;letter-spacing:-2px;
+
+  position:relative;z-index:1;
+
+  color:#1a2a3a;
+
+  transition:color .2s,text-shadow .2s;
+
+}
+
+.result-num.climbing{
+
+  color:var(--line);
+
+  text-shadow:0 0 40px rgba(26,237,255,0.4);
+
+  animation:climb-pulse .15s ease-in-out infinite;
+
+}
+
+@keyframes climb-pulse{0%,100%{opacity:1;}50%{opacity:.7;}}
+
+.result-num.win{color:var(--win);text-shadow:0 0 50px rgba(34,197,94,0.6);}
+
+.result-num.lose{color:var(--lose);text-shadow:0 0 50px rgba(255,51,51,0.5);}
+
+
+
+.result-x{font-size:clamp(20px,5vw,28px);font-weight:700;color:#2a4a5a;
+
+  margin-bottom:12px;position:relative;z-index:1;font-family:var(--mono);}
+
+.result-x.climbing{color:rgba(26,237,255,0.6);}
+
+.result-x.win{color:var(--win);}
+
+.result-x.lose{color:var(--lose);}
+
+
+
+.result-label{font-size:10px;letter-spacing:3px;position:relative;z-index:1;
+
+  min-height:16px;color:#2a4a5a;}
+
+.result-label.win{color:var(--win);}
+
+.result-label.lose{color:var(--lose);}
+
+
+
+/* Target line indicator */
+
+.target-line-wrap{position:relative;height:4px;background:rgba(255,255,255,0.05);
+
+  border-radius:2px;margin:20px 0 8px;overflow:visible;}
+
+.target-marker{
+
+  position:absolute;top:-6px;height:16px;width:2px;background:var(--line);
+
+  border-radius:1px;box-shadow:0 0 8px var(--line);
+
+  transition:left .3s;
+
+}
+
+.target-label-pos{position:absolute;top:-22px;font-size:8px;letter-spacing:1px;
+
+  color:var(--line);transform:translateX(-50%);white-space:nowrap;}
+
+.target-range{display:flex;justify-content:space-between;font-size:8px;color:#2a4a5a;}
+
+
+
+/* TARGET INPUT */
+
+.target-section{background:rgba(0,0,0,0.5);border:1px solid rgba(26,237,255,0.06);
+
+  border-radius:16px;padding:16px;margin-bottom:16px;}
+
+.ts-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;}
+
+.ts-label{font-size:9px;letter-spacing:2px;color:#2a4a5a;}
+
+.ts-target-val{
+
+  font-size:32px;font-weight:900;font-family:var(--mono);
+
+  color:var(--line);cursor:pointer;
+
+  background:rgba(26,237,255,0.06);border:1px solid rgba(26,237,255,0.12);
+
+  border-radius:8px;padding:6px 14px;
+
+  outline:none;text-align:center;width:140px;
+
+}
+
+.ts-target-val:focus{border-color:rgba(26,237,255,0.3);}
+
+
+
+/* Preset multiplier buttons */
+
+.mult-presets{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
+
+.mp{padding:8px 12px;background:rgba(26,237,255,0.04);border:1px solid rgba(26,237,255,0.08);
+
+  border-radius:8px;font-size:10px;color:#3a5a6a;cursor:pointer;transition:all .15s;font-family:var(--mono);}
+
+.mp:hover{border-color:var(--line);color:var(--line);}
+
+.mp.active{border-color:var(--line);color:var(--line);background:rgba(26,237,255,0.1);}
+
+
+
+/* Win chance display */
+
+.chance-display{display:flex;justify-content:space-between;
+
+  background:rgba(26,237,255,0.03);border-radius:8px;padding:10px 14px;}
+
+.cd-item{text-align:center;}
+
+.cd-v{font-size:14px;font-weight:700;font-family:var(--mono);color:var(--line);}
+
+.cd-l{font-size:8px;color:#2a4a5a;letter-spacing:1px;margin-top:2px;}
+
+
+
+/* BET */
+
+.bet-row{display:flex;gap:8px;margin-bottom:10px;}
+
+.bet-inp{flex:1;background:rgba(0,0,0,0.5);border:1px solid rgba(26,237,255,0.08);
+
+  border-radius:8px;padding:12px;color:#b0c0d0;font-family:var(--font);
+
+  font-size:13px;font-weight:700;outline:none;text-align:center;}
+
+.bet-inp:focus{border-color:rgba(26,237,255,0.25);}
+
+.adj{padding:12px 14px;background:rgba(26,237,255,0.04);border:1px solid rgba(26,237,255,0.08);
+
+  border-radius:8px;color:#2a4a5a;font-family:var(--font);font-size:12px;cursor:pointer;transition:all .15s;}
+
+.adj:hover{color:var(--line);border-color:rgba(26,237,255,0.2);}
+
+.qrow{display:flex;gap:6px;margin-bottom:14px;}
+
+.qb{flex:1;padding:8px 4px;background:rgba(26,237,255,0.03);border:1px solid rgba(26,237,255,0.06);
+
+  border-radius:8px;color:#2a4a5a;font-size:9px;letter-spacing:1px;cursor:pointer;text-align:center;transition:all .15s;}
+
+.qb:hover{border-color:var(--line);color:var(--line);}
+
+
+
+/* PLAY BUTTON */
+
+.btn-play{
+
+  width:100%;padding:17px;border:none;border-radius:12px;
+
+  font-family:var(--font);font-size:13px;font-weight:900;letter-spacing:3px;
+
+  cursor:pointer;transition:all .2s;
+
+  background:linear-gradient(135deg,#003344,var(--line));
+
+  color:#04050a;box-shadow:0 4px 24px rgba(26,237,255,0.25);
+
+}
+
+.btn-play:not(:disabled):hover{transform:translateY(-2px);box-shadow:0 6px 36px rgba(26,237,255,0.45);}
+
+.btn-play:disabled{opacity:.4;cursor:not-allowed;transform:none!important;}
+
+
+
+/* STATS */
+
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:14px;}
+
+.stt{background:rgba(26,237,255,0.03);border:1px solid rgba(26,237,255,0.05);
+
+  border-radius:10px;padding:8px 4px;text-align:center;}
+
+.stt .sv{font-size:11px;font-weight:700;color:var(--line);font-family:var(--mono);}
+
+.stt .sl{font-size:7px;color:#2a4a5a;letter-spacing:1px;margin-top:2px;}
+
+
+
+/* FLASH */
+
+#flash{position:fixed;inset:0;pointer-events:none;opacity:0;z-index:200;}
+
+#flash.g{background:radial-gradient(ellipse at 50% 30%,rgba(34,197,94,0.25),transparent 70%);}
+
+#flash.r{background:radial-gradient(ellipse at 50% 30%,rgba(255,51,51,0.2),transparent 70%);}
+
+#flash.show{animation:fl .5s ease;}
+
+@keyframes fl{0%,100%{opacity:0;}30%{opacity:1;}}
+
+</style>
+
+    <script src="/static/sound.js"></script>
+
+    <script src="/static/big-win.js"></script>
+
+
+    <script src="/static/balance-animation.js"></script>
+
+
+    <script src="/static/page-transitions.js"></script>
+
+
+    <script src="/static/autoplay.js"></script>
+
+
+<link rel="stylesheet" href="/static/games-shared.css"><script src="/static/js/csrf.js"></script>
+
+
+</head>
+
+<body>
+
+<div id="flash"></div>
+
+
+
+<header class="hdr">
+
+  <a class="back" href="/games"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>GAMES</a>
+
+  <span class="title">📉  LIMBO</span>
+
+  <span class="bal" id="balDisplay">$—</span>
+
+</header>
+
+
+
+<div class="page">
+
+  <div class="limbo-hero">
+
+    <div class="result-num" id="resultNum">—</div>
+
+    <div class="result-x" id="resultX"></div>
+
+    <div class="result-label" id="resultLabel">SET A TARGET MULTIPLIER</div>
+
+    <div class="target-line-wrap">
+
+      <div class="target-marker" id="targetMarker" style="left:20%">
+
+        <div class="target-label-pos" id="targetLabelPos">2.00×</div>
+
+      </div>
+
+    </div>
+
+    <div class="target-range"><span>1.01×</span><span>1000×</span></div>
+
+  </div>
+
+
+
+  <!-- TARGET -->
+
+  <div class="target-section">
+
+    <div class="ts-header">
+
+      <span class="ts-label">TARGET MULTIPLIER</span>
+
+      <input class="ts-target-val" id="targetInp" type="number" value="2.00" step="0.01" min="1.01" max="1000000" oninput="onTarget()">
+
+    </div>
+
+    <div class="mult-presets">
+
+      <div class="mp" onclick="setTarget(1.5)">1.5×</div>
+
+      <div class="mp active" onclick="setTarget(2)">2×</div>
+
+      <div class="mp" onclick="setTarget(5)">5×</div>
+
+      <div class="mp" onclick="setTarget(10)">10×</div>
+
+      <div class="mp" onclick="setTarget(25)">25×</div>
+
+      <div class="mp" onclick="setTarget(100)">100×</div>
+
+      <div class="mp" onclick="setTarget(1000)">1000×</div>
+
+    </div>
+
+    <div class="chance-display">
+
+      <div class="cd-item"><div class="cd-v" id="cdChance">48%</div><div class="cd-l">WIN CHANCE</div></div>
+
+      <div class="cd-item"><div class="cd-v" id="cdTarget">2.00×</div><div class="cd-l">TARGET</div></div>
+
+      <div class="cd-item"><div class="cd-v" id="cdPayout">$960</div><div class="cd-l">IF WIN</div></div>
+
+    </div>
+
+  </div>
+
+
+
+  <!-- BET -->
+
+  <div class="bet-row">
+
+    <button class="adj" onclick="halveBet()">½</button>
+
+    <input class="bet-inp" id="betInp" type="number" value="500" min="50" step="50" oninput="onTarget()">
+
+    <button class="adj" onclick="doubleBet()">2×</button>
+
+  </div>
+
+  <div class="qrow">
+
+    <div class="qb" onclick="qb(100)">$100</div>
+
+    <div class="qb" onclick="qb(500)">$500</div>
+
+    <div class="qb" onclick="qb(1000)">$1K</div>
+
+    <div class="qb" onclick="qb(5000)">$5K</div>
+
+    <div class="qb" onclick="qb(10000)">$10K</div>
+
+  </div>
+
+
+
+  <button class="btn-play" id="playBtn" onclick="play()">📉  SET THE LIMBO</button>
+
+
+
+  <div style="display:flex;gap:6px;margin-top:10px;align-items:center;">
+
+
+    <span style="font-size:8px;color:#2a4a5a;letter-spacing:1px;flex-shrink:0;">AUTO</span>
+
+
+    <div class="qb" id="la5" onclick="limboSetAuto(5)">5×</div>
+
+
+    <div class="qb" id="la10" onclick="limboSetAuto(10)">10×</div>
+
+
+    <div class="qb" id="la25" onclick="limboSetAuto(25)">25×</div>
+
+
+    <button id="limboAutoBtn" onclick="limboToggleAuto()" style="flex:2;padding:8px 4px;background:rgba(26,237,255,0.04);border:1px solid rgba(26,237,255,0.1);border-radius:8px;color:#2a4a5a;font-family:var(--font);font-size:8px;font-weight:700;letter-spacing:1px;cursor:pointer;">🔁 AUTO PLAY</button>
+
+
+    <button onclick="limboAdvAuto()" style="padding:8px 6px;background:rgba(255,215,0,0.04);border:1px solid rgba(255,215,0,0.1);border-radius:8px;color:#2a4a5a;font-family:var(--font);font-size:7px;cursor:pointer;">⚙️</button>
+
+
+  </div>
+
+
+  <div id="limboAutoPanel"></div>
+
+
+
+  <div class="stats">
+
+    <div class="stt"><div class="sv" id="stW">0</div><div class="sl">WINS</div></div>
+
+    <div class="stt"><div class="sv" id="stL">0</div><div class="sl">LOSSES</div></div>
+
+    <div class="stt"><div class="sv" id="stS">0</div><div class="sl">STREAK</div></div>
+
+    <div class="stt"><div class="sv" id="stB">$0</div><div class="sl">BEST</div></div>
+
+  </div>
+
+</div>
+
+
+
+<script>
+
+let balance=0,wins=0,losses=0,streak=0,bestWin=0,playing=false;
+
+let limboAutoCount=0,limboAutoRunning=false;
+
+
+
+async function init(){
+
+  try{const d=await api('/api/user/me');balance=d.balance;updateBal();}catch(e){}
+
+  onTarget();
+
+}
+
+
+
+function updateBal(){var e=document.getElementById('balDisplay'),c=e.textContent||'',n='$'+balance.toLocaleString(undefined,{maximumFractionDigits:0});if(c&&c!=='$—'&&c!==n){var p=parseFloat(c.replace(/[,$]/g,''));if(!isNaN(p)&&p!==balance){animateBalance(e,'$'+p.toLocaleString(undefined,{maximumFractionDigits:0}),n,balance>=p);return}}e.textContent=n}
+
+
+
+function setTarget(v){Sound.click();document.getElementById('targetInp').value=v.toFixed(2);onTarget();}
+
+
+
+function onTarget(){
+
+  const target=parseFloat(document.getElementById('targetInp').value)||2;
+
+  const bet=parseInt(document.getElementById('betInp').value)||500;
+
+  // Win chance ˜ (1-house_edge) / target
+
+  const chance=Math.min(99,Math.max(1,Math.round((0.96/target)*100)));
+
+  document.getElementById('cdChance').textContent=chance+'%';
+
+  document.getElementById('cdTarget').textContent=target.toFixed(2)+'×';
+
+  document.getElementById('cdPayout').textContent='$'+(bet*target).toLocaleString(undefined,{maximumFractionDigits:0});
+
+
+
+  // Update marker position (log scale)
+
+  const pct=Math.min(95,Math.max(2,Math.log10(target)/Math.log10(1000)*100));
+
+  document.getElementById('targetMarker').style.left=pct+'%';
+
+  document.getElementById('targetLabelPos').textContent=target.toFixed(2)+'×';
+
+}
+
+
+
+function qb(v){Sound.click();document.getElementById('betInp').value=v;onTarget();}
+
+
+function halveBet(){Sound.click();document.getElementById('betInp').value=Math.max(50,Math.floor(parseInt(document.getElementById('betInp').value||500)/2));onTarget();}
+
+
+function doubleBet(){Sound.click();document.getElementById('betInp').value=Math.min(balance,parseInt(document.getElementById('betInp').value||500)*2);onTarget();}
+
+
+
+async function play(){
+
+
+  Sound.click();if(playing) return;
+
+
+  const bet=parseInt(document.getElementById('betInp').value)||500;
+
+  const target=parseFloat(document.getElementById('targetInp').value)||2;
+
+  if(bet>balance){document.getElementById('resultLabel').textContent='❌ INSUFFICIENT BALANCE';Sound.error();return;}
+
+
+
+  playing=true;
+
+  document.getElementById('playBtn').disabled=true;
+
+
+
+  const numEl=document.getElementById('resultNum');
+
+  const xEl=document.getElementById('resultX');
+
+  const lblEl=document.getElementById('resultLabel');
+
+
+
+  // Animate climbing number
+
+  numEl.className='result-num climbing';
+
+
+  xEl.className='result-x climbing';
+
+
+  lblEl.textContent='CLIMBING…';
+
+
+  xEl.textContent='';Sound.whoosh();
+
+
+
+  let displayed=1.00;
+
+  let climbInterval=setInterval(()=>{
+
+    displayed=Math.min(displayed*1.05+0.02,999.99);
+
+    numEl.textContent=displayed.toFixed(2);
+
+    xEl.textContent='×';
+
+  },40);
+
+
+
+  try{
+
+    const d=await api('/api/games/easy/limbo',{method:'POST',
+
+      body:JSON.stringify({amount:bet,target})});
+
+
+
+    await delay(700);
+
+    clearInterval(climbInterval);
+
+
+
+    numEl.textContent=d.result.toFixed(2);
+
+    xEl.textContent='×';
+
+    balance=await refreshBal();
+
+    updateBal();
+
+
+
+    if(d.user_wins){
+
+
+      Sound.win();numEl.className='result-num win';
+
+
+      xEl.className='result-x win';
+
+
+      lblEl.className='result-label win';
+
+
+      lblEl.textContent=`✅ TARGET MET · +$${d.win.toLocaleString(undefined,{maximumFractionDigits:0})}`;
+
+
+      wins++;streak++;
+
+
+      if(d.win>bestWin){bestWin=d.win;document.getElementById('stB').textContent='$'+bestWin.toLocaleString(undefined,{maximumFractionDigits:0});}
+
+
+      flash('g');if(window.maybeBigWin)await maybeBigWin(bet,d.win);
+
+
+    }else{
+
+
+      Sound.loss();numEl.className='result-num lose';
+
+
+      xEl.className='result-x lose';
+
+
+      lblEl.className='result-label lose';
+
+
+      lblEl.textContent=`❌ CRASHED AT ${d.result.toFixed(2)}× — TARGET WAS ${target.toFixed(2)}×`;
+
+
+      losses++;streak=0;
+
+
+      flash('r');
+
+
+    }
+
+    document.getElementById('stW').textContent=wins;
+
+    document.getElementById('stL').textContent=losses;
+
+    document.getElementById('stS').textContent=streak;
+
+  }catch(e){
+
+    clearInterval(climbInterval);
+
+    numEl.className='result-num';numEl.textContent='!';
+
+    lblEl.textContent='ERROR: '+e.message;
+
+  }finally{
+
+    playing=false;
+
+    document.getElementById('playBtn').disabled=false;
+
+  }
+
+}
+
+
+
+function limboSetAuto(n){
+
+  limboAutoCount=n;
+
+  ['5','10','25'].forEach(v=>{
+
+    const el=document.getElementById('la'+v);
+
+    if(el){el.style.borderColor='';el.style.color='';}
+
+  });
+
+  const sel=document.getElementById('la'+n);
+
+  if(sel){sel.style.borderColor='var(--line)';sel.style.color='var(--line)';}
+
+}
+
+
+
+async function limboToggleAuto(){
+
+  if(limboAutoRunning){
+
+    limboAutoRunning=false;
+
+    document.getElementById('limboAutoBtn').textContent='🔁 AUTO PLAY';
+
+    return;
+
+  }
+
+  if(!limboAutoCount) limboSetAuto(5);
+
+  limboAutoRunning=true;
+
+  document.getElementById('limboAutoBtn').textContent='⏹️ STOP';
+
+  let rem=limboAutoCount;
+
+  while(rem>0&&limboAutoRunning){
+
+    const bet=parseInt(document.getElementById('betInp').value)||500;
+
+    if(bet>balance) break;
+
+    await play();
+
+    rem--;
+
+  }
+
+  limboAutoRunning=false;
+
+  document.getElementById('limboAutoBtn').textContent='🔁 AUTO PLAY';
+
+}
+
+
+
+// Advanced autoplay with stop conditions
+
+
+let limboAP=null;
+
+
+function limboAdvAuto(){
+
+
+  if(!limboAP){
+
+
+    limboAP=new AutoPlay({
+
+
+      onRound: async()=>{
+
+
+        const bet=parseInt(document.getElementById('betInp').value)||500;
+
+
+        const target=parseFloat(document.getElementById('targetInp').value)||2;
+
+
+        const numEl=document.getElementById('resultNum');
+
+
+        const xEl=document.getElementById('resultX');
+
+
+        const lblEl=document.getElementById('resultLabel');
+
+
+        numEl.className='result-num climbing';
+
+
+        xEl.className='result-x climbing';
+
+
+        lblEl.textContent='CLIMBING…';
+
+
+        xEl.textContent='';Sound.whoosh();
+
+
+        let displayed=1.00;
+
+
+        let ci=setInterval(()=>{displayed=Math.min(displayed*1.05+0.02,999.99);numEl.textContent=displayed.toFixed(2);xEl.textContent='×';},40);
+
+
+        try{
+
+
+          const d=await api('/api/games/easy/limbo',{method:'POST',body:JSON.stringify({amount:bet,target})});
+
+
+          await delay(700);
+
+
+          clearInterval(ci);
+
+
+          numEl.textContent=d.result.toFixed(2);
+
+
+          xEl.textContent='×';
+
+
+          balance=d.balance;updateBal();
+
+
+          if(d.user_wins){
+
+
+            Sound.win();numEl.className='result-num win';xEl.className='result-x win';
+
+
+            lblEl.className='result-label win';
+
+
+            lblEl.textContent='✅ WIN +$'+d.win.toLocaleString();
+
+
+            wins++;streak++;
+
+
+            if(d.win>bestWin){bestWin=d.win;document.getElementById('stB').textContent='$'+bestWin.toLocaleString();}
+
+
+            flash('g');if(window.maybeBigWin)await maybeBigWin(bet,d.win);
+
+
+          }else{
+
+
+            Sound.loss();numEl.className='result-num lose';xEl.className='result-x lose';
+
+
+            lblEl.className='result-label lose';
+
+
+            lblEl.textContent='❌ CRASHED AT '+d.result.toFixed(2)+'×';
+
+
+            losses++;streak=0;
+
+
+            flash('r');
+
+
+          }
+
+
+          document.getElementById('stW').textContent=wins;
+
+
+          document.getElementById('stL').textContent=losses;
+
+
+          document.getElementById('stS').textContent=streak;
+
+
+          return {win:d.user_wins,multiplier:d.result,winAmount:d.win};
+
+
+        }catch(e){clearInterval(ci);numEl.textContent='!';return null;}
+
+
+      },
+
+
+      onStop: (r)=>{limboAutoRunning=false;},
+
+
+      roundDelay: 900,
+
+
+    });
+
+
+    limboAP.setBalance(balance);
+
+
+  }
+
+
+  const panel=document.getElementById('limboAutoPanel');
+
+
+  if(panel.querySelector('.autoplay-panel')){panel.innerHTML='';return;}
+
+
+  limboAP.bindUI(panel,{defaultRounds:10,getBalance:()=>balance});
+
+
+}
+
+
+
+
+
+function flash(c){const el=document.getElementById('flash');el.className=c;void el.offsetWidth;el.classList.add('show');}
+
+async function refreshBal(){try{const d=await api('/api/user/me');return d.balance;}catch(e){return balance;}}
+
+async function api(url,opts={}){
+
+  const r=await fetch(url,{credentials:'include',headers:{'Content-Type':'application/json'},...opts});
+
+  if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.detail||'Error');}
+
+  return r.json();
+
+}
+
+function delay(ms){return new Promise(r=>setTimeout(r,ms));}
+
+init();
+
+</script>
+
+<script>if("serviceWorker"in navigator){navigator.serviceWorker.register("/static/sw.js").catch(function(){})}</script>
+
+
+<script src="/static/chat.js"></script>
+
+
+</body>
+
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

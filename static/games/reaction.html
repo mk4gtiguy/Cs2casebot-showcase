@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+
+<title>⚡ Reaction Time — CS2CaseBot</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+
+<style>
+
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+
+:root{--bg:#060408;--cs:#ffd700;--green:#22c55e;--font:'Orbitron',monospace;}
+
+html,body{min-height:100vh;background:var(--bg);font-family:var(--font);overflow-x:hidden;color:#e8d8c0;}
+
+body{background-image:radial-gradient(ellipse 80% 40% at 50% 0%,rgba(255,215,0,0.04) 0%,transparent 70%);}
+
+.hdr{display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(6,4,8,0.98);border-bottom:1px solid rgba(255,215,0,0.1);position:sticky;top:0;z-index:50;}
+
+.back{display:flex;align-items:center;gap:5px;color:#2a2010;font-size:10px;letter-spacing:1px;text-decoration:none;transition:color .2s;}
+
+.back:hover{color:var(--cs);}
+
+.back svg{width:14px;height:14px;}
+
+.title{flex:1;font-size:14px;font-weight:900;letter-spacing:3px;background:linear-gradient(90deg,var(--cs),#ff9500);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+
+.tkts{font-size:12px;font-weight:700;color:var(--cs);font-family:monospace;}
+
+.page{max-width:420px;margin:0 auto;padding:16px 14px 80px;}
+
+.arena{background:rgba(4,2,6,0.99);border:1px solid rgba(255,215,0,0.08);border-radius:20px;padding:18px 14px 20px;margin-bottom:14px;position:relative;overflow:hidden;}
+
+.arena::before{content:'';position:absolute;top:0;left:15%;right:15%;height:1px;background:linear-gradient(90deg,transparent,rgba(255,215,0,0.3),transparent);}
+
+.info-strip{display:flex;justify-content:space-between;font-size:9px;letter-spacing:1px;color:#2a2010;margin-bottom:16px;}
+
+.info-strip span{color:var(--cs);}
+
+#reactionBox{
+
+  width:100%;height:240px;border-radius:14px;
+
+  display:flex;align-items:center;justify-content:center;
+
+  cursor:pointer;user-select:none;-webkit-tap-highlight-color:transparent;
+
+  font-size:22px;font-weight:900;letter-spacing:3px;color:rgba(255,255,255,0.95);
+
+  transition:background .1s,box-shadow .1s,border-color .1s;
+
+  border:2px solid transparent;margin-bottom:14px;
+
+}
+
+.box-wait{background:#7f1d1d!important;box-shadow:0 0 40px rgba(127,29,29,0.45),inset 0 0 50px rgba(0,0,0,0.4)!important;border-color:#991b1b!important;}
+
+.box-fake{background:#78350f!important;box-shadow:0 0 40px rgba(120,53,15,0.5),inset 0 0 50px rgba(0,0,0,0.4)!important;border-color:#92400e!important;}
+
+.box-go{background:#14532d!important;box-shadow:0 0 60px rgba(20,83,45,0.7),inset 0 0 30px rgba(0,0,0,0.2)!important;border-color:#166534!important;}
+
+.box-early{background:#450a0a!important;box-shadow:0 0 40px rgba(69,10,10,0.45)!important;border-color:#7f1d1d!important;}
+
+.guide{text-align:center;color:#444;font-size:10px;letter-spacing:1px;line-height:2;}
+
+.guide .g{color:var(--green);font-weight:700;}
+
+.guide .r{color:#ef4444;}
+
+.hist-row{display:flex;gap:4px;flex-wrap:wrap;align-items:center;min-height:14px;margin-top:16px;}
+
+.hist-lbl{font-size:8px;color:#2a2010;letter-spacing:1px;flex-shrink:0;margin-right:2px;}
+
+.hist-dot{width:12px;height:12px;border-radius:50%;}
+
+.bet-ctrl{background:rgba(0,0,0,0.4);border:1px solid rgba(255,215,0,0.06);border-radius:14px;padding:14px;}
+
+.bl{font-size:8px;color:#2a2010;letter-spacing:2px;margin-bottom:10px;}
+
+.btn-start{width:100%;padding:15px;border:none;border-radius:10px;font-family:var(--font);font-size:13px;font-weight:900;letter-spacing:3px;cursor:pointer;transition:all .2s;background:linear-gradient(135deg,#664400,var(--cs));color:#06040a;box-shadow:0 4px 20px rgba(255,215,0,0.3);}
+
+.btn-start:not(:disabled):hover{transform:translateY(-2px);}
+
+.btn-start:disabled{opacity:.4;cursor:not-allowed;}
+
+.best-note{text-align:center;font-size:9px;color:#2a2010;letter-spacing:1px;margin-top:8px;}
+
+.best-note span{color:var(--cs);}
+
+.result-card{text-align:center;padding:10px 0;}
+
+.r-icon{font-size:52px;margin-bottom:12px;}
+
+.r-ms{font-size:32px;font-weight:900;margin-bottom:4px;font-family:monospace;}
+
+.r-lbl{color:var(--cs);font-size:14px;margin-bottom:14px;letter-spacing:1px;}
+
+.r-tkt{font-size:18px;font-weight:700;margin-bottom:6px;}
+
+.r-tiers{color:#333;font-size:10px;letter-spacing:1px;margin-bottom:20px;}
+
+.btn-row{display:flex;gap:10px;justify-content:center;}
+
+.btn-again{padding:12px 22px;border:none;border-radius:10px;font-family:var(--font);font-size:10px;font-weight:700;letter-spacing:2px;cursor:pointer;background:linear-gradient(135deg,#664400,var(--cs));color:#06040a;}
+
+.btn-back{padding:12px 18px;border:1px solid rgba(255,215,0,0.15);border-radius:10px;font-family:var(--font);font-size:10px;font-weight:700;letter-spacing:1px;cursor:pointer;background:transparent;color:#2a2010;}
+
+.btn-back:hover{color:var(--cs);}
+
+@keyframes confettiDrop{to{transform:translateY(110vh) rotate(720deg);opacity:0;}}
+
+</style>
+
+    <script src="/static/sound.js"></script>
+
+
+    <script src="/static/page-transitions.js"></script>
+
+
+    <script src="/static/autoplay.js"></script>
+
+    <script src="/static/arcade-celebrate.js"></script>
+
+<link rel="stylesheet" href="/static/games-shared.css"><script src="/static/js/csrf.js"></script>
+
+
+</head>
+
+<body>
+
+<header class="hdr">
+
+  <a class="back" href="/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>BACK</a>
+
+  <span class="title">⚡ REACTION TIME</span>
+
+  <span class="tkts">🎟️ <span id="tktBal">—</span></span>
+
+</header>
+
+<div class="page">
+
+  <div class="arena" id="arenaWrap">
+
+    <div class="info-strip">
+
+      <span>COST: <span>1 TICKET</span></span>
+
+      <span>&lt;150ms = <span>8 🎟️</span></span>
+
+    </div>
+
+    <div id="reactionBox" class="box-wait" onclick="boxClick()">WAIT...</div>
+
+    <div class="guide">Click the instant it turns <span class="g">GREEN</span><br>Orange flashes = fakes · <span class="r">Early click = penalty</span></div>
+
+    <div class="hist-row" id="histRow"><span class="hist-lbl">SESSION:</span></div>
+
+  </div>
+
+
+
+  <div id="startCtrl" class="bet-ctrl">
+
+    <div class="bl">TICKET ARCADE</div>
+
+    <button class="btn-start" id="startBtn" onclick="startGame()">⚡ PLAY (1 🎟️)</button>
+
+    <div class="best-note">Best: <span id="bestDisp">—</span></div>
+
+  </div>
+
+
+
+  <div id="resultWrap" style="display:none;padding:16px 0;"></div>
+
+  <div id="arcadeLbBox" style="margin-top:14px;"></div>
+
+</div>
+
+<script>
+
+let _state=null,_history=[],_best=null;
+
+async function api(url,opts={}){const r=await fetch(url,{credentials:'include',headers:{'Content-Type':'application/json'},...opts});if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.detail||'Error');}return r.json();}
+
+async function loadBal(){try{const d=await api('/api/tickets/balance');document.getElementById('tktBal').textContent=d.balance??d.tickets??'?';}catch(e){}}
+
+function refreshLb(){
+  const box=document.getElementById('arcadeLbBox');
+  if(box&&window.renderArcadeLeaderboard) renderArcadeLeaderboard(box,'reaction',s=>Math.round(s)+'ms');
+}
+
+loadBal();
+refreshLb();
+
+
+
+async function startGame(){
+
+
+  Sound.click();
+
+
+  if(_state)return;
+
+
+  document.getElementById('startBtn').disabled=true;
+
+  document.getElementById('resultWrap').style.display='none';
+
+  const box=document.getElementById('reactionBox');
+
+  box.className='box-wait';box.textContent='WAIT...';
+
+  try{
+
+    const data=await api('/api/ticket-games/reaction/start',{method:'POST'});
+
+    loadBal();
+
+    _state={token:data.token,startTime:null,waiting:true};
+
+    const delay=2000+Math.random()*3000;
+
+    const numFakes=1+Math.floor(Math.random()*2);
+
+    for(let fi=0;fi<numFakes;fi++){
+
+      const fakeAt=500+Math.random()*(delay*0.55);
+
+      setTimeout(()=>{
+
+        if(!_state||!_state.waiting)return;
+
+        box.className='box-fake';box.textContent='!!';
+
+        setTimeout(()=>{if(!_state||!_state.waiting)return;box.className='box-wait';box.textContent='WAIT...';},220);
+
+      },fakeAt);
+
+    }
+
+    setTimeout(()=>{
+
+
+      if(!_state)return;
+
+
+      box.className='box-go';box.textContent='CLICK NOW!';
+
+
+      _state.startTime=performance.now();_state.waiting=false;
+
+
+      Sound.beep();
+
+
+    },delay);
+
+  }catch(e){
+
+    document.getElementById('startBtn').disabled=false;
+
+    showResult(`<div style="color:#ef4444;font-size:12px;text-align:center;padding:10px;">${e.message||'Not enough tickets'}</div>`);
+
+  }
+
+}
+
+
+
+function boxClick(){
+
+
+  if(!_state)return;
+
+
+  Sound.click();
+
+
+  if(_state.waiting){
+
+
+    const box=document.getElementById('reactionBox');
+
+
+    box.className='box-early';box.textContent='TOO EARLY! ❌';
+
+
+    submitResult(9999);return;
+
+
+  }
+
+
+  const ms=Math.round(performance.now()-_state.startTime);
+
+
+  submitResult(ms);
+
+
+}
+
+
+
+async function submitResult(ms){
+
+  if(!_state)return;
+
+  const token=_state.token;_state=null;
+
+  try{
+
+    const res=await api('/api/ticket-games/reaction/submit',{method:'POST',body:JSON.stringify({token,ms})});
+
+    const won=res.tickets_won;
+
+    const label=ms<150?'SUPERHUMAN!':ms<250?'Lightning Fast':ms<400?'Quick!':ms<600?'Not Bad':ms===9999?'Too Early!':'Too Slow';
+
+    if(ms!==9999&&(_best===null||ms<_best)){_best=ms;document.getElementById('bestDisp').textContent=ms+'ms';}
+
+    pushHist(won>0);loadBal();
+
+    if(res.is_new_best&&window.celebrateHighScore) celebrateHighScore(won);
+    refreshLb();
+
+    showResult(`
+
+      <div class="result-card">
+
+        <div class="r-icon">${won>=5?'🏆':won>=2?'⭐':won===0&&ms!==9999?'💀':'?'}</div>
+
+        ${ms!==9999?`<div class="r-ms">${ms} ms</div><div class="r-lbl">${label}</div>`:`<div class="r-lbl" style="color:#ef4444;">CLICKED TOO EARLY</div>`}
+
+        ${won>0?`<div class="r-tkt" style="color:var(--green);">+${won} tickets won!</div>`:`<div class="r-tkt" style="color:#555;">No tickets this time</div>`}
+
+        <div class="r-tiers">&lt;150ms=8🎟️ · &lt;200ms=5🎟️ · &lt;300ms=3🎟️ · &lt;450ms=2🎟️ · &lt;600ms=1🎟️</div>
+
+        <div class="btn-row">
+
+          <button class="btn-again" onclick="resetAndPlay()">🔄 PLAY AGAIN</button>
+
+          <button class="btn-back" onclick="location.href='/'">BACK</button>
+
+        </div>
+
+      </div>
+
+    `);
+
+    if(won>0){spawnConfetti();Sound.levelup();}else{Sound.loss();}
+
+
+  }catch(e){showResult(`<div style="color:#ef4444;font-size:12px;text-align:center;">${e.message}</div>`);}
+
+
+  document.getElementById('startBtn').disabled=false;
+
+
+}
+
+
+
+function resetAndPlay(){
+
+
+  Sound.click();
+
+
+  document.getElementById('resultWrap').style.display='none';
+
+
+  document.getElementById('reactionBox').className='box-wait';
+
+
+  document.getElementById('reactionBox').textContent='WAIT...';
+
+
+  startGame();
+
+
+}
+
+
+
+function showResult(html){
+
+  document.getElementById('resultWrap').innerHTML=html;
+
+  document.getElementById('resultWrap').style.display='';
+
+  document.getElementById('startBtn').disabled=false;
+
+}
+
+
+
+function pushHist(win){
+
+  _history.push(win);if(_history.length>20)_history.shift();
+
+  const el=document.getElementById('histRow');if(!el)return;
+
+  el.innerHTML='<span class="hist-lbl">SESSION:</span>';
+
+  _history.forEach(w=>{const d=document.createElement('div');d.className='hist-dot';d.style.background=w?'#22c55e':'#ef4444';el.appendChild(d);});
+
+}
+
+
+
+function spawnConfetti(){
+
+  const cols=['#ffd700','#22c55e','#3b82f6','#a855f7','#ec4899'];
+
+  for(let i=0;i<35;i++){
+
+    const el=document.createElement('div');
+
+    el.style.cssText=`position:fixed;width:7px;height:7px;border-radius:2px;background:${cols[i%cols.length]};left:${Math.random()*100}%;top:-10px;z-index:999;pointer-events:none;animation:confettiDrop ${0.9+Math.random()*1.2}s ease ${Math.random()*0.5}s forwards;`;
+
+    document.body.appendChild(el);setTimeout(()=>el.remove(),2500);
+
+  }
+
+}
+
+</script>
+
+<script>if("serviceWorker"in navigator){navigator.serviceWorker.register("/static/sw.js").catch(function(){})}</script>
+
+
+<script src="/static/chat.js"></script>
+
+
+</body>
+
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

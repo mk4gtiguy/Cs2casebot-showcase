@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>🔨  Live Case Auction — CS2CaseBot</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+:root{--bg:#06070a;--accent:#ffd700;--green:#22c55e;--red:#ef4444;--muted:#556;--font:'Orbitron',monospace;}
+html,body{min-height:100vh;background:var(--bg);font-family:var(--font);overflow-x:hidden;color:#c8d0e8;}
+.hdr{display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(6,7,10,0.98);border-bottom:1px solid rgba(255,215,0,0.12);position:sticky;top:0;z-index:50;}
+.back{display:flex;align-items:center;gap:5px;color:#2a2a3a;font-size:10px;letter-spacing:1px;text-decoration:none;}
+.back svg{width:14px;height:14px;}
+.title{flex:1;font-size:14px;font-weight:900;letter-spacing:3px;color:var(--accent);}
+.bal{font-size:13px;font-weight:700;color:var(--accent);font-family:monospace;}
+.page{max-width:460px;margin:0 auto;padding:16px 14px 100px;}
+
+.case-hdr{text-align:center;margin-bottom:14px;}
+.case-emoji{font-size:44px;}
+.case-name{font-size:13px;font-weight:900;color:var(--accent);letter-spacing:1px;margin-top:6px;}
+.case-blind-note{font-size:9px;color:var(--muted);margin-top:2px;letter-spacing:1px;}
+
+.bid-hdr{text-align:center;margin-bottom:14px;}
+.bid-total{font-size:clamp(30px,9vw,44px);font-weight:900;color:var(--accent);font-family:monospace;line-height:1;}
+.bid-label{font-size:9px;letter-spacing:2px;color:var(--muted);margin-top:4px;}
+.high-bidder{font-size:11px;color:#ccc;margin-top:6px;}
+.round-timer{font-size:clamp(24px,7vw,32px);font-weight:900;color:var(--accent);font-family:monospace;line-height:1;margin-top:6px;}
+.round-status-banner{text-align:center;font-size:11px;font-weight:700;letter-spacing:2px;color:var(--accent);margin-bottom:10px;}
+.round-status-banner.settled{color:var(--green);}
+.round-status-banner.cancelled{color:var(--red);}
+
+.bid-panel{background:rgba(0,0,0,0.4);border:1px solid rgba(255,215,0,0.1);border-radius:14px;padding:16px;margin-bottom:14px;}
+.bet-row{display:flex;gap:8px;margin-bottom:10px;}
+.bet-row input{flex:1;background:rgba(0,0,0,0.5);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:10px;color:#fff;font-family:monospace;font-size:14px;}
+.min-bid-hint{font-size:9px;color:var(--muted);margin-bottom:10px;text-align:center;}
+.btn-bid{width:100%;padding:15px;border:none;border-radius:12px;font-family:var(--font);font-size:12px;font-weight:900;letter-spacing:2px;cursor:pointer;background:linear-gradient(135deg,#7a5c00,var(--accent));color:#06070a;}
+.btn-bid:disabled{opacity:.4;cursor:not-allowed;}
+
+.result-panel{background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.3);border-radius:14px;padding:16px;margin-bottom:14px;text-align:center;display:none;}
+.result-panel .rp-item{font-size:14px;font-weight:900;color:var(--green);}
+.result-panel .rp-value{font-size:11px;color:#ccc;margin-top:4px;}
+
+.disclaimer-inline{font-size:10px;color:var(--muted);margin-top:18px;text-align:center;line-height:1.5;}
+</style>
+    <script src="/static/sound.js"></script>
+    <script src="/static/big-win.js"></script>
+    <script src="/static/balance-animation.js"></script>
+    <script src="/static/page-transitions.js"></script>
+<link rel="stylesheet" href="/static/games-shared.css"><script src="/static/js/csrf.js"></script>
+</head>
+<body>
+
+<header class="hdr">
+  <a class="back" href="/games"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>GAMES</a>
+  <span class="title">🔨  LIVE CASE AUCTION</span>
+  <span class="bal" id="balDisplay">$—</span>
+</header>
+
+<div class="page">
+
+  <div class="case-hdr">
+    <div class="case-emoji" id="caseEmoji">📦</div>
+    <div class="case-name" id="caseName">Loading…</div>
+    <div class="case-blind-note">BIDDING BLIND — THE ITEM STAYS UNKNOWN UNTIL AUCTION CLOSE</div>
+  </div>
+
+  <div class="bid-hdr">
+    <div class="bid-total" id="bidTotal">$0.00</div>
+    <div class="bid-label">CURRENT HIGH BID</div>
+    <div class="high-bidder" id="highBidderEl">No bids yet</div>
+  </div>
+  <div class="round-status-banner" id="roundStatusBanner">BIDDING OPEN</div>
+  <div class="round-timer" id="roundTimer">20</div>
+
+  <div class="bid-panel" id="bidPanel">
+    <div class="min-bid-hint" id="minBidHint">Minimum bid: $10.00</div>
+    <div class="bet-row"><input type="number" id="bidInput" value="10" min="10" max="750000"></div>
+    <button class="btn-bid" id="bidBtn" onclick="placeBid()">🔨  PLACE BID</button>
+  </div>
+
+  <div class="result-panel" id="resultPanel">
+    <div class="rp-item" id="resultItem"></div>
+    <div class="rp-value" id="resultValue"></div>
+  </div>
+
+  <div class="disclaimer-inline">⚠️ Your bid is deducted immediately and refunded instantly if you're outbid. The winning bidder pays their final bid and receives whatever the case rolls — could be worth far more or less. This is a simulation; balances/items have no real-world value.</div>
+</div>
+
+<script>
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+let balance = 0, myUserId = null;
+let balDisplayInited = false;
+let currentRoundId = null;
+let ws = null;
+
+async function init(){
+  try{ const d = await api('/api/user/me'); balance = d.balance; myUserId = String(d.user_id); updateBal(); }catch(e){}
+  const params = new URLSearchParams(location.search);
+  const roundParam = params.get('round');
+  await joinOpenRound(roundParam ? Number(roundParam) : null);
+}
+
+async function joinOpenRound(roundId){
+  try{
+    const data = await api('/api/games/live-case-auction/rounds');
+    if (roundId){ enterRound(roundId, null); return; }
+    if (data.rounds && data.rounds.length){ enterRound(data.rounds[0].round_id, data.rounds[0]); }
+    else {
+      // No open auctions yet -- placing the first bid will create one.
+      enterRound(null, null);
+    }
+  }catch(e){}
+}
+
+function updateBal(){
+  const e = document.getElementById('balDisplay');
+  const n = '$'+balance.toLocaleString(undefined,{maximumFractionDigits:0});
+  if (balDisplayInited && window.animateBalance) { animateBalance(e, e.textContent, n, true); }
+  else { e.textContent = n; }
+  balDisplayInited = true;
+}
+async function refreshBal(){ try{ const d = await api('/api/user/me'); return d.balance; }catch(e){ return balance; } }
+
+function enterRound(roundId, round){
+  currentRoundId = roundId;
+  if (round) renderRound(round);
+  if (roundId) connectWS(roundId);
+}
+
+function renderRound(round){
+  document.getElementById('caseEmoji').textContent = round.case_emoji || '📦';
+  document.getElementById('caseName').textContent = round.case_name || 'Mystery Case';
+  document.getElementById('bidTotal').textContent = '$' + Number(round.current_bid || 0).toFixed(2);
+  document.getElementById('highBidderEl').textContent = round.high_bidder_name
+    ? `High bidder: ${esc(round.high_bidder_name)}` : 'No bids yet';
+
+  const banner = document.getElementById('roundStatusBanner');
+  banner.className = 'round-status-banner ' + round.status;
+  banner.textContent = round.status === 'bidding' ? 'BIDDING OPEN'
+                      : round.status === 'settled' ? 'AUCTION COMPLETE' : 'CANCELLED — NO BIDS';
+
+  const minNext = round.min_next_bid || 10;
+  document.getElementById('minBidHint').textContent = `Minimum next bid: $${Number(minNext).toFixed(2)}`;
+  document.getElementById('bidInput').value = minNext;
+  document.getElementById('bidBtn').disabled = round.status !== 'bidding';
+}
+
+async function placeBid(){
+  const amount = parseFloat(document.getElementById('bidInput').value) || 10;
+  document.getElementById('bidBtn').disabled = true;
+  try{
+    const body = { amount };
+    if (currentRoundId) body.round_id = currentRoundId;
+    const data = await api('/api/games/live-case-auction/bid', { method: 'POST', body: JSON.stringify(body) });
+    balance = await refreshBal(); updateBal();
+    renderRound(data);
+    enterRound(data.round_id, data);
+    Sound && Sound.click && Sound.click();
+  }catch(e){
+    showToast(e.message || 'Could not place bid');
+  }finally{
+    document.getElementById('bidBtn').disabled = false;
+  }
+}
+
+function connectWS(roundId){
+  closeWS();
+  const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  ws = new WebSocket(proto + '//' + location.host + '/api/games/live-case-auction/ws/' + roundId);
+  ws.onmessage = (ev) => handleWSMsg(JSON.parse(ev.data));
+  ws.onclose = () => { if (currentRoundId === roundId) setTimeout(() => { if (currentRoundId === roundId) connectWS(roundId); }, 2000); };
+}
+function closeWS(){ if (ws) { try{ ws.close(); }catch(e){} ws = null; } }
+
+function handleWSMsg(msg){
+  if (msg.type === 'room_state' || msg.type === 'new_bid'){
+    renderRound(msg);
+  } else if (msg.type === 'tick'){
+    document.getElementById('roundTimer').textContent = msg.seconds;
+  } else if (msg.type === 'round_ending'){
+    document.getElementById('roundTimer').textContent = '';
+  } else if (msg.type === 'result'){
+    onResult(msg);
+  } else if (msg.type === 'cancelled'){
+    onCancelled(msg);
+  }
+}
+
+async function onResult(msg){
+  renderRound(msg);
+  balance = await refreshBal(); updateBal();
+  const iWon = String(msg.winner_id) === myUserId;
+  const panel = document.getElementById('resultPanel');
+  panel.style.display = 'block';
+  document.getElementById('resultItem').textContent = `${esc(msg.winner_name || 'Someone')} won: ${esc(msg.item.name)}`;
+  document.getElementById('resultValue').textContent =
+    `Paid $${Number(msg.paid).toFixed(2)} for an item worth $${Number(msg.item.value).toFixed(2)}`;
+  if (iWon){
+    Sound && Sound.win && Sound.win();
+    spawnConfettiSafe();
+    if (window.maybeBigWin) maybeBigWin(msg.paid, msg.item.value);
+  } else {
+    Sound && Sound.loss && Sound.loss();
+  }
+  setTimeout(() => {
+    closeWS();
+    currentRoundId = null;
+    document.getElementById('resultPanel').style.display = 'none';
+    joinOpenRound(null);
+  }, 4000);
+}
+
+async function onCancelled(msg){
+  document.getElementById('roundStatusBanner').className = 'round-status-banner cancelled';
+  document.getElementById('roundStatusBanner').textContent = 'CANCELLED — NO BIDS PLACED';
+  setTimeout(() => {
+    closeWS();
+    currentRoundId = null;
+    joinOpenRound(null);
+  }, 3000);
+}
+
+function spawnConfettiSafe(){
+  try{ if (window.spawnConfettiExplosion) spawnConfettiExplosion(); else if (window.spawnConfetti) spawnConfetti('Gold', 60); }catch(e){}
+}
+
+function showToast(msg){
+  let t = document.getElementById('aucToast');
+  if (!t){
+    t = document.createElement('div');
+    t.id = 'aucToast';
+    t.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:rgba(20,20,30,0.95);border:1px solid rgba(255,215,0,0.3);color:#fff;padding:10px 18px;border-radius:10px;font-size:11px;z-index:500;max-width:90vw;text-align:center;';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.style.opacity = '1';
+  clearTimeout(t._hideTimer);
+  t._hideTimer = setTimeout(() => { t.style.opacity = '0'; }, 3000);
+}
+
+async function api(url, opts = {}){
+  const r = await fetch(url, { credentials: 'include', headers: { 'Content-Type': 'application/json' }, ...opts });
+  if (!r.ok){ const e = await r.json().catch(() => ({})); throw new Error(e.detail || 'Error'); }
+  return r.json();
+}
+
+init();
+</script>
+<script>if("serviceWorker"in navigator){navigator.serviceWorker.register("/static/sw.js").catch(function(){})}</script>
+<script src="/static/chat.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>⛏️  PvP Mines Race — CS2CaseBot</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+:root{--bg:#06070a;--accent:#ffd700;--green:#22c55e;--red:#ef4444;--muted:#556;--font:'Orbitron',monospace;}
+html,body{min-height:100vh;background:var(--bg);font-family:var(--font);overflow-x:hidden;color:#c8d0e8;}
+.hdr{display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(6,7,10,0.98);border-bottom:1px solid rgba(255,215,0,0.12);position:sticky;top:0;z-index:50;}
+.back{display:flex;align-items:center;gap:5px;color:#2a2a3a;font-size:10px;letter-spacing:1px;text-decoration:none;}
+.back svg{width:14px;height:14px;}
+.title{flex:1;font-size:14px;font-weight:900;letter-spacing:3px;color:var(--accent);}
+.bal{font-size:13px;font-weight:700;color:var(--accent);font-family:monospace;}
+.page{max-width:460px;margin:0 auto;padding:16px 14px 100px;}
+
+.pot-hdr{text-align:center;margin-bottom:14px;}
+.pot-total{font-size:clamp(30px,9vw,44px);font-weight:900;color:var(--accent);font-family:monospace;line-height:1;}
+.pot-label{font-size:9px;letter-spacing:2px;color:var(--muted);margin-top:4px;}
+.round-status-banner{text-align:center;font-size:11px;font-weight:700;letter-spacing:2px;color:var(--accent);margin-bottom:10px;}
+.round-status-banner.settled{color:var(--green);}
+.round-status-banner.cancelled{color:var(--red);}
+
+.join-panel{background:rgba(0,0,0,0.4);border:1px solid rgba(255,215,0,0.1);border-radius:14px;padding:16px;margin-bottom:14px;}
+.bet-row{display:flex;gap:8px;margin-bottom:10px;}
+.bet-row input{flex:1;background:rgba(0,0,0,0.5);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:10px;color:#fff;font-family:monospace;font-size:14px;}
+.btn-join{width:100%;padding:15px;border:none;border-radius:12px;font-family:var(--font);font-size:12px;font-weight:900;letter-spacing:2px;cursor:pointer;background:linear-gradient(135deg,#7a5c00,var(--accent));color:#06070a;}
+
+.my-status{background:rgba(255,215,0,0.06);border:1px solid rgba(255,215,0,0.2);border-radius:12px;padding:14px;margin-bottom:14px;text-align:center;}
+.my-progress{font-size:24px;font-weight:900;color:var(--accent);font-family:monospace;}
+.btn-reveal{width:100%;margin-top:10px;padding:14px;border:none;border-radius:10px;background:linear-gradient(135deg,#1a6b2f,var(--green));color:#06070a;font-family:var(--font);font-size:11px;font-weight:900;letter-spacing:1px;cursor:pointer;}
+.btn-reveal:disabled{opacity:.35;cursor:not-allowed;}
+
+.players-list{display:flex;flex-direction:column;gap:6px;}
+.player-row{display:flex;justify-content:space-between;background:rgba(0,0,0,0.3);border-radius:8px;padding:8px 10px;font-size:10px;color:#aaa;}
+.player-row.busted{opacity:.5;}
+.disclaimer-inline{font-size:10px;color:var(--muted);margin-top:18px;text-align:center;line-height:1.5;}
+</style>
+    <script src="/static/sound.js"></script>
+    <script src="/static/big-win.js"></script>
+    <script src="/static/balance-animation.js"></script>
+    <script src="/static/page-transitions.js"></script>
+<link rel="stylesheet" href="/static/games-shared.css"><script src="/static/js/csrf.js"></script>
+</head>
+<body>
+
+<header class="hdr">
+  <a class="back" href="/games"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>GAMES</a>
+  <span class="title">⛏️  MINES RACE</span>
+  <span class="bal" id="balDisplay">$—</span>
+</header>
+
+<div class="page">
+
+  <div class="pot-hdr">
+    <div class="pot-total" id="potTotal">$0.00</div>
+    <div class="pot-label">FIRST TO 5 SAFE REVEALS TAKES THE POT</div>
+  </div>
+  <div class="round-status-banner" id="roundStatusBanner">RACING — SAME 3-MINE BOARD FOR EVERYONE</div>
+
+  <div class="join-panel" id="joinPanel">
+    <div class="bet-row"><input type="number" id="betInput" value="100" min="50" max="750000"></div>
+    <button class="btn-join" onclick="joinRound()">⛏️  JOIN THE RACE</button>
+  </div>
+
+  <div class="my-status" id="myStatus" style="display:none;">
+    <div class="my-progress" id="myProgressEl">0 / 5 SAFE</div>
+    <button class="btn-reveal" id="revealBtn" onclick="doReveal()">🔲 REVEAL TILE</button>
+  </div>
+
+  <div class="players-list" id="playersList"></div>
+
+  <div class="disclaimer-inline">⚠️ Pure PvP race — a bust means your entry fee stays in the pot, no refund. If nobody reaches 5 safe reveals within 60s, everyone still in the race gets refunded. This is a simulation; balances have no real-world value.</div>
+</div>
+
+<script>
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+let balance = 0, myUserId = null;
+let balDisplayInited = false;
+let currentRoundId = null;
+let ws = null;
+let myBetAmount = 0;
+
+async function init(){
+  try{ const d = await api('/api/user/me'); balance = d.balance; myUserId = String(d.user_id); updateBal(); }catch(e){}
+  const params = new URLSearchParams(location.search);
+  const roundParam = params.get('round');
+  await joinOpenRound(roundParam ? Number(roundParam) : null);
+}
+
+async function joinOpenRound(roundId){
+  try{
+    const data = await api('/api/games/mines-race/rounds');
+    if (roundId){ enterRound(roundId, null); return; }
+    if (data.rounds && data.rounds.length){ enterRound(data.rounds[0].round_id, null); }
+  }catch(e){}
+}
+
+function updateBal(){
+  const e = document.getElementById('balDisplay');
+  const n = '$'+balance.toLocaleString(undefined,{maximumFractionDigits:0});
+  if (balDisplayInited && window.animateBalance) { animateBalance(e, e.textContent, n, true); }
+  else { e.textContent = n; }
+  balDisplayInited = true;
+}
+async function refreshBal(){ try{ const d = await api('/api/user/me'); return d.balance; }catch(e){ return balance; } }
+
+async function joinRound(){
+  const amount = parseFloat(document.getElementById('betInput').value) || 100;
+  try{
+    const body = { amount };
+    if (currentRoundId) body.round_id = currentRoundId;
+    const data = await api('/api/games/mines-race/join', { method: 'POST', body: JSON.stringify(body) });
+    myBetAmount = amount;
+    balance = await refreshBal(); updateBal();
+    document.getElementById('joinPanel').style.display = 'none';
+    document.getElementById('myStatus').style.display = 'block';
+    enterRound(data.round_id, data.round);
+  }catch(e){
+    showToast(e.message || 'Could not join');
+  }
+}
+
+function enterRound(roundId, round){
+  if (currentRoundId === roundId && ws) return;
+  currentRoundId = roundId;
+  if (round) renderRound(round);
+  connectWS(roundId);
+}
+
+function renderRound(round){
+  document.getElementById('potTotal').textContent = '$' + Number(round.pot || 0).toFixed(2);
+  const banner = document.getElementById('roundStatusBanner');
+  banner.className = 'round-status-banner ' + round.status;
+  banner.textContent = round.status === 'racing' ? 'RACING — SAME 3-MINE BOARD FOR EVERYONE'
+                      : round.status === 'settled' ? 'RACE COMPLETE' : 'CANCELLED — REFUNDED';
+
+  const me = (round.players || []).find(p => String(p.user_id) === myUserId);
+  if (me){
+    document.getElementById('joinPanel').style.display = 'none';
+    document.getElementById('myStatus').style.display = 'block';
+    document.getElementById('myProgressEl').textContent = `${me.safe_count} / 5 SAFE`;
+    document.getElementById('revealBtn').disabled = round.status !== 'racing' || me.busted || me.safe_count >= 5;
+  }
+
+  const list = document.getElementById('playersList');
+  list.innerHTML = (round.players || []).map(p => `
+    <div class="player-row ${p.busted ? 'busted' : ''}">
+      <span>${esc(p.username || 'Player')}${p.busted ? ' (busted)' : ''}</span>
+      <span>${p.safe_count} / 5</span>
+    </div>
+  `).join('') || '<div style="color:var(--muted);font-size:10px;">No one racing yet.</div>';
+}
+
+async function doReveal(){
+  if (!currentRoundId) return;
+  document.getElementById('revealBtn').disabled = true;
+  try{
+    const data = await api('/api/games/mines-race/reveal', { method: 'POST', body: JSON.stringify({ round_id: currentRoundId }) });
+    document.getElementById('myProgressEl').textContent = `${data.safe_count} / 5 SAFE`;
+    if (data.hit_mine){
+      Sound && Sound.loss && Sound.loss();
+      showToast('💥 You hit a mine — out of the race!');
+    } else {
+      Sound && Sound.click && Sound.click();
+      document.getElementById('revealBtn').disabled = data.safe_count >= 5;
+    }
+  }catch(e){
+    showToast(e.message || 'Could not reveal');
+    document.getElementById('revealBtn').disabled = false;
+  }
+}
+
+function connectWS(roundId){
+  closeWS();
+  const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  ws = new WebSocket(proto + '//' + location.host + '/api/games/mines-race/ws/' + roundId);
+  ws.onmessage = (ev) => handleWSMsg(JSON.parse(ev.data));
+  ws.onclose = () => { if (currentRoundId === roundId) setTimeout(() => { if (currentRoundId === roundId) connectWS(roundId); }, 2000); };
+}
+function closeWS(){ if (ws) { try{ ws.close(); }catch(e){} ws = null; } }
+
+function handleWSMsg(msg){
+  if (msg.type === 'room_state' || msg.type === 'player_joined'){
+    renderRound(msg.round || msg);
+  } else if (msg.type === 'player_revealed'){
+    api('/api/games/mines-race/rounds/' + currentRoundId).then(renderRound).catch(()=>{});
+  } else if (msg.type === 'race_won'){
+    onWon(msg);
+  } else if (msg.type === 'cancelled'){
+    onCancelled(msg);
+  }
+}
+
+async function onWon(msg){
+  renderRound(msg);
+  balance = await refreshBal(); updateBal();
+  const iWon = String(msg.winner_id) === myUserId;
+  if (iWon){
+    Sound && Sound.win && Sound.win();
+    spawnConfettiSafe();
+    showToast(`You won the pot: $${Number(msg.win).toFixed(2)}!`);
+    if (window.maybeBigWin) maybeBigWin(myBetAmount, msg.win);
+  } else {
+    Sound && Sound.loss && Sound.loss();
+  }
+  resetToLobbyAfter();
+}
+
+async function onCancelled(msg){
+  document.getElementById('roundStatusBanner').className = 'round-status-banner cancelled';
+  document.getElementById('roundStatusBanner').textContent = 'CANCELLED — NOBODY REACHED THE TARGET, REFUNDED';
+  balance = await refreshBal(); updateBal();
+  resetToLobbyAfter();
+}
+
+function resetToLobbyAfter(){
+  setTimeout(() => {
+    closeWS();
+    currentRoundId = null;
+    document.getElementById('joinPanel').style.display = 'block';
+    document.getElementById('myStatus').style.display = 'none';
+    joinOpenRound(null);
+  }, 3000);
+}
+
+function spawnConfettiSafe(){
+  try{ if (window.spawnConfettiExplosion) spawnConfettiExplosion(); else if (window.spawnConfetti) spawnConfetti('Gold', 60); }catch(e){}
+}
+
+function showToast(msg){
+  let t = document.getElementById('mrToast');
+  if (!t){
+    t = document.createElement('div');
+    t.id = 'mrToast';
+    t.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:rgba(20,20,30,0.95);border:1px solid rgba(255,215,0,0.3);color:#fff;padding:10px 18px;border-radius:10px;font-size:11px;z-index:500;max-width:90vw;text-align:center;';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.style.opacity = '1';
+  clearTimeout(t._hideTimer);
+  t._hideTimer = setTimeout(() => { t.style.opacity = '0'; }, 3000);
+}
+
+async function api(url, opts = {}){
+  const r = await fetch(url, { credentials: 'include', headers: { 'Content-Type': 'application/json' }, ...opts });
+  if (!r.ok){ const e = await r.json().catch(() => ({})); throw new Error(e.detail || 'Error'); }
+  return r.json();
+}
+
+init();
+</script>
+<script>if("serviceWorker"in navigator){navigator.serviceWorker.register("/static/sw.js").catch(function(){})}</script>
+<script src="/static/chat.js"></script>
+
+</body>
+</html>

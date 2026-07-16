@@ -1,0 +1,2126 @@
+@app.get("/api/user/achievements")
+@rate_limit("read")
+async def get_user_achievements(request: Request):
+    user_id = await get_user_id_from_session(request)
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    async with db_pool.acquire() as conn:
+        user = await conn.fetchrow(
+            """SELECT 
+                COALESCE(total_opens, 0) as total_opens,
+                COALESCE(total_golds, 0) as total_golds,
+                COALESCE(total_trades, 0) as total_trades,
+                COALESCE(daily_streak, 0) as daily_streak,
+                COALESCE(balance, 0) as balance,
+                COALESCE(total_hourly_claimed, 0) as total_hourly_claimed,
+                COALESCE(total_weekly_claimed, 0) as total_weekly_claimed,
+                COALESCE(total_premium_opens, 0) as total_premium_opens,
+                COALESCE(total_inventory_items, 0) as total_inventory_items,
+                COALESCE(total_stickers, 0) as total_stickers,
+                COALESCE(total_games_played, 0) as total_games_played,
+                COALESCE(total_quests_completed, 0) as total_quests_completed,
+                COALESCE(win_streak, 0) as win_streak,
+                COALESCE(total_spent, 0) as total_spent,
+                COALESCE(coinflip_wins, 0) as coinflip_wins,
+                COALESCE(dice_wins, 0) as dice_wins,
+                COALESCE(slots_wins, 0) as slots_wins,
+                COALESCE(mines_wins, 0) as mines_wins,
+                COALESCE(jackpot_wins, 0) as jackpot_wins
+               FROM users WHERE user_id = $1""",
+            user_id
+        )
+        
+        achievements = []
+        
+        # 1. First Case
+        if user and user['total_opens'] >= 1:
+            achievements.append({
+                "id": "first_open",
+                "name": "First Case",
+                "description": "Open your first case",
+                "icon": "🎯",
+                "unlocked": True
+            })
+        else:
+            achievements.append({
+                "id": "first_open",
+                "name": "First Case",
+                "description": "Open your first case",
+                "icon": "🎯",
+                "unlocked": False
+            })
+        
+        # 2. First Gold
+        if user and user['total_golds'] >= 1:
+            achievements.append({
+                "id": "first_gold",
+                "name": "First Gold",
+                "description": "Find your first Gold item",
+                "icon": "⭐",
+                "unlocked": True
+            })
+        else:
+            achievements.append({
+                "id": "first_gold",
+                "name": "First Gold",
+                "description": "Find your first Gold item",
+                "icon": "⭐",
+                "unlocked": False
+            })
+        
+        # 3. Streak 5
+        if user and user['daily_streak'] >= 5:
+            achievements.append({
+                "id": "streak_5",
+                "name": "Streak 5",
+                "description": "Maintain a 5-day daily streak",
+                "icon": "🔥",
+                "unlocked": True
+            })
+        else:
+            achievements.append({
+                "id": "streak_5",
+                "name": "Streak 5",
+                "description": "Maintain a 5-day daily streak",
+                "icon": "🔥",
+                "unlocked": False
+            })
+        
+        # 4. Streak 10
+        if user and user['daily_streak'] >= 10:
+            achievements.append({
+                "id": "streak_10",
+                "name": "Streak 10",
+                "description": "Maintain a 10-day daily streak",
+                "icon": "💎",
+                "unlocked": True
+            })
+        else:
+            achievements.append({
+                "id": "streak_10",
+                "name": "Streak 10",
+                "description": "Maintain a 10-day daily streak",
+                "icon": "💎",
+                "unlocked": False
+            })
+        
+        # 5. Gold Hunter (10 Golds)
+        if user and user['total_golds'] >= 10:
+            achievements.append({
+                "id": "gold_hunter",
+                "name": "Gold Hunter",
+                "description": "Find 10 Gold items",
+                "icon": "🏆",
+                "unlocked": True
+            })
+        else:
+            achievements.append({
+                "id": "gold_hunter",
+                "name": "Gold Hunter",
+                "description": "Find 10 Gold items",
+                "icon": "🏆",
+                "unlocked": False
+            })
+        
+        # 6. Case Master (100 Cases)
+        if user and user['total_opens'] >= 100:
+            achievements.append({
+                "id": "case_master",
+                "name": "Case Master",
+                "description": "Open 100 cases",
+                "icon": "🎰",
+                "unlocked": True
+            })
+        else:
+            achievements.append({
+                "id": "case_master",
+                "name": "Case Master",
+                "description": "Open 100 cases",
+                "icon": "🎰",
+                "unlocked": False
+            })
+        
+        # 7. Lucky Streak (25 Streak)
+        if user and user['daily_streak'] >= 25:
+            achievements.append({
+                "id": "streak_25",
+                "name": "Lucky Streak",
+                "description": "Maintain a 25-day daily streak",
+                "icon": "🍀",
+                "unlocked": True
+            })
+        else:
+            achievements.append({
+                "id": "streak_25",
+                "name": "Lucky Streak",
+                "description": "Maintain a 25-day daily streak",
+                "icon": "🍀",
+                "unlocked": False
+            })
+        
+        # 8. Streak Legend (50 Streak)
+        if user and user['daily_streak'] >= 50:
+            achievements.append({
+                "id": "streak_50",
+                "name": "Streak Legend",
+                "description": "Maintain a 50-day daily streak",
+                "icon": "👑",
+                "unlocked": True
+            })
+        else:
+            achievements.append({
+                "id": "streak_50",
+                "name": "Streak Legend",
+                "description": "Maintain a 50-day daily streak",
+                "icon": "👑",
+                "unlocked": False
+            })
+        
+        # 9. Gold Digger (50 Golds)
+        if user and user['total_golds'] >= 50:
+            achievements.append({
+                "id": "gold_digger",
+                "name": "Gold Digger",
+                "description": "Find 50 Gold items",
+                "icon": "⛏️",
+                "unlocked": True
+            })
+        else:
+            achievements.append({
+                "id": "gold_digger",
+                "name": "Gold Digger",
+                "description": "Find 50 Gold items",
+                "icon": "⛏️",
+                "unlocked": False
+            })
+        
+        # 10. Gold Legend (100 Golds)
+        if user and user['total_golds'] >= 100:
+            achievements.append({
+                "id": "gold_legend",
+                "name": "Gold Legend",
+                "description": "Find 100 Gold items",
+                "icon": "👑",
+                "unlocked": True
+            })
+        else:
+            achievements.append({
+                "id": "gold_legend",
+                "name": "Gold Legend",
+                "description": "Find 100 Gold items",
+                "icon": "👑",
+                "unlocked": False
+            })
+        
+        # 11. Case Collector (500 Cases)
+        if user and user['total_opens'] >= 500:
+            achievements.append({
+                "id": "case_collector",
+                "name": "Case Collector",
+                "description": "Open 500 cases",
+                "icon": "📦",
+                "unlocked": True
+            })
+        else:
+            achievements.append({
+                "id": "case_collector",
+                "name": "Case Collector",
+                "description": "Open 500 cases",
+                "icon": "📦",
+                "unlocked": False
+            })
+        
+        # 12. Case Connoisseur (1000 Cases)
+        if user and user['total_opens'] >= 1000:
+            achievements.append({
+                "id": "case_connoisseur",
+                "name": "Case Connoisseur",
+                "description": "Open 1000 cases",
+                "icon": "🎁",
+                "unlocked": True
+            })
+        else:
+            achievements.append({
+                "id": "case_connoisseur",
+                "name": "Case Connoisseur",
+                "description": "Open 1000 cases",
+                "icon": "🎁",
+                "unlocked": False
+            })
+        
+        # 13. Millionaire ($1,000,000 Balance)
+        if user and user['balance'] >= 1000000:
+            achievements.append({
+                "id": "millionaire",
+                "name": "Millionaire",
+                "description": "Reach $1,000,000 balance",
+                "icon": "💰",
+                "unlocked": True
+            })
+        else:
+            achievements.append({
+                "id": "millionaire",
+                "name": "Millionaire",
+                "description": "Reach $1,000,000 balance",
+                "icon": "💰",
+                "unlocked": False
+            })
+        
+        # 14. Trade Master (50 Trades)
+        if user and user['total_trades'] >= 50:
+            achievements.append({
+                "id": "trade_master",
+                "name": "Trade Master",
+                "description": "Complete 50 trade-ups",
+                "icon": "🔄",
+                "unlocked": True
+            })
+        else:
+            achievements.append({
+                "id": "trade_master",
+                "name": "Trade Master",
+                "description": "Complete 50 trade-ups",
+                "icon": "🔄",
+                "unlocked": False
+            })
+        
+        # 15. Trade Legend (500 Trades)
+        if user and user['total_trades'] >= 500:
+            achievements.append({
+                "id": "trade_legend",
+                "name": "Trade Legend",
+                "description": "Complete 500 trade-ups",
+                "icon": "🏅",
+                "unlocked": True
+            })
+        else:
+            achievements.append({
+                "id": "trade_legend",
+                "name": "Trade Legend",
+                "description": "Complete 500 trade-ups",
+                "icon": "🏅",
+                "unlocked": False
+            })
+        
+        # 16. Hourly Grinder (100 Hourly Claims)
+        if user and user['total_hourly_claimed'] >= 100:
+            achievements.append({
+                "id": "hourly_grinder",
+                "name": "Hourly Grinder",
+                "description": "Claim 100 hourly rewards",
+                "icon": "🕐",
+                "unlocked": True
+            })
+        else:
+            achievements.append({
+                "id": "hourly_grinder",
+                "name": "Hourly Grinder",
+                "description": "Claim 100 hourly rewards",
+                "icon": "🕐",
+                "unlocked": False
+            })
+        
+        # 17. Weekly Warrior (10 Weekly Claims)
+        if user and user['total_weekly_claimed'] >= 10:
+            achievements.append({
+                "id": "weekly_warrior",
+                "name": "Weekly Warrior",
+                "description": "Claim 10 weekly rewards",
+                "icon": "📅",
+                "unlocked": True
+            })
+        else:
+            achievements.append({
+                "id": "weekly_warrior",
+                "name": "Weekly Warrior",
+                "description": "Claim 10 weekly rewards",
+                "icon": "📅",
+                "unlocked": False
+            })
+        
+        # 18. First Trade
+        if user and user['total_trades'] >= 1:
+            achievements.append({
+                "id": "first_trade",
+                "name": "First Trade",
+                "description": "Complete your first trade-up",
+                "icon": "🤝",
+                "unlocked": True
+            })
+        else:
+            achievements.append({
+                "id": "first_trade",
+                "name": "First Trade",
+                "description": "Complete your first trade-up",
+                "icon": "🤝",
+                "unlocked": False
+            })
+        
+        # 19. Daily Dedication (30 Day Streak)
+        if user and user['daily_streak'] >= 30:
+            achievements.append({
+                "id": "daily_dedication",
+                "name": "Daily Dedication",
+                "description": "Maintain a 30-day daily streak",
+                "icon": "📆",
+                "unlocked": True
+            })
+        else:
+            achievements.append({
+                "id": "daily_dedication",
+                "name": "Daily Dedication",
+                "description": "Maintain a 30-day daily streak",
+                "icon": "📆",
+                "unlocked": False
+            })
+        
+        # 20. High Roller ($100,000 Balance)
+        if user and user['balance'] >= 100000:
+            achievements.append({
+                "id": "high_roller",
+                "name": "High Roller",
+                "description": "Reach $100,000 balance",
+                "icon": "💎",
+                "unlocked": True
+            })
+        else:
+            achievements.append({
+                "id": "high_roller",
+                "name": "High Roller",
+                "description": "Reach $100,000 balance",
+                "icon": "💎",
+                "unlocked": False
+            })
+
+        # 21. Newbie (First Login)
+        if user:
+            achievements.append({
+                "id": "newbie",
+                "name": "Newbie",
+                "description": "Log in for the first time",
+                "icon": "👋",
+                "unlocked": True
+            })
+        else:
+            achievements.append({
+                "id": "newbie",
+                "name": "Newbie",
+                "description": "Log in for the first time",
+                "icon": "👋",
+                "unlocked": False
+            })
+        
+        # 22. Spender ($10,000 Spent on Cases)
+        if user and user['total_spent'] >= 10000:
+            achievements.append({
+                "id": "spender",
+                "name": "Spender",
+                "description": "Spend $10,000 on cases",
+                "icon": "💳",
+                "unlocked": True
+            })
+        else:
+            achievements.append({
+                "id": "spender",
+                "name": "Spender",
+                "description": "Spend $10,000 on cases",
+                "icon": "💳",
+                "unlocked": False
+            })
+        
+        # 23. Big Spender ($100,000 Spent on Cases)
+        if user and user['total_spent'] >= 100000:
+            achievements.append({
+                "id": "big_spender",
+                "name": "Big Spender",
+                "description": "Spend $100,000 on cases",
+                "icon": "💎",
+                "unlocked": True
+            })
+        else:
+            achievements.append({
+                "id": "big_spender",
+                "name": "Big Spender",
+                "description": "Spend $100,000 on cases",
+                "icon": "💎",
+                "unlocked": False
+            })
+        
+        # 24. Coinflip Champion (50 Coinflip Wins)
+        if user and user['coinflip_wins'] >= 50:
+            achievements.append({
+                "id": "coinflip_champion",
+                "name": "Coinflip Champion",
+                "description": "Win 50 coinflips",
+                "icon": "🪙",
+                "unlocked": True
+            })
+        else:
+            achievements.append({
+                "id": "coinflip_champion",
+                "name": "Coinflip Champion",
+                "description": "Win 50 coinflips",
+                "icon": "🪙",
+                "unlocked": False
+            })
+        
+        # 25. Dice Master (100 Dice Wins)
+        if user and user['dice_wins'] >= 100:
+            achievements.append({
+                "id": "dice_master",
+                "name": "Dice Master",
+                "description": "Win 100 dice rolls",
+                "icon": "🎲",
+                "unlocked": True
+            })
+        else:
+            achievements.append({
+                "id": "dice_master",
+                "name": "Dice Master",
+                "description": "Win 100 dice rolls",
+                "icon": "🎲",
+                "unlocked": False
+            })
+        
+        # 26. Slots King (50 Slots Wins)
+        if user and user['slots_wins'] >= 50:
+            achievements.append({
+                "id": "slots_king",
+                "name": "Slots King",
+                "description": "Win 50 slots spins",
+                "icon": "🎰",
+                "unlocked": True
+            })
+        else:
+            achievements.append({
+                "id": "slots_king",
+                "name": "Slots King",
+                "description": "Win 50 slots spins",
+                "icon": "🎰",
+                "unlocked": False
+            })
+        
+        # 27. Miner (10 Mines Wins)
+        if user and user['mines_wins'] >= 10:
+            achievements.append({
+                "id": "miner",
+                "name": "Miner",
+                "description": "Win 10 mines games",
+                "icon": "⛏️",
+                "unlocked": True
+            })
+        else:
+            achievements.append({
+                "id": "miner",
+                "name": "Miner",
+                "description": "Win 10 mines games",
+                "icon": "⛏️",
+                "unlocked": False
+            })
+        
+        # 28. Jackpot Winner (Win a Jackpot)
+        if user and user['jackpot_wins'] >= 1:
+            achievements.append({
+                "id": "jackpot_winner",
+                "name": "Jackpot Winner",
+                "description": "Win a jackpot",
+                "icon": "🎰",
+                "unlocked": True
+            })
+        else:
+            achievements.append({
+                "id": "jackpot_winner",
+                "name": "Jackpot Winner",
+                "description": "Win a jackpot",
+                "icon": "🎰",
+                "unlocked": False
+            })
+        
+        # 29. Premium User (Open a Premium Case)
+        if user and user['total_premium_opens'] >= 1:
+            achievements.append({
+                "id": "premium_user",
+                "name": "Premium User",
+                "description": "Open your first premium case",
+                "icon": "🎟️",
+                "unlocked": True
+            })
+        else:
+            achievements.append({
+                "id": "premium_user",
+                "name": "Premium User",
+                "description": "Open your first premium case",
+                "icon": "🎟️",
+                "unlocked": False
+            })
+        
+        # 30. Whale (100 Premium Case Opens)
+        if user and user['total_premium_opens'] >= 100:
+            achievements.append({
+                "id": "whale",
+                "name": "Whale",
+                "description": "Open 100 premium cases",
+                "icon": "🐋",
+                "unlocked": True
+            })
+        else:
+            achievements.append({
+                "id": "whale",
+                "name": "Whale",
+                "description": "Open 100 premium cases",
+                "icon": "🐋",
+                "unlocked": False
+            })
+        
+        # 31. Inventory Collector (100 Items in Inventory)
+        if user and user['total_inventory_items'] >= 100:
+            achievements.append({
+                "id": "inventory_collector",
+                "name": "Inventory Collector",
+                "description": "Have 100 items in your inventory",
+                "icon": "📦",
+                "unlocked": True
+            })
+        else:
+            achievements.append({
+                "id": "inventory_collector",
+                "name": "Inventory Collector",
+                "description": "Have 100 items in your inventory",
+                "icon": "📦",
+                "unlocked": False
+            })
+        
+        # 32. Hoarder (500 Items in Inventory)
+        if user and user['total_inventory_items'] >= 500:
+            achievements.append({
+                "id": "hoarder",
+                "name": "Hoarder",
+                "description": "Have 500 items in your inventory",
+                "icon": "🏚️",
+                "unlocked": True
+            })
+        else:
+            achievements.append({
+                "id": "hoarder",
+                "name": "Hoarder",
+                "description": "Have 500 items in your inventory",
+                "icon": "🏚️",
+                "unlocked": False
+            })
+        
+        # 33. Sticker Collector (50 Stickers)
+        if user and user['total_stickers'] >= 50:
+            achievements.append({
+                "id": "sticker_collector",
+                "name": "Sticker Collector",
+                "description": "Collect 50 stickers",
+                "icon": "⭐",
+                "unlocked": True
+            })
+        else:
+            achievements.append({
+                "id": "sticker_collector",
+                "name": "Sticker Collector",
+                "description": "Collect 50 stickers",
+                "icon": "⭐",
+                "unlocked": False
+            })
+        
+        # 34. Sticker Master (200 Stickers)
+        if user and user['total_stickers'] >= 200:
+            achievements.append({
+                "id": "sticker_master",
+                "name": "Sticker Master",
+                "description": "Collect 200 stickers",
+                "icon": "✨",
+                "unlocked": True
+            })
+        else:
+            achievements.append({
+                "id": "sticker_master",
+                "name": "Sticker Master",
+                "description": "Collect 200 stickers",
+                "icon": "✨",
+                "unlocked": False
+            })
+        
+        # 35. Market Trader (10 Trades)
+        if user and user['total_trades'] >= 10:
+            achievements.append({
+                "id": "market_trader",
+                "name": "Market Trader",
+                "description": "Complete 10 trade-ups",
+                "icon": "📊",
+                "unlocked": True
+            })
+        else:
+            achievements.append({
+                "id": "market_trader",
+                "name": "Market Trader",
+                "description": "Complete 10 trade-ups",
+                "icon": "📊",
+                "unlocked": False
+            })
+        
+        # 36. Gambler (50 Casino Games Played)
+        if user and user['total_games_played'] >= 50:
+            achievements.append({
+                "id": "gambler",
+                "name": "Gambler",
+                "description": "Play 50 casino games",
+                "icon": "🎯",
+                "unlocked": True
+            })
+        else:
+            achievements.append({
+                "id": "gambler",
+                "name": "Gambler",
+                "description": "Play 50 casino games",
+                "icon": "🎯",
+                "unlocked": False
+            })
+        
+        # 37. Casino Regular (500 Games Played)
+        if user and user['total_games_played'] >= 500:
+            achievements.append({
+                "id": "casino_regular",
+                "name": "Casino Regular",
+                "description": "Play 500 casino games",
+                "icon": "🎰",
+                "unlocked": True
+            })
+        else:
+            achievements.append({
+                "id": "casino_regular",
+                "name": "Casino Regular",
+                "description": "Play 500 casino games",
+                "icon": "🎰",
+                "unlocked": False
+            })
+        
+        # 38. Quest Master (50 Quests Completed)
+        if user and user['total_quests_completed'] >= 50:
+            achievements.append({
+                "id": "quest_master",
+                "name": "Quest Master",
+                "description": "Complete 50 quests",
+                "icon": "📋",
+                "unlocked": True
+            })
+        else:
+            achievements.append({
+                "id": "quest_master",
+                "name": "Quest Master",
+                "description": "Complete 50 quests",
+                "icon": "📋",
+                "unlocked": False
+            })
+        
+        # 39. Steamroller (Win 10 Games in a Row)
+        if user and user['win_streak'] >= 10:
+            achievements.append({
+                "id": "steamroller",
+                "name": "Steamroller",
+                "description": "Win 10 games in a row",
+                "icon": "🔥",
+                "unlocked": True
+            })
+        else:
+            achievements.append({
+                "id": "steamroller",
+                "name": "Steamroller",
+                "description": "Win 10 games in a row",
+                "icon": "🔥",
+                "unlocked": False
+            })
+        
+        # 40. Unstoppable (Win 25 Games in a Row)
+        if user and user['win_streak'] >= 25:
+            achievements.append({
+                "id": "unstoppable",
+                "name": "Unstoppable",
+                "description": "Win 25 games in a row",
+                "icon": "⚡",
+                "unlocked": True
+            })
+        else:
+            achievements.append({
+                "id": "unstoppable",
+                "name": "Unstoppable",
+                "description": "Win 25 games in a row",
+                "icon": "⚡",
+                "unlocked": False
+            })
+        
+        return {"achievements": achievements}
+
+# ============================================
+# CASES DATA - 37 REAL CS2 CASES!
+# ============================================
+
+CASES = {
+    "cs:go_weapon_case": {
+        "name": "CS:GO Weapon Case",
+        "emoji": "📦",
+        "price": 2.0,
+        "items": [
+            {"name": "MP7 | Skulls", "rarity": "Blue", "condition": "Battle-Scarred"},
+            {"name": "AUG | Wings", "rarity": "Blue", "condition": "Battle-Scarred"},
+            {"name": "SG 553 | Ultraviolet", "rarity": "Blue", "condition": "Well-Worn"},
+            {"name": "Glock-18 | Dragon Tattoo", "rarity": "Purple", "condition": "Well-Worn"},
+            {"name": "USP-S | Dark Water", "rarity": "Purple", "condition": "Well-Worn"},
+            {"name": "M4A1-S | Dark Water", "rarity": "Purple", "condition": "Battle-Scarred"},
+            {"name": "AK-47 | Case Hardened", "rarity": "Pink", "condition": "Well-Worn"},
+            {"name": "Desert Eagle | Hypnotic", "rarity": "Pink", "condition": "Minimal Wear"},
+            {"name": "★ Bayonet", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"},
+            {"name": "★ Bayonet | Fade", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"},
+            {"name": "★ Bayonet | Slaughter", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"}
+        ]
+    },
+    "esports_2013_case": {
+        "name": "eSports 2013 Case",
+        "emoji": "🎯",
+        "price": 2.0,
+        "items": [
+            {"name": "M4A4 | Faded Zebra", "rarity": "Blue", "condition": "Factory New"},
+            {"name": "MAG-7 | Memento", "rarity": "Blue", "condition": "Minimal Wear"},
+            {"name": "FAMAS | Doomkitty", "rarity": "Blue", "condition": "Field-Tested"},
+            {"name": "Galil AR | Orange DDPAT", "rarity": "Purple", "condition": "Well-Worn"},
+            {"name": "Sawed-Off | Orange DDPAT", "rarity": "Purple", "condition": "Well-Worn"},
+            {"name": "P250 | Splash", "rarity": "Purple", "condition": "Field-Tested"},
+            {"name": "AK-47 | Red Laminate", "rarity": "Pink", "condition": "Factory New"},
+            {"name": "AWP | BOOM", "rarity": "Pink", "condition": "Factory New"},
+            {"name": "★ Bayonet", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"},
+            {"name": "★ Bayonet | Fade", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"},
+            {"name": "★ Bayonet | Slaughter", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"}
+        ]
+    },
+    "operation_phoenix_weapon_case": {
+        "name": "Operation Phoenix Weapon Case",
+        "emoji": "⚡",
+        "price": 2.5,
+        "items": [
+            {"name": "UMP-45 | Corporal", "rarity": "Blue", "condition": "Well-Worn"},
+            {"name": "Negev | Terrain", "rarity": "Blue", "condition": "Well-Worn"},
+            {"name": "Tec-9 | Sandstorm", "rarity": "Blue", "condition": "Factory New"},
+            {"name": "MAG-7 | Heaven Guard", "rarity": "Blue", "condition": "Well-Worn"},
+            {"name": "MAC-10 | Heat", "rarity": "Purple", "condition": "Battle-Scarred"},
+            {"name": "SG 553 | Pulse", "rarity": "Purple", "condition": "Minimal Wear"},
+            {"name": "FAMAS | Sergeant", "rarity": "Purple", "condition": "Battle-Scarred"},
+            {"name": "USP-S | Guardian", "rarity": "Purple", "condition": "Field-Tested"},
+            {"name": "★ Bayonet", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"},
+            {"name": "★ Bayonet | Fade", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"},
+            {"name": "★ Bayonet | Slaughter", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"}
+        ]
+    },
+    "huntsman_weapon_case": {
+        "name": "Huntsman Weapon Case",
+        "emoji": "🔥",
+        "price": 2.5,
+        "items": [
+            {"name": "Tec-9 | Isaac", "rarity": "Blue", "condition": "Battle-Scarred"},
+            {"name": "SSG 08 | Slashed", "rarity": "Blue", "condition": "Minimal Wear"},
+            {"name": "Galil AR | Kami", "rarity": "Blue", "condition": "Factory New"},
+            {"name": "CZ75-Auto | Twist", "rarity": "Blue", "condition": "Well-Worn"},
+            {"name": "P90 | Module", "rarity": "Blue", "condition": "Well-Worn"},
+            {"name": "P2000 | Pulse", "rarity": "Blue", "condition": "Well-Worn"},
+            {"name": "AUG | Torque", "rarity": "Purple", "condition": "Minimal Wear"},
+            {"name": "PP-Bizon | Antique", "rarity": "Purple", "condition": "Minimal Wear"},
+            {"name": "★ Huntsman Knife", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"},
+            {"name": "★ Huntsman Knife | Fade", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"},
+            {"name": "★ Huntsman Knife | Crimson Web", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"}
+        ]
+    },
+    "operation_breakout_weapon_case": {
+        "name": "Operation Breakout Weapon Case",
+        "emoji": "💎",
+        "price": 2.5,
+        "items": [
+            {"name": "MP7 | Urban Hazard", "rarity": "Blue", "condition": "Well-Worn"},
+            {"name": "Negev | Desert-Strike", "rarity": "Blue", "condition": "Factory New"},
+            {"name": "P2000 | Ivory", "rarity": "Blue", "condition": "Field-Tested"},
+            {"name": "SSG 08 | Abyss", "rarity": "Blue", "condition": "Field-Tested"},
+            {"name": "UMP-45 | Labyrinth", "rarity": "Blue", "condition": "Well-Worn"},
+            {"name": "PP-Bizon | Osiris", "rarity": "Purple", "condition": "Field-Tested"},
+            {"name": "CZ75-Auto | Tigris", "rarity": "Purple", "condition": "Factory New"},
+            {"name": "Nova | Koi", "rarity": "Purple", "condition": "Field-Tested"},
+            {"name": "★ Butterfly Knife", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"},
+            {"name": "★ Butterfly Knife | Fade", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"},
+            {"name": "★ Butterfly Knife | Crimson Web", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"}
+        ]
+    },
+    "esports_2014_summer_case": {
+        "name": "eSports 2014 Summer Case",
+        "emoji": "🌟",
+        "price": 2.0,
+        "items": [
+            {"name": "SSG 08 | Dark Water", "rarity": "Blue", "condition": "Battle-Scarred"},
+            {"name": "MAC-10 | Ultraviolet", "rarity": "Blue", "condition": "Battle-Scarred"},
+            {"name": "USP-S | Blood Tiger", "rarity": "Blue", "condition": "Well-Worn"},
+            {"name": "CZ75-Auto | Hexane", "rarity": "Blue", "condition": "Factory New"},
+            {"name": "Negev | Bratatat", "rarity": "Blue", "condition": "Minimal Wear"},
+            {"name": "XM1014 | Red Python", "rarity": "Blue", "condition": "Field-Tested"},
+            {"name": "PP-Bizon | Blue Streak", "rarity": "Purple", "condition": "Minimal Wear"},
+            {"name": "P90 | Virus", "rarity": "Purple", "condition": "Well-Worn"},
+            {"name": "★ Bayonet", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"},
+            {"name": "★ Bayonet | Fade", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"},
+            {"name": "★ Bayonet | Slaughter", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"}
+        ]
+    },
+    "operation_vanguard_weapon_case": {
+        "name": "Operation Vanguard Weapon Case",
+        "emoji": "🎨",
+        "price": 2.5,
+        "items": [
+            {"name": "G3SG1 | Murky", "rarity": "Blue", "condition": "Well-Worn"},
+            {"name": "MAG-7 | Firestarter", "rarity": "Blue", "condition": "Field-Tested"},
+            {"name": "MP9 | Dart", "rarity": "Blue", "condition": "Field-Tested"},
+            {"name": "Five-SeveN | Urban Hazard", "rarity": "Blue", "condition": "Well-Worn"},
+            {"name": "UMP-45 | Delusion", "rarity": "Blue", "condition": "Battle-Scarred"},
+            {"name": "Glock-18 | Grinder", "rarity": "Purple", "condition": "Well-Worn"},
+            {"name": "M4A1-S | Basilisk", "rarity": "Purple", "condition": "Well-Worn"},
+            {"name": "M4A4 | Griffin", "rarity": "Purple", "condition": "Factory New"},
+            {"name": "★ Bayonet", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"},
+            {"name": "★ Bayonet | Fade", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"},
+            {"name": "★ Bayonet | Slaughter", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"}
+        ]
+    },
+    "chroma_case": {
+        "name": "Chroma Case",
+        "emoji": "🌈",
+        "price": 2.0,
+        "items": [
+            {"name": "Glock-18 | Catacombs", "rarity": "Blue", "condition": "Field-Tested"},
+            {"name": "M249 | System Lock", "rarity": "Blue", "condition": "Battle-Scarred"},
+            {"name": "MP9 | Deadly Poison", "rarity": "Blue", "condition": "Factory New"},
+            {"name": "SCAR-20 | Grotto", "rarity": "Blue", "condition": "Battle-Scarred"},
+            {"name": "XM1014 | Quicksilver", "rarity": "Blue", "condition": "Well-Worn"},
+            {"name": "Dual Berettas | Urban Shock", "rarity": "Purple", "condition": "Field-Tested"},
+            {"name": "Desert Eagle | Naga", "rarity": "Purple", "condition": "Factory New"},
+            {"name": "MAC-10 | Malachite", "rarity": "Purple", "condition": "Minimal Wear"},
+            {"name": "★ Bayonet | Marble Fade", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"},
+            {"name": "★ Bayonet | Tiger Tooth", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"},
+            {"name": "★ Bayonet | Doppler", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"}
+        ]
+    },
+    "chroma_2_case": {
+        "name": "Chroma 2 Case",
+        "emoji": "💥",
+        "price": 2.0,
+        "items": [
+            {"name": "AK-47 | Elite Build", "rarity": "Blue", "condition": "Minimal Wear"},
+            {"name": "MP7 | Armor Core", "rarity": "Blue", "condition": "Factory New"},
+            {"name": "Desert Eagle | Bronze Deco", "rarity": "Blue", "condition": "Minimal Wear"},
+            {"name": "P250 | Valence", "rarity": "Blue", "condition": "Battle-Scarred"},
+            {"name": "Negev | Man-o'-war", "rarity": "Blue", "condition": "Battle-Scarred"},
+            {"name": "Sawed-Off | Origami", "rarity": "Blue", "condition": "Battle-Scarred"},
+            {"name": "AWP | Worm God", "rarity": "Purple", "condition": "Factory New"},
+            {"name": "MAG-7 | Heat", "rarity": "Purple", "condition": "Field-Tested"},
+            {"name": "★ Bayonet | Marble Fade", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"},
+            {"name": "★ Bayonet | Tiger Tooth", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"},
+            {"name": "★ Bayonet | Doppler", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"}
+        ]
+    },
+    "falchion_case": {
+        "name": "Falchion Case",
+        "emoji": "🌅",
+        "price": 2.0,
+        "items": [
+            {"name": "Galil AR | Rocket Pop", "rarity": "Blue", "condition": "Minimal Wear"},
+            {"name": "Glock-18 | Bunsen Burner", "rarity": "Blue", "condition": "Factory New"},
+            {"name": "Nova | Ranger", "rarity": "Blue", "condition": "Factory New"},
+            {"name": "P90 | Elite Build", "rarity": "Blue", "condition": "Well-Worn"},
+            {"name": "UMP-45 | Riot", "rarity": "Blue", "condition": "Minimal Wear"},
+            {"name": "USP-S | Torque", "rarity": "Blue", "condition": "Battle-Scarred"},
+            {"name": "FAMAS | Neural Net", "rarity": "Purple", "condition": "Battle-Scarred"},
+            {"name": "M4A4 | Evil Daimyo", "rarity": "Purple", "condition": "Battle-Scarred"},
+            {"name": "★ Falchion Knife", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"},
+            {"name": "★ Falchion Knife | Fade", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"},
+            {"name": "★ Falchion Knife | Crimson Web", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"}
+        ]
+    },
+    "shadow_case": {
+        "name": "Shadow Case",
+        "emoji": "⚠️",
+        "price": 2.0,
+        "items": [
+            {"name": "Dual Berettas | Dualing Dragons", "rarity": "Blue", "condition": "Battle-Scarred"},
+            {"name": "FAMAS | Survivor Z", "rarity": "Blue", "condition": "Field-Tested"},
+            {"name": "Glock-18 | Wraiths", "rarity": "Blue", "condition": "Battle-Scarred"},
+            {"name": "MAC-10 | Rangeen", "rarity": "Blue", "condition": "Battle-Scarred"},
+            {"name": "MAG-7 | Cobalt Core", "rarity": "Blue", "condition": "Factory New"},
+            {"name": "SCAR-20 | Green Marine", "rarity": "Blue", "condition": "Minimal Wear"},
+            {"name": "XM1014 | Scumbria", "rarity": "Blue", "condition": "Battle-Scarred"},
+            {"name": "Galil AR | Stone Cold", "rarity": "Purple", "condition": "Minimal Wear"},
+            {"name": "★ Shadow Daggers", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"},
+            {"name": "★ Shadow Daggers | Fade", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"},
+            {"name": "★ Shadow Daggers | Crimson Web", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"}
+        ]
+    },
+    "revolver_case": {
+        "name": "Revolver Case",
+        "emoji": "🤲",
+        "price": 2.0,
+        "items": [
+            {"name": "R8 Revolver | Crimson Web", "rarity": "Blue", "condition": "Battle-Scarred"},
+            {"name": "AUG | Ricochet", "rarity": "Blue", "condition": "Battle-Scarred"},
+            {"name": "Desert Eagle | Corinthian", "rarity": "Blue", "condition": "Field-Tested"},
+            {"name": "P2000 | Imperial", "rarity": "Blue", "condition": "Factory New"},
+            {"name": "Sawed-Off | Yorick", "rarity": "Blue", "condition": "Well-Worn"},
+            {"name": "SCAR-20 | Outbreak", "rarity": "Blue", "condition": "Battle-Scarred"},
+            {"name": "PP-Bizon | Fuel Rod", "rarity": "Purple", "condition": "Factory New"},
+            {"name": "Five-SeveN | Retrobution", "rarity": "Purple", "condition": "Battle-Scarred"},
+            {"name": "★ Bayonet", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"},
+            {"name": "★ Bayonet | Fade", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"},
+            {"name": "★ Bayonet | Slaughter", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"}
+        ]
+    },
+    "operation_wildfire_case": {
+        "name": "Operation Wildfire Case",
+        "emoji": "🎪",
+        "price": 3.0,
+        "items": [
+            {"name": "PP-Bizon | Photic Zone", "rarity": "Blue", "condition": "Battle-Scarred"},
+            {"name": "Dual Berettas | Cartel", "rarity": "Blue", "condition": "Well-Worn"},
+            {"name": "MAC-10 | Lapis Gator", "rarity": "Blue", "condition": "Well-Worn"},
+            {"name": "SSG 08 | Necropos", "rarity": "Blue", "condition": "Factory New"},
+            {"name": "Tec-9 | Jambiya", "rarity": "Blue", "condition": "Well-Worn"},
+            {"name": "USP-S | Lead Conduit", "rarity": "Blue", "condition": "Battle-Scarred"},
+            {"name": "FAMAS | Valence", "rarity": "Purple", "condition": "Minimal Wear"},
+            {"name": "Five-SeveN | Triumvirate", "rarity": "Purple", "condition": "Minimal Wear"},
+            {"name": "★ Bowie Knife", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"},
+            {"name": "★ Bowie Knife | Fade", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"},
+            {"name": "★ Bowie Knife | Crimson Web", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"}
+        ]
+    },
+    "chroma_3_case": {
+        "name": "Chroma 3 Case",
+        "emoji": "🏹",
+        "price": 2.0,
+        "items": [
+            {"name": "Dual Berettas | Ventilators", "rarity": "Blue", "condition": "Field-Tested"},
+            {"name": "G3SG1 | Orange Crash", "rarity": "Blue", "condition": "Field-Tested"},
+            {"name": "M249 | Spectre", "rarity": "Blue", "condition": "Factory New"},
+            {"name": "MP9 | Bioleak", "rarity": "Blue", "condition": "Well-Worn"},
+            {"name": "P2000 | Oceanic", "rarity": "Blue", "condition": "Factory New"},
+            {"name": "Sawed-Off | Fubar", "rarity": "Blue", "condition": "Well-Worn"},
+            {"name": "SG 553 | Atlas", "rarity": "Blue", "condition": "Factory New"},
+            {"name": "CZ75-Auto | Red Astor", "rarity": "Purple", "condition": "Field-Tested"},
+            {"name": "★ Bayonet | Marble Fade", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"},
+            {"name": "★ Bayonet | Tiger Tooth", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"},
+            {"name": "★ Bayonet | Doppler", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"}
+        ]
+    },
+    "gamma_case": {
+        "name": "Gamma Case",
+        "emoji": "🗡️",
+        "price": 2.5,
+        "items": [
+            {"name": "Five-SeveN | Violent Daimyo", "rarity": "Blue", "condition": "Factory New"},
+            {"name": "MAC-10 | Carnivore", "rarity": "Blue", "condition": "Minimal Wear"},
+            {"name": "Nova | Exo", "rarity": "Blue", "condition": "Minimal Wear"},
+            {"name": "P250 | Iron Clad", "rarity": "Blue", "condition": "Field-Tested"},
+            {"name": "PP-Bizon | Harvester", "rarity": "Blue", "condition": "Factory New"},
+            {"name": "SG 553 | Aerial", "rarity": "Blue", "condition": "Well-Worn"},
+            {"name": "Tec-9 | Ice Cap", "rarity": "Blue", "condition": "Battle-Scarred"},
+            {"name": "AUG | Aristocrat", "rarity": "Purple", "condition": "Field-Tested"},
+            {"name": "★ Bayonet | Gamma Doppler", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"},
+            {"name": "★ Bayonet | Gamma Doppler", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"},
+            {"name": "★ Bayonet | Gamma Doppler", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"}
+        ]
+    },
+    "gamma_2_case": {
+        "name": "Gamma 2 Case",
+        "emoji": "🛡️",
+        "price": 2.5,
+        "items": [
+            {"name": "CZ75-Auto | Imprint", "rarity": "Blue", "condition": "Factory New"},
+            {"name": "Five-SeveN | Scumbria", "rarity": "Blue", "condition": "Well-Worn"},
+            {"name": "G3SG1 | Ventilator", "rarity": "Blue", "condition": "Factory New"},
+            {"name": "Negev | Dazzle", "rarity": "Blue", "condition": "Field-Tested"},
+            {"name": "P90 | Grim", "rarity": "Blue", "condition": "Field-Tested"},
+            {"name": "UMP-45 | Briefing", "rarity": "Blue", "condition": "Well-Worn"},
+            {"name": "XM1014 | Slipstream", "rarity": "Blue", "condition": "Factory New"},
+            {"name": "Desert Eagle | Directive", "rarity": "Purple", "condition": "Minimal Wear"},
+            {"name": "★ Bayonet | Gamma Doppler", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"},
+            {"name": "★ Bayonet | Gamma Doppler", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"},
+            {"name": "★ Bayonet | Gamma Doppler", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"}
+        ]
+    },
+    "glove_case": {
+        "name": "Glove Case",
+        "emoji": "👑",
+        "price": 4.0,
+        "items": [
+            {"name": "CZ75-Auto | Polymer", "rarity": "Blue", "condition": "Factory New"},
+            {"name": "Glock-18 | Ironwork", "rarity": "Blue", "condition": "Minimal Wear"},
+            {"name": "MP7 | Cirrus", "rarity": "Blue", "condition": "Factory New"},
+            {"name": "Galil AR | Black Sand", "rarity": "Blue", "condition": "Battle-Scarred"},
+            {"name": "MP9 | Sand Scale", "rarity": "Blue", "condition": "Factory New"},
+            {"name": "MAG-7 | Sonar", "rarity": "Blue", "condition": "Well-Worn"},
+            {"name": "P2000 | Turf", "rarity": "Blue", "condition": "Battle-Scarred"},
+            {"name": "Dual Berettas | Royal Consorts", "rarity": "Purple", "condition": "Factory New"},
+            {"name": "★ Bloodhound Gloves | Snakebite", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"},
+            {"name": "★ Bloodhound Gloves | Bronzed", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"},
+            {"name": "★ Bloodhound Gloves | Charred", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"}
+        ]
+    },
+    "spectrum_case": {
+        "name": "Spectrum Case",
+        "emoji": "🎰",
+        "price": 2.5,
+        "items": [
+            {"name": "PP-Bizon | Jungle Slipstream", "rarity": "Blue", "condition": "Battle-Scarred"},
+            {"name": "SCAR-20 | Blueprint", "rarity": "Blue", "condition": "Well-Worn"},
+            {"name": "Desert Eagle | Oxide Blaze", "rarity": "Blue", "condition": "Well-Worn"},
+            {"name": "Five-SeveN | Capillary", "rarity": "Blue", "condition": "Field-Tested"},
+            {"name": "MP7 | Akoben", "rarity": "Blue", "condition": "Minimal Wear"},
+            {"name": "P250 | Ripple", "rarity": "Blue", "condition": "Field-Tested"},
+            {"name": "Sawed-Off | Zander", "rarity": "Blue", "condition": "Minimal Wear"},
+            {"name": "Galil AR | Crimson Tsunami", "rarity": "Purple", "condition": "Field-Tested"},
+            {"name": "★ Bowie Knife | Marble Fade", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"},
+            {"name": "★ Bowie Knife | Tiger Tooth", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"},
+            {"name": "★ Bowie Knife | Doppler", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"}
+        ]
+    },
+    "operation_hydra_case": {
+        "name": "Operation Hydra Case",
+        "emoji": "🎲",
+        "price": 4.0,
+        "items": [
+            {"name": "USP-S | Blueprint", "rarity": "Blue", "condition": "Minimal Wear"},
+            {"name": "FAMAS | Macabre", "rarity": "Blue", "condition": "Field-Tested"},
+            {"name": "M4A1-S | Briefing", "rarity": "Blue", "condition": "Factory New"},
+            {"name": "MAC-10 | Aloha", "rarity": "Blue", "condition": "Factory New"},
+            {"name": "MAG-7 | Hard Water", "rarity": "Blue", "condition": "Field-Tested"},
+            {"name": "Tec-9 | Cut Out", "rarity": "Blue", "condition": "Well-Worn"},
+            {"name": "UMP-45 | Metal Flowers", "rarity": "Blue", "condition": "Battle-Scarred"},
+            {"name": "AK-47 | Orbit Mk01", "rarity": "Purple", "condition": "Minimal Wear"},
+            {"name": "★ Bloodhound Gloves | Snakebite", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"},
+            {"name": "★ Bloodhound Gloves | Bronzed", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"},
+            {"name": "★ Bloodhound Gloves | Charred", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"}
+        ]
+    },
+    "spectrum_2_case": {
+        "name": "Spectrum 2 Case",
+        "emoji": "🎳",
+        "price": 3.0,
+        "items": [
+            {"name": "Sawed-Off | Morris", "rarity": "Blue", "condition": "Minimal Wear"},
+            {"name": "AUG | Triqua", "rarity": "Blue", "condition": "Battle-Scarred"},
+            {"name": "G3SG1 | Hunter", "rarity": "Blue", "condition": "Well-Worn"},
+            {"name": "Glock-18 | Off World", "rarity": "Blue", "condition": "Factory New"},
+            {"name": "MAC-10 | Oceanic", "rarity": "Blue", "condition": "Factory New"},
+            {"name": "Tec-9 | Cracked Opal", "rarity": "Blue", "condition": "Field-Tested"},
+            {"name": "SCAR-20 | Jungle Slipstream", "rarity": "Blue", "condition": "Minimal Wear"},
+            {"name": "MP9 | Goo", "rarity": "Purple", "condition": "Factory New"},
+            {"name": "★ Bowie Knife | Marble Fade", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"},
+            {"name": "★ Bowie Knife | Tiger Tooth", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"},
+            {"name": "★ Bowie Knife | Doppler", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"}
+        ]
+    },
+    "clutch_case": {
+        "name": "Clutch Case",
+        "emoji": "🎭",
+        "price": 3.0,
+        "items": [
+            {"name": "PP-Bizon | Night Riot", "rarity": "Blue", "condition": "Well-Worn"},
+            {"name": "Five-SeveN | Flame Test", "rarity": "Blue", "condition": "Battle-Scarred"},
+            {"name": "MP9 | Black Sand", "rarity": "Blue", "condition": "Field-Tested"},
+            {"name": "P2000 | Urban Hazard", "rarity": "Blue", "condition": "Field-Tested"},
+            {"name": "R8 Revolver | Grip", "rarity": "Blue", "condition": "Minimal Wear"},
+            {"name": "SG 553 | Aloha", "rarity": "Blue", "condition": "Well-Worn"},
+            {"name": "XM1014 | Oxide Blaze", "rarity": "Blue", "condition": "Minimal Wear"},
+            {"name": "Glock-18 | Moonrise", "rarity": "Purple", "condition": "Well-Worn"},
+            {"name": "★ Driver Gloves | Imperial Plaid", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"},
+            {"name": "★ Driver Gloves | King Snake", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"},
+            {"name": "★ Driver Gloves | Racing Green", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"}
+        ]
+    },
+    "horizon_case": {
+        "name": "Horizon Case",
+        "emoji": "🎪",
+        "price": 2.5,
+        "items": [
+            {"name": "AUG | Amber Slipstream", "rarity": "Blue", "condition": "Field-Tested"},
+            {"name": "Dual Berettas | Shred", "rarity": "Blue", "condition": "Field-Tested"},
+            {"name": "Glock-18 | Warhawk", "rarity": "Blue", "condition": "Minimal Wear"},
+            {"name": "MP9 | Capillary", "rarity": "Blue", "condition": "Minimal Wear"},
+            {"name": "P90 | Traction", "rarity": "Blue", "condition": "Battle-Scarred"},
+            {"name": "R8 Revolver | Survivalist", "rarity": "Blue", "condition": "Factory New"},
+            {"name": "Tec-9 | Snek-9", "rarity": "Blue", "condition": "Minimal Wear"},
+            {"name": "CZ75-Auto | Eco", "rarity": "Purple", "condition": "Factory New"},
+            {"name": "★ Navaja Knife", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"},
+            {"name": "★ Navaja Knife | Fade", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"},
+            {"name": "★ Navaja Knife | Crimson Web", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"}
+        ]
+    },
+    "danger_zone_case": {
+        "name": "Danger Zone Case",
+        "emoji": "🎯",
+        "price": 2.5,
+        "items": [
+            {"name": "MP9 | Modest Threat", "rarity": "Blue", "condition": "Minimal Wear"},
+            {"name": "Glock-18 | Oxide Blaze", "rarity": "Blue", "condition": "Factory New"},
+            {"name": "Nova | Wood Fired", "rarity": "Blue", "condition": "Battle-Scarred"},
+            {"name": "M4A4 | Magnesium", "rarity": "Blue", "condition": "Well-Worn"},
+            {"name": "Sawed-Off | Black Sand", "rarity": "Blue", "condition": "Minimal Wear"},
+            {"name": "SG 553 | Danger Close", "rarity": "Blue", "condition": "Minimal Wear"},
+            {"name": "Tec-9 | Fubar", "rarity": "Blue", "condition": "Battle-Scarred"},
+            {"name": "G3SG1 | Scavenger", "rarity": "Purple", "condition": "Minimal Wear"},
+            {"name": "★ Navaja Knife", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"},
+            {"name": "★ Navaja Knife | Fade", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"},
+            {"name": "★ Navaja Knife | Crimson Web", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"}
+        ]
+    },
+    "prisma_case": {
+        "name": "Prisma Case",
+        "emoji": "🎱",
+        "price": 2.5,
+        "items": [
+            {"name": "FAMAS | Crypsis", "rarity": "Blue", "condition": "Well-Worn"},
+            {"name": "AK-47 | Uncharted", "rarity": "Blue", "condition": "Well-Worn"},
+            {"name": "MAC-10 | Whitefish", "rarity": "Blue", "condition": "Battle-Scarred"},
+            {"name": "Galil AR | Akoben", "rarity": "Blue", "condition": "Minimal Wear"},
+            {"name": "MP7 | Mischief", "rarity": "Blue", "condition": "Factory New"},
+            {"name": "P250 | Verdigris", "rarity": "Blue", "condition": "Battle-Scarred"},
+            {"name": "P90 | Off World", "rarity": "Blue", "condition": "Battle-Scarred"},
+            {"name": "AWP | Atheris", "rarity": "Purple", "condition": "Factory New"},
+            {"name": "★ Navaja Knife", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"},
+            {"name": "★ Navaja Knife | Marble Fade", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"},
+            {"name": "★ Navaja Knife | Tiger Tooth", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"}
+        ]
+    },
+    "shattered_web_case": {
+        "name": "Shattered Web Case",
+        "emoji": "🔫",
+        "price": 4.0,
+        "items": [
+            {"name": "MP5-SD | Acid Wash", "rarity": "Blue", "condition": "Field-Tested"},
+            {"name": "Nova | Plume", "rarity": "Blue", "condition": "Field-Tested"},
+            {"name": "G3SG1 | Black Sand", "rarity": "Blue", "condition": "Field-Tested"},
+            {"name": "R8 Revolver | Memento", "rarity": "Blue", "condition": "Field-Tested"},
+            {"name": "Dual Berettas | Balance", "rarity": "Blue", "condition": "Well-Worn"},
+            {"name": "SCAR-20 | Torn", "rarity": "Blue", "condition": "Well-Worn"},
+            {"name": "M249 | Warbird", "rarity": "Blue", "condition": "Field-Tested"},
+            {"name": "PP-Bizon | Embargo", "rarity": "Purple", "condition": "Minimal Wear"},
+            {"name": "★ Nomad Knife", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"},
+            {"name": "★ Nomad Knife | Fade", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"},
+            {"name": "★ Nomad Knife | Crimson Web", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"}
+        ]
+    },
+    "cs20_case": {
+        "name": "CS20 Case",
+        "emoji": "🌙",
+        "price": 2.5,
+        "items": [
+            {"name": "Dual Berettas | Elite 1.6", "rarity": "Blue", "condition": "Field-Tested"},
+            {"name": "Tec-9 | Flash Out", "rarity": "Blue", "condition": "Field-Tested"},
+            {"name": "MAC-10 | Classic Crate", "rarity": "Blue", "condition": "Well-Worn"},
+            {"name": "MAG-7 | Popdog", "rarity": "Blue", "condition": "Factory New"},
+            {"name": "SCAR-20 | Assault", "rarity": "Blue", "condition": "Minimal Wear"},
+            {"name": "FAMAS | Decommissioned", "rarity": "Blue", "condition": "Well-Worn"},
+            {"name": "Glock-18 | Sacrifice", "rarity": "Blue", "condition": "Factory New"},
+            {"name": "M249 | Aztec", "rarity": "Purple", "condition": "Battle-Scarred"},
+            {"name": "★ Classic Knife", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"},
+            {"name": "★ Classic Knife | Fade", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"},
+            {"name": "★ Classic Knife | Crimson Web", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"}
+        ]
+    },
+    "prisma_2_case": {
+        "name": "Prisma 2 Case",
+        "emoji": "🎂",
+        "price": 2.0,
+        "items": [
+            {"name": "AUG | Tom Cat", "rarity": "Blue", "condition": "Well-Worn"},
+            {"name": "AWP | Capillary", "rarity": "Blue", "condition": "Field-Tested"},
+            {"name": "CZ75-Auto | Distressed", "rarity": "Blue", "condition": "Factory New"},
+            {"name": "Desert Eagle | Blue Ply", "rarity": "Blue", "condition": "Field-Tested"},
+            {"name": "MP5-SD | Desert Strike", "rarity": "Blue", "condition": "Well-Worn"},
+            {"name": "Negev | Prototype", "rarity": "Blue", "condition": "Minimal Wear"},
+            {"name": "R8 Revolver | Bone Forged", "rarity": "Blue", "condition": "Factory New"},
+            {"name": "P2000 | Acid Etched", "rarity": "Purple", "condition": "Field-Tested"},
+            {"name": "★ Navaja Knife", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"},
+            {"name": "★ Navaja Knife | Marble Fade", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"},
+            {"name": "★ Navaja Knife | Tiger Tooth", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"}
+        ]
+    },
+    "fracture_case": {
+        "name": "Fracture Case",
+        "emoji": "💎",
+        "price": 2.0,
+        "items": [
+            {"name": "Negev | Ultralight", "rarity": "Blue", "condition": "Minimal Wear"},
+            {"name": "P2000 | Gnarled", "rarity": "Blue", "condition": "Battle-Scarred"},
+            {"name": "SG 553 | Ol' Rusty", "rarity": "Blue", "condition": "Field-Tested"},
+            {"name": "SSG 08 | Mainframe 001", "rarity": "Blue", "condition": "Factory New"},
+            {"name": "P250 | Cassette", "rarity": "Blue", "condition": "Minimal Wear"},
+            {"name": "P90 | Freight", "rarity": "Blue", "condition": "Well-Worn"},
+            {"name": "PP-Bizon | Runic", "rarity": "Blue", "condition": "Well-Worn"},
+            {"name": "MAG-7 | Monster Call", "rarity": "Purple", "condition": "Well-Worn"},
+            {"name": "★ Nomad Knife", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"},
+            {"name": "★ Nomad Knife | Fade", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"},
+            {"name": "★ Nomad Knife | Crimson Web", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"}
+        ]
+    },
+    "operation_broken_fang_case": {
+        "name": "Operation Broken Fang Case",
+        "emoji": "⚡",
+        "price": 3.5,
+        "items": [
+            {"name": "CZ75-Auto | Vendetta", "rarity": "Blue", "condition": "Well-Worn"},
+            {"name": "P90 | Cocoa Rampage", "rarity": "Blue", "condition": "Minimal Wear"},
+            {"name": "G3SG1 | Digital Mesh", "rarity": "Blue", "condition": "Minimal Wear"},
+            {"name": "Galil AR | Vandal", "rarity": "Blue", "condition": "Field-Tested"},
+            {"name": "P250 | Contaminant", "rarity": "Blue", "condition": "Field-Tested"},
+            {"name": "M249 | Deep Relief", "rarity": "Blue", "condition": "Field-Tested"},
+            {"name": "MP5-SD | Condition Zero", "rarity": "Blue", "condition": "Field-Tested"},
+            {"name": "AWP | Exoskeleton", "rarity": "Purple", "condition": "Factory New"},
+            {"name": "★ Broken Fang Gloves | Yellow-banded", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"},
+            {"name": "★ Broken Fang Gloves | Unhinged", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"},
+            {"name": "★ Broken Fang Gloves | Needle Point", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"}
+        ]
+    },
+    "snakebite_case": {
+        "name": "Snakebite Case",
+        "emoji": "🌊",
+        "price": 2.5,
+        "items": [
+            {"name": "SG 553 | Heavy Metal", "rarity": "Blue", "condition": "Field-Tested"},
+            {"name": "Glock-18 | Clear Polymer", "rarity": "Blue", "condition": "Well-Worn"},
+            {"name": "M249 | O.S.I.P.R.", "rarity": "Blue", "condition": "Factory New"},
+            {"name": "CZ75-Auto | Circaetus", "rarity": "Blue", "condition": "Battle-Scarred"},
+            {"name": "UMP-45 | Oscillator", "rarity": "Blue", "condition": "Factory New"},
+            {"name": "R8 Revolver | Junk Yard", "rarity": "Blue", "condition": "Field-Tested"},
+            {"name": "Nova | Windblown", "rarity": "Blue", "condition": "Well-Worn"},
+            {"name": "P250 | Cyber Shell", "rarity": "Purple", "condition": "Well-Worn"},
+            {"name": "★ Broken Fang Gloves | Yellow-banded", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"},
+            {"name": "★ Broken Fang Gloves | Unhinged", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"},
+            {"name": "★ Broken Fang Gloves | Needle Point", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"}
+        ]
+    },
+    "operation_riptide_case": {
+        "name": "Operation Riptide Case",
+        "emoji": "🌪️",
+        "price": 3.0,
+        "items": [
+            {"name": "AUG | Plague", "rarity": "Blue", "condition": "Field-Tested"},
+            {"name": "Dual Berettas | Tread", "rarity": "Blue", "condition": "Battle-Scarred"},
+            {"name": "G3SG1 | Keeping Tabs", "rarity": "Blue", "condition": "Battle-Scarred"},
+            {"name": "MP7 | Guerrilla", "rarity": "Blue", "condition": "Well-Worn"},
+            {"name": "PP-Bizon | Lumen", "rarity": "Blue", "condition": "Factory New"},
+            {"name": "USP-S | Black Lotus", "rarity": "Blue", "condition": "Well-Worn"},
+            {"name": "XM1014 | Watchdog", "rarity": "Blue", "condition": "Well-Worn"},
+            {"name": "MAG-7 | BI83 Spectrum", "rarity": "Purple", "condition": "Well-Worn"},
+            {"name": "★ Bowie Knife | Gamma Doppler", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"},
+            {"name": "★ Bowie Knife | Gamma Doppler", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"},
+            {"name": "★ Bowie Knife | Gamma Doppler", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"}
+        ]
+    },
+    "dreams_and_nightmares_case": {
+        "name": "Dreams & Nightmares Case",
+        "emoji": "🎇",
+        "price": 2.5,
+        "items": [
+            {"name": "Five-SeveN | Scrawl", "rarity": "Blue", "condition": "Field-Tested"},
+            {"name": "MAC-10 | Ensnared", "rarity": "Blue", "condition": "Minimal Wear"},
+            {"name": "MAG-7 | Foresight", "rarity": "Blue", "condition": "Well-Worn"},
+            {"name": "MP5-SD | Necro Jr.", "rarity": "Blue", "condition": "Factory New"},
+            {"name": "P2000 | Lifted Spirits", "rarity": "Blue", "condition": "Well-Worn"},
+            {"name": "SCAR-20 | Poultrygeist", "rarity": "Blue", "condition": "Battle-Scarred"},
+            {"name": "Sawed-Off | Spirit Board", "rarity": "Blue", "condition": "Battle-Scarred"},
+            {"name": "PP-Bizon | Space Cat", "rarity": "Purple", "condition": "Factory New"},
+            {"name": "★ Bowie Knife | Gamma Doppler", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"},
+            {"name": "★ Bowie Knife | Gamma Doppler", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"},
+            {"name": "★ Bowie Knife | Gamma Doppler", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"}
+        ]
+    },
+    "recoil_case": {
+        "name": "Recoil Case",
+        "emoji": "📦",
+        "price": 2.0,
+        "items": [
+            {"name": "FAMAS | Meow 36", "rarity": "Blue", "condition": "Factory New"},
+            {"name": "Galil AR | Destroyer", "rarity": "Blue", "condition": "Well-Worn"},
+            {"name": "M4A4 | Poly Mag", "rarity": "Blue", "condition": "Battle-Scarred"},
+            {"name": "MAC-10 | Monkeyflage", "rarity": "Blue", "condition": "Field-Tested"},
+            {"name": "Negev | Drop Me", "rarity": "Blue", "condition": "Minimal Wear"},
+            {"name": "UMP-45 | Roadblock", "rarity": "Blue", "condition": "Well-Worn"},
+            {"name": "Glock-18 | Winterized", "rarity": "Blue", "condition": "Field-Tested"},
+            {"name": "R8 Revolver | Crazy 8", "rarity": "Purple", "condition": "Well-Worn"},
+            {"name": "★ Broken Fang Gloves | Yellow-banded", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"},
+            {"name": "★ Broken Fang Gloves | Unhinged", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"},
+            {"name": "★ Broken Fang Gloves | Needle Point", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"}
+        ]
+    },
+    "revolution_case": {
+        "name": "Revolution Case",
+        "emoji": "🎯",
+        "price": 2.5,
+        "items": [
+            {"name": "MAG-7 | Insomnia", "rarity": "Blue", "condition": "Well-Worn"},
+            {"name": "MP9 | Featherweight", "rarity": "Blue", "condition": "Battle-Scarred"},
+            {"name": "SCAR-20 | Fragments", "rarity": "Blue", "condition": "Factory New"},
+            {"name": "P250 | Re.built", "rarity": "Blue", "condition": "Minimal Wear"},
+            {"name": "MP5-SD | Liquidation", "rarity": "Blue", "condition": "Battle-Scarred"},
+            {"name": "SG 553 | Cyberforce", "rarity": "Blue", "condition": "Battle-Scarred"},
+            {"name": "Tec-9 | Rebel", "rarity": "Blue", "condition": "Factory New"},
+            {"name": "M4A1-S | Emphorosaur-S", "rarity": "Purple", "condition": "Factory New"},
+            {"name": "★ Driver Gloves | Imperial Plaid", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"},
+            {"name": "★ Driver Gloves | King Snake", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"},
+            {"name": "★ Driver Gloves | Racing Green", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"}
+        ]
+    },
+    "kilowatt_case": {
+        "name": "Kilowatt Case",
+        "emoji": "⚡",
+        "price": 3.5,
+        "items": [
+            {"name": "Dual Berettas | Hideout", "rarity": "Blue", "condition": "Minimal Wear"},
+            {"name": "MAC-10 | Light Box", "rarity": "Blue", "condition": "Field-Tested"},
+            {"name": "Nova | Dark Sigil", "rarity": "Blue", "condition": "Factory New"},
+            {"name": "SSG 08 | Dezastre", "rarity": "Blue", "condition": "Minimal Wear"},
+            {"name": "Tec-9 | Slag", "rarity": "Blue", "condition": "Minimal Wear"},
+            {"name": "UMP-45 | Motorized", "rarity": "Blue", "condition": "Factory New"},
+            {"name": "XM1014 | Irezumi", "rarity": "Blue", "condition": "Factory New"},
+            {"name": "Glock-18 | Block-18", "rarity": "Purple", "condition": "Minimal Wear"},
+            {"name": "★ Kukri Knife", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"},
+            {"name": "★ Kukri Knife | Fade", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"},
+            {"name": "★ Kukri Knife | Slaughter", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"}
+        ]
+    },
+    "gallery_case": {
+        "name": "Gallery Case",
+        "emoji": "🔥",
+        "price": 3.0,
+        "items": [
+            {"name": "USP-S | 27", "rarity": "Blue", "condition": "Minimal Wear"},
+            {"name": "Desert Eagle | Calligraffiti", "rarity": "Blue", "condition": "Battle-Scarred"},
+            {"name": "MP5-SD | Statics", "rarity": "Blue", "condition": "Factory New"},
+            {"name": "AUG | Luxe Trim", "rarity": "Blue", "condition": "Field-Tested"},
+            {"name": "M249 | Hypnosis", "rarity": "Blue", "condition": "Well-Worn"},
+            {"name": "R8 Revolver | Tango", "rarity": "Blue", "condition": "Factory New"},
+            {"name": "SCAR-20 | Trail Blazer", "rarity": "Blue", "condition": "Factory New"},
+            {"name": "M4A4 | Turbine", "rarity": "Purple", "condition": "Factory New"},
+            {"name": "★ Kukri Knife", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"},
+            {"name": "★ Kukri Knife | Fade", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"},
+            {"name": "★ Kukri Knife | Slaughter", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"}
+        ]
+    },
+    "fever_case": {
+        "name": "Fever Case",
+        "emoji": "💎",
+        "price": 4.0,
+        "items": [
+            {"name": "M4A4 | Choppa", "rarity": "Blue", "condition": "Well-Worn"},
+            {"name": "MAG-7 | Resupply", "rarity": "Blue", "condition": "Battle-Scarred"},
+            {"name": "SSG 08 | Memorial", "rarity": "Blue", "condition": "Field-Tested"},
+            {"name": "P2000 | Sure Grip", "rarity": "Blue", "condition": "Battle-Scarred"},
+            {"name": "USP-S | PC-GRN", "rarity": "Blue", "condition": "Field-Tested"},
+            {"name": "MP9 | Nexus", "rarity": "Blue", "condition": "Minimal Wear"},
+            {"name": "XM1014 | Mockingbird", "rarity": "Blue", "condition": "Factory New"},
+            {"name": "Desert Eagle | Serpent Strike", "rarity": "Purple", "condition": "Well-Worn"},
+            {"name": "★ Survival Knife", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"},
+            {"name": "★ Survival Knife | Marble Fade", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"},
+            {"name": "★ Survival Knife | Tiger Tooth", "rarity": "Gold", "tier": "Legendary", "condition": "Factory New"}
+        ]
+    },
+}
+
+# ============================================
+# FEATURED CASES
+# ============================================
+
+FEATURED_CASES = [
+    "kilowatt_case",
+    "gallery_case",
+    "fever_case",
+    "cs20_case",
+    "spectrum_2_case",
+    "operation_riptide_case",
+    "dreams_and_nightmares_case"
+]
+
+# ============================================
+# RARITY & VALUE DATA
+# ============================================
+
+RARITY_EMOJIS = {
+    "Blue": "🟦",
+    "Purple": "🟪",
+    "Pink": "💗",
+    "Red": "🔴",
+    "Gold": "⭐",
+    "⭐": "⭐",
+    "✨": "✨",
+    "💫": "💫",
+    "🔥": "🔥",
+    "👑 Common": "👑",
+    "👑 Rare": "👑",
+    "👑 Epic": "👑",
+    "👑 Legendary": "👑"
+}
+
+WEAPON_BASE_VALUES = {"Blue": 0.25, "Purple": 1.00, "Pink": 4.00, "Red": 20.00}
+GOLD_VALUES = {"Common": 150, "Rare": 300, "Epic": 600, "Legendary": 1000, "Mythic": 2500}
+CONDITION_MULTIPLIERS = {"Factory New": 2.0, "Minimal Wear": 1.5, "Field-Tested": 1.0, "Well-Worn": 0.75, "Battle-Scarred": 0.5}
+DROP_RATES = {"Gold": 2.6, "Red": 2.5, "Pink": 2.5, "Purple": 5.0, "Blue": 87.4}
+GOLD_TIER_PROGRESSION = ["Common", "Rare", "Epic", "Legendary", "Mythic"]
+
+
+
+# ============================================
+# STICKER CAPSULES DATA
+# ============================================
+
+STICKER_CAPSULES = {
+    "recoil": {
+        "name": "Recoil Sticker Capsule",
+        "emoji": "⭐",
+        "price": 0.50,
+        "stickers": [
+            {"name": "CS2 Logo", "rarity": "⭐"},
+            {"name": "AWP Sniper", "rarity": "✨"},
+            {"name": "Headshot", "rarity": "💫"},
+            {"name": "Clutch King", "rarity": "🔥"}
+        ]
+    },
+    "dreams": {
+        "name": "Dreams Sticker Capsule",
+        "emoji": "🌙⭐",
+        "price": 1.00,
+        "stickers": [
+            {"name": "Phoenix Rising", "rarity": "⭐"},
+            {"name": "Dragon Lore", "rarity": "✨"},
+            {"name": "Royal Crown", "rarity": "👑 Common"},
+            {"name": "Knight's Oath", "rarity": "👑 Rare"}
+        ]
+    },
+    "cs20": {
+        "name": "CS20 Sticker Capsule",
+        "emoji": "🎂⭐",
+        "price": 1.00,
+        "stickers": [
+            {"name": "Counter-Terrorist Elite", "rarity": "⭐"},
+            {"name": "Terrorist Elite", "rarity": "✨"},
+            {"name": "20 Years", "rarity": "💫"},
+            {"name": "Legends", "rarity": "👑 Epic"}
+        ]
+    },
+    "championship": {
+        "name": "Championship Sticker Capsule",
+        "emoji": "🏆",
+        "price": 2.00,
+        "stickers": [
+            {"name": "Victory", "rarity": "✨"},
+            {"name": "Champion", "rarity": "💫"},
+            {"name": "Golden Trophy", "rarity": "👑 Epic"},
+            {"name": "Hall of Fame", "rarity": "👑 Legendary"}
+        ]
+    },
+    "legends": {
+        "name": "Legends Sticker Capsule",
+        "emoji": "👑",
+        "price": 3.00,
+        "stickers": [
+            {"name": "s1mple", "rarity": "🔥"},
+            {"name": "ZyWoo", "rarity": "🔥"},
+            {"name": "NiKo", "rarity": "👑 Rare"},
+            {"name": "KennyS", "rarity": "👑 Epic"}
+        ]
+    }
+}
+
+STICKER_VALUES = {
+    "⭐": 0.10,
+    "✨": 0.50,
+    "💫": 2.00,
+    "🔥": 10.00,
+    "👑 Common": 30,
+    "👑 Rare": 75,
+    "👑 Epic": 150,
+    "👑 Legendary": 300
+}
+
+def get_random_sticker(capsule_id):
+    capsule = STICKER_CAPSULES.get(capsule_id)
+    if not capsule or not capsule.get('stickers'):
+        return None
+    
+    sticker = random.choice(capsule['stickers'])
+    is_stattrak = random.random() < 0.1
+    value = STICKER_VALUES.get(sticker['rarity'], 0.25)
+    if is_stattrak:
+        value *= 2
+    
+    name = f"StatTrak™ {sticker['name']}" if is_stattrak else sticker['name']
+    
+    return {
+        'name': name,
+        'rarity': sticker['rarity'],
+        'price': round(value, 2),
+        'is_stattrak': is_stattrak
+    }
+
+# ============================================
+# GAME HELPERS
+# ============================================
+
+SLOT_SYMBOLS = [
+    {'emoji': '🍒', 'value': 1, 'name': 'Cherry'},
+    {'emoji': '🍋', 'value': 2, 'name': 'Lemon'},
+    {'emoji': '🍊', 'value': 3, 'name': 'Orange'},
+    {'emoji': '🍇', 'value': 4, 'name': 'Grape'},
+    {'emoji': '💎', 'value': 10, 'name': 'Diamond'},
+    {'emoji': '7️⃣', 'value': 20, 'name': 'Seven'},
+    {'emoji': '🎰', 'value': 50, 'name': 'Jackpot'},
+]
+
+SLOT_PAYOUTS = {
+    '🍒🍒🍒': 3,
+    '🍋🍋🍋': 5,
+    '🍊🍊🍊': 8,
+    '🍇🍇🍇': 12,
+    '💎💎💎': 30,
+    '7️⃣7️⃣7️⃣': 60,
+    '🎰🎰🎰': 200
+}
+
+
+
+# ============================================
+# GAME ROUTES (ADDED - All Missing)
+# ============================================
+
+# ─── Coinflip ────────────────────────────────────────────────────────
+
+@app.post("/api/games/coinflip/create")
+@rate_limit("game")
+async def create_coinflip_game(request: Request, body: dict = Body(...)):
+    user_id = await get_user_id_from_session(request)
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    amount = body.get("amount")
+    if not amount or amount < 100:
+        return {"success": False, "error": "Minimum bet is $100"}
+    
+    pool = await get_db()
+    async with pool.acquire() as conn:
+        async with conn.transaction():
+            user = await conn.fetchrow("SELECT balance FROM users WHERE user_id = $1", user_id)
+            if not user or user['balance'] < amount:
+                return {"success": False, "error": "Insufficient balance"}
+            
+            await conn.execute(
+                "UPDATE users SET balance = balance - $1 WHERE user_id = $2",
+                amount, user_id
+            )
+            
+            # Computer flips coin - 50/50
+            user_wins = random.choice([True, False])
+            
+            if user_wins:
+                win_amount = int(amount * 1.95)
+                await conn.execute(
+                    "UPDATE users SET balance = balance + $1 WHERE user_id = $2",
+                    win_amount, user_id
+                )
+                await update_quest_progress(user_id, "jackpot_win", 1, conn)
+            else:
+                win_amount = 0
+            
+            await conn.execute(
+                """INSERT INTO coinflip_games 
+                   (creator_id, amount, status, completed_at, opponent_id, winner_id) 
+                   VALUES ($1, $2, 'complete', NOW(), NULL, $3)""",
+                user_id, amount, user_id if user_wins else None
+            )
+            
+            return {
+                "success": True,
+                "user_wins": user_wins,
+                "amount": amount,
+                "win_amount": win_amount,
+                "message": "You won! 🎉" if user_wins else "Computer wins! 😢"
+            }
+
+# ─── Dice ────────────────────────────────────────────────────────────
+
+@app.post("/api/games/dice/play")
+@rate_limit("game")
+async def play_dice(request: Request, body: dict = Body(...)):
+    user_id = await get_user_id_from_session(request)
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    amount = body.get("amount")
+    bet_type = body.get("bet_type", "over")
+    bet_number = body.get("bet_number", 50)
+    
+    if not amount or amount < 100:
+        return {"success": False, "error": "Minimum bet is $100"}
+    if bet_type not in ['over', 'under']:
+        return {"success": False, "error": 'Bet type must be "over" or "under"'}
+    if bet_number < 2 or bet_number > 99:
+        return {"success": False, "error": "Bet number must be between 2 and 99"}
+    
+    pool = await get_db()
+    async with pool.acquire() as conn:
+        async with conn.transaction():
+            user = await conn.fetchrow("SELECT balance FROM users WHERE user_id = $1", user_id)
+            if not user or user['balance'] < amount:
+                return {"success": False, "error": "Insufficient balance"}
+            
+            await conn.execute(
+                "UPDATE users SET balance = balance - $1 WHERE user_id = $2",
+                amount, user_id
+            )
+            
+            roll = random.randint(1, 100)
+            win = (roll > bet_number) if bet_type == 'over' else (roll < bet_number)
+            
+            if bet_type == 'over':
+                multiplier = round(95 / (100 - bet_number), 2)
+            else:
+                multiplier = round(95 / (bet_number - 1), 2)
+            
+            win_amount = int(amount * multiplier) if win else 0
+            
+            if win:
+                await conn.execute(
+                    "UPDATE users SET balance = balance + $1 WHERE user_id = $2",
+                    win_amount, user_id
+                )
+                await update_quest_progress(user_id, "earn_money", int(win_amount), conn)
+            
+            await conn.execute(
+                """INSERT INTO dice_games 
+                   (user_id, amount, bet_type, bet_number, roll_number, result, multiplier) 
+                   VALUES ($1, $2, $3, $4, $5, $6, $7)""",
+                user_id, amount, bet_type, bet_number, roll, 'win' if win else 'lose', multiplier
+            )
+            
+            return {
+                "success": True,
+                "roll": roll,
+                "bet_type": bet_type,
+                "bet_number": bet_number,
+                "win": win,
+                "multiplier": multiplier,
+                "amount": amount,
+                "win_amount": win_amount
+            }
+
+# ─── Mines ───────────────────────────────────────────────────────────
+
+@app.post("/api/games/mines/start")
+@rate_limit("game")
+async def start_mines_game(request: Request, body: dict = Body(...)):
+    user_id = await get_user_id_from_session(request)
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    amount = body.get("amount")
+    grid_size = body.get("grid_size", 5)
+    mine_count = body.get("mine_count", 3)
+    
+    if not amount or amount < 100:
+        return {"success": False, "error": "Minimum bet is $100"}
+    if grid_size not in [3, 4, 5, 6]:
+        return {"success": False, "error": "Grid size must be 3, 4, 5, or 6"}
+    
+    max_mines = grid_size * grid_size - 2
+    if mine_count < 1 or mine_count > max_mines:
+        return {"success": False, "error": f"Invalid mine count. Max is {max_mines}"}
+    
+    pool = await get_db()
+    async with pool.acquire() as conn:
+        async with conn.transaction():
+            user = await conn.fetchrow("SELECT balance FROM users WHERE user_id = $1", user_id)
+            if not user or user['balance'] < amount:
+                return {"success": False, "error": "Insufficient balance"}
+            
+            await conn.execute(
+                "UPDATE users SET balance = balance - $1 WHERE user_id = $2",
+                amount, user_id
+            )
+            
+            total_tiles = grid_size * grid_size
+            mine_positions = random.sample(range(total_tiles), mine_count)
+            
+            result = await conn.fetch(
+                """INSERT INTO mines_games 
+                   (user_id, bet_amount, grid_size, mine_count, mine_positions, status, multiplier) 
+                   VALUES ($1, $2, $3, $4, $5, 'active', 1.0) 
+                   RETURNING id""",
+                user_id, amount, grid_size, mine_count, mine_positions
+            )
+            game_id = result[0]['id']
+            
+            return {
+                "success": True,
+                "game_id": game_id,
+                "bet_amount": amount,
+                "grid_size": grid_size,
+                "mine_count": mine_count,
+                "revealed_tiles": [],
+                "remaining": total_tiles - mine_count
+            }
+
+@app.post("/api/games/mines/reveal")
+@rate_limit("game")
+async def reveal_mines_tile(request: Request, body: dict = Body(...)):
+    user_id = await get_user_id_from_session(request)
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    game_id = body.get("game_id")
+    tile_index = body.get("tile_index")
+    
+    if not game_id or tile_index is None:
+        return {"success": False, "error": "Missing game_id or tile_index"}
+    
+    pool = await get_db()
+    async with pool.acquire() as conn:
+        async with conn.transaction():
+            game = await conn.fetchrow(
+                "SELECT * FROM mines_games WHERE id = $1 AND user_id = $2",
+                game_id, user_id
+            )
+            if not game:
+                return {"success": False, "error": "Game not found"}
+            
+            if game['status'] != 'active':
+                return {"success": False, "error": "Game already finished"}
+            
+            mine_positions = game['mine_positions']
+            revealed_tiles = game['revealed_tiles'] or []
+            
+            if tile_index in revealed_tiles:
+                return {"success": False, "error": "Tile already revealed"}
+            
+            if tile_index in mine_positions:
+                await conn.execute(
+                    "UPDATE mines_games SET status = 'lost', exploded = true WHERE id = $1",
+                    game_id
+                )
+                return {
+                    "success": False, 
+                    "exploded": True, 
+                    "mine_hit": tile_index
+                }
+            
+            revealed_tiles.append(tile_index)
+            
+            total_tiles = game['grid_size'] * game['grid_size']
+            remaining = total_tiles - len(revealed_tiles) - game['mine_count']
+            safe_tiles = total_tiles - game['mine_count']
+            progress = len(revealed_tiles) / safe_tiles if safe_tiles > 0 else 0
+            multiplier = round(1.0 + (progress * 1.5), 2)
+            
+            bet_amount = float(game['bet_amount'])
+            cash_out_amount = int(bet_amount * multiplier)
+            
+            if len(revealed_tiles) >= safe_tiles:
+                await conn.execute(
+                    """UPDATE mines_games 
+                       SET status = 'won', revealed_tiles = $1, multiplier = $2, 
+                           win_amount = $3 WHERE id = $4""",
+                    revealed_tiles, multiplier, cash_out_amount, game_id
+                )
+                await conn.execute(
+                    "UPDATE users SET balance = balance + $1 WHERE user_id = $2",
+                    cash_out_amount, user_id
+                )
+                await update_quest_progress(user_id, "earn_money", int(cash_out_amount), conn)
+                return {
+                    "success": True,
+                    "game_won": True,
+                    "win_amount": cash_out_amount,
+                    "multiplier": multiplier,
+                    "revealed": revealed_tiles,
+                    "remaining": 0
+                }
+            
+            await conn.execute(
+                "UPDATE mines_games SET revealed_tiles = $1, multiplier = $2 WHERE id = $3",
+                revealed_tiles, multiplier, game_id
+            )
+            
+            return {
+                "success": True,
+                "game_won": False,
+                "revealed": revealed_tiles,
+                "remaining": remaining,
+                "multiplier": multiplier,
+                "cash_out_amount": cash_out_amount
+            }
+
+@app.post("/api/games/mines/cashout")
+@rate_limit("game")
+async def cashout_mines(request: Request, body: dict = Body(...)):
+    user_id = await get_user_id_from_session(request)
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    game_id = body.get("game_id")
+    if not game_id:
+        return {"success": False, "error": "Missing game_id"}
+    
+    pool = await get_db()
+    async with pool.acquire() as conn:
+        async with conn.transaction():
+            game = await conn.fetchrow(
+                "SELECT * FROM mines_games WHERE id = $1 AND user_id = $2 AND status = 'active'",
+                game_id, user_id
+            )
+            if not game:
+                return {"success": False, "error": "Game not found or already finished"}
+            
+            revealed_tiles = game['revealed_tiles'] or []
+            if len(revealed_tiles) == 0:
+                return {"success": False, "error": "No tiles revealed yet"}
+            
+            total_tiles = game['grid_size'] * game['grid_size']
+            safe_tiles = total_tiles - game['mine_count']
+            progress = len(revealed_tiles) / safe_tiles if safe_tiles > 0 else 0
+            multiplier = round(1.0 + (progress * 1.5), 2)
+            
+            bet_amount = float(game['bet_amount'])
+            win_amount = int(bet_amount * multiplier)
+            
+            await conn.execute(
+                "UPDATE mines_games SET status = 'cashed_out', win_amount = $1 WHERE id = $2",
+                win_amount, game_id
+            )
+            await conn.execute(
+                "UPDATE users SET balance = balance + $1 WHERE user_id = $2",
+                win_amount, user_id
+            )
+            await update_quest_progress(user_id, "earn_money", int(win_amount), conn)
+            
+            return {
+                "success": True,
+                "win_amount": win_amount,
+                "multiplier": multiplier
+            }
+
+# ─── Slots ───────────────────────────────────────────────────────────
+
+@app.post("/api/games/slots/play")
+@rate_limit("game")
+async def play_slots(request: Request, body: dict = Body(...)):
+    user_id = await get_user_id_from_session(request)
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    amount = body.get("amount")
+    if not amount or amount < 50:
+        return {"success": False, "error": "Minimum bet is $50"}
+    
+    pool = await get_db()
+    async with pool.acquire() as conn:
+        async with conn.transaction():
+            user = await conn.fetchrow("SELECT balance FROM users WHERE user_id = $1", user_id)
+            if not user or user['balance'] < amount:
+                return {"success": False, "error": "Insufficient balance"}
+            
+            await conn.execute(
+                "UPDATE users SET balance = balance - $1 WHERE user_id = $2",
+                amount, user_id
+            )
+            
+            symbols = [random.choice(SLOT_SYMBOLS)['emoji'] for _ in range(3)]
+            result_str = ''.join(symbols)
+            multiplier = SLOT_PAYOUTS.get(result_str, 0)
+            win_amount = int(amount * multiplier * 0.98) if multiplier > 0 else 0
+            
+            if multiplier == 0:
+                for sym in SLOT_SYMBOLS:
+                    if symbols.count(sym['emoji']) >= 2:
+                        multiplier = sym['value'] / 2
+                        win_amount = int(amount * multiplier * 0.98)
+                        break
+            
+            if win_amount > 0:
+                await conn.execute(
+                    "UPDATE users SET balance = balance + $1 WHERE user_id = $2",
+                    win_amount, user_id
+                )
+                await update_quest_progress(user_id, "earn_money", int(win_amount), conn)
+            
+            await conn.execute(
+                """INSERT INTO slots_games 
+                   (user_id, bet_amount, spin_result, multiplier, win_amount) 
+                   VALUES ($1, $2, $3, $4, $5)""",
+                user_id, amount, symbols, multiplier, win_amount
+            )
+            
+            return {
+                "success": True,
+                "symbols": symbols,
+                "result_str": result_str,
+                "multiplier": multiplier,
+                "win_amount": win_amount,
+                "bet_amount": amount
+            }
+
+# ─── Game Stats ─────────────────────────────────────────────────────
+
+@app.get("/api/games/stats")
+@rate_limit("read")
+async def get_game_stats(request: Request):
+    user_id = await get_user_id_from_session(request)
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    pool = await get_db()
+    async with pool.acquire() as conn:
+        coinflip_wins = await conn.fetchval(
+            "SELECT COUNT(*) FROM coinflip_games WHERE creator_id = $1 AND winner_id = $1",
+            user_id
+        ) or 0
+        coinflip_losses = await conn.fetchval(
+            "SELECT COUNT(*) FROM coinflip_games WHERE creator_id = $1 AND winner_id IS NULL AND status = 'complete'",
+            user_id
+        ) or 0
+        
+        dice_wins = await conn.fetchval(
+            "SELECT COUNT(*) FROM dice_games WHERE user_id = $1 AND result = 'win'",
+            user_id
+        ) or 0
+        dice_losses = await conn.fetchval(
+            "SELECT COUNT(*) FROM dice_games WHERE user_id = $1 AND result = 'lose'",
+            user_id
+        ) or 0
+        
+        mines_wins = await conn.fetchval(
+            "SELECT COUNT(*) FROM mines_games WHERE user_id = $1 AND status IN ('won', 'cashed_out')",
+            user_id
+        ) or 0
+        mines_losses = await conn.fetchval(
+            "SELECT COUNT(*) FROM mines_games WHERE user_id = $1 AND status = 'lost'",
+            user_id
+        ) or 0
+        
+        slots_wins = await conn.fetchval(
+            "SELECT COUNT(*) FROM slots_games WHERE user_id = $1 AND win_amount > 0",
+            user_id
+        ) or 0
+        slots_losses = await conn.fetchval(
+            "SELECT COUNT(*) FROM slots_games WHERE user_id = $1 AND win_amount = 0",
+            user_id
+        ) or 0
+        
+        return {
+            "coinflip": {"wins": coinflip_wins, "losses": coinflip_losses},
+            "dice": {"wins": dice_wins, "losses": dice_losses},
+            "mines": {"wins": mines_wins, "losses": mines_losses},
+            "slots": {"wins": slots_wins, "losses": slots_losses}
+        }
+
+# ============================================
+# SKIN UPGRADE (ADDED - Missing)
+# ============================================
+
+@app.post("/api/games/upgrade")
+@rate_limit("economy")
+async def upgrade_skin(request: Request, body: dict = Body(...)):
+    user_id = await get_user_id_from_session(request)
+    if not user_id:
+        raise HTTPException(status_code=401, detail="Not authenticated")
+    
+    item_id = body.get("item_id")
+    if not item_id:
+        return {"success": False, "error": "Missing item_id"}
+    
+    pool = await get_db()
+    async with pool.acquire() as conn:
+        async with conn.transaction():
+            item = await conn.fetchrow(
+                "SELECT * FROM inventory WHERE id = $1 AND user_id = $2 AND status = 'kept'",
+                item_id, user_id
+            )
+            if not item:
+                return {"success": False, "error": "Item not found"}
+            
+            rarity_order = ['Blue', 'Purple', 'Pink', 'Red', 'Gold']
+            if item['rarity'] == 'Gold':
+                return {"success": False, "error": "Gold items cannot be upgraded!"}
+            
+            current_rarity = item['rarity']
+            current_index = rarity_order.index(current_rarity)
+            next_rarity = rarity_order[current_index + 1] if current_index < len(rarity_order) - 1 else None
+            
+            if not next_rarity:
+                return {"success": False, "error": "Item cannot be upgraded further"}
+            
+            chances = {'Blue': 0.8, 'Purple': 0.6, 'Pink': 0.4, 'Red': 0.25}
+            success_chance = chances.get(current_rarity, 0.5)
+            success = random.random() < success_chance
+            
+            upgrade_cost = {'Blue': 10, 'Purple': 50, 'Pink': 200, 'Red': 1000}.get(current_rarity, 10)
+            
+            user = await conn.fetchrow("SELECT balance FROM users WHERE user_id = $1", user_id)
+            if not user or user['balance'] < upgrade_cost:
+                return {"success": False, "error": f"Insufficient balance. Costs ${upgrade_cost}"}
+            
+            await conn.execute(
+                "UPDATE users SET balance = balance - $1 WHERE user_id = $2",
+                upgrade_cost, user_id
+            )
+            await conn.execute("DELETE FROM inventory WHERE id = $1", item_id)
+            
+            if success:
+                possible_items = []
+                for case in CASES.values():
+                    for case_item in case['items']:
+                        if case_item['rarity'] == next_rarity:
+                            possible_items.append(case_item)
+                
+                new_item_template = random.choice(possible_items) if possible_items else {
+                    'name': f'Mystery {next_rarity} Item',
+                    'rarity': next_rarity,
+                    'condition': 'Field-Tested',
+                    'tier': None
+                }
+                
+                is_stattrak = random.random() < 0.1
+                float_value = generate_skin_float()
+                condition_from_float = get_skin_condition(float_value)
+                base_value = calculate_item_value(next_rarity, new_item_template.get('condition', 'Field-Tested'), 
+                                                  new_item_template.get('tier'), is_stattrak)
+                float_multiplier = {
+                    "Factory New": 2.0, "Minimal Wear": 1.5, "Field-Tested": 1.0,
+                    "Well-Worn": 0.75, "Battle-Scarred": 0.5
+                }.get(condition_from_float, 1.0)
+                value = round(base_value * float_multiplier, 2)
+                name = f"{'StatTrak™ ' if is_stattrak else ''}{new_item_template['name']}"
+                
+                await conn.execute(
+                    """INSERT INTO inventory 
+                       (user_id, item_name, item_type, rarity, price, condition, is_stattrak, status, float_value) 
+                       VALUES ($1, $2, 'weapon', $3, $4, $5, $6, 'kept', $7)""",
+                    user_id, name, next_rarity, value, condition_from_float, is_stattrak, float_value
+                )
+                
+                return {
+                    "success": True,
+                    "upgraded": True,
+                    "new_rarity": next_rarity,
+                    "new_item_name": name,
+                    "new_price": value,
+                    "old_rarity": current_rarity,
+                    "old_item_name": item['item_name']
+                }
+            else:
+                return {
+                    "success": True,
+                    "upgraded": False,
+                    "old_item_name": item['item_name'],
+                    "old_rarity": current_rarity,
+                    "cost": upgrade_cost
+                }
+

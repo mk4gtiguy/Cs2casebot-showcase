@@ -1,0 +1,974 @@
+﻿<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+
+<title>🪙  Coinflip — CS2CaseBot</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+
+<style>
+
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+
+:root{--bg:#060610;--gold:#ffd700;--silver:#b0b8c8;--font:'Orbitron',monospace;}
+
+html,body{min-height:100vh;background:var(--bg);font-family:var(--font);overflow-x:hidden;color:#e8eaf0;}
+
+
+
+/* HEADER */
+
+.hdr{display:flex;align-items:center;gap:12px;padding:12px 16px;
+
+  background:rgba(6,6,16,0.97);border-bottom:1px solid rgba(255,215,0,0.1);
+
+  position:sticky;top:0;z-index:50;}
+
+.back{display:flex;align-items:center;gap:5px;color:#444;font-size:10px;
+
+  letter-spacing:1px;text-decoration:none;transition:color .2s;}
+
+.back:hover{color:var(--gold);}
+
+.back svg{width:14px;height:14px;}
+
+.title{flex:1;font-size:14px;font-weight:900;letter-spacing:3px;color:var(--gold);}
+
+.bal{font-size:13px;font-weight:700;color:var(--gold);font-family:monospace;}
+
+
+
+/* SPLIT BG */
+
+.split-bg{
+
+  position:fixed;inset:0;z-index:0;
+
+  background:linear-gradient(180deg,
+
+    rgba(255,215,0,0.04) 0%,
+
+    rgba(6,6,16,0) 50%,
+
+    rgba(176,184,200,0.04) 100%);
+
+  pointer-events:none;
+
+}
+
+
+
+/* PAGE */
+
+.page{max-width:420px;margin:0 auto;padding:20px 16px 80px;position:relative;z-index:1;}
+
+
+
+/* COIN ARENA */
+
+.coin-arena{
+
+  background:rgba(10,10,24,0.95);
+
+  border:1px solid rgba(255,255,255,0.06);
+
+  border-radius:24px;
+
+  padding:28px 20px 24px;
+
+  text-align:center;
+
+  margin-bottom:20px;
+
+  position:relative;
+
+  overflow:hidden;
+
+}
+
+.coin-arena::before{
+
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+
+  background:linear-gradient(90deg,transparent,var(--gold),transparent);
+
+}
+
+
+
+/* COIN */
+
+.coin-wrap{perspective:600px;margin:0 auto 24px;width:140px;height:140px;}
+
+.coin{
+
+  width:140px;height:140px;
+
+  transform-style:preserve-3d;
+
+  position:relative;
+
+  transition:transform 0.1s;
+
+}
+
+.coin.flip{animation:coinflip var(--flip-dur,1.2s) cubic-bezier(.45,0,.55,1) forwards;}
+
+@keyframes coinflip{
+
+  0%  {transform:rotateY(0deg);}
+
+  100%{transform:rotateY(var(--flip-end,720deg));}
+
+}
+
+.coin-face{
+
+  position:absolute;inset:0;border-radius:50%;
+
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+
+  backface-visibility:hidden;
+
+  border:4px solid;
+
+}
+
+.coin-heads{
+
+  background:radial-gradient(circle at 35% 35%,#ffe45e,#c9900a);
+
+  border-color:#ffb800;
+
+  box-shadow:0 0 30px rgba(255,184,0,0.4),inset 0 2px 8px rgba(255,255,255,0.3);
+
+}
+
+.coin-tails{
+
+  background:radial-gradient(circle at 35% 35%,#dde3ee,#6a7080);
+
+  border-color:#a0aabc;
+
+  box-shadow:0 0 30px rgba(176,184,200,0.3),inset 0 2px 8px rgba(255,255,255,0.2);
+
+  transform:rotateY(180deg);
+
+}
+
+.coin-label{font-size:11px;font-weight:900;letter-spacing:2px;margin-top:4px;}
+
+.coin-heads .coin-label{color:#7a4a00;}
+
+.coin-tails .coin-label{color:#4a5060;}
+
+.coin-emoji{font-size:40px;line-height:1;}
+
+
+
+/* RESULT BANNER */
+
+.result-banner{
+
+  min-height:40px;display:flex;align-items:center;justify-content:center;
+
+  font-size:16px;font-weight:900;letter-spacing:3px;
+
+}
+
+.result-banner.win{color:var(--gold);text-shadow:0 0 20px rgba(255,215,0,0.5);}
+
+.result-banner.loss{color:#ff4444;text-shadow:0 0 20px rgba(255,68,68,0.4);}
+
+.result-banner.idle{color:#333;font-size:12px;}
+
+
+
+/* CALL SELECTOR */
+
+.call-section{margin-bottom:20px;}
+
+.call-label{font-size:9px;letter-spacing:2px;color:#444;margin-bottom:10px;}
+
+.call-btns{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+
+.call-btn{
+
+  padding:20px 12px;border-radius:16px;
+
+  border:2px solid rgba(255,255,255,0.08);
+
+  background:rgba(255,255,255,0.03);
+
+  cursor:pointer;text-align:center;
+
+  transition:all .2s;
+
+  position:relative;overflow:hidden;
+
+}
+
+.call-btn.heads{border-color:rgba(255,184,0,0.2);}
+
+.call-btn.tails{border-color:rgba(176,184,200,0.2);}
+
+.call-btn.selected.heads{
+
+  border-color:var(--gold);
+
+  background:rgba(255,215,0,0.1);
+
+  box-shadow:0 0 24px rgba(255,215,0,0.2);
+
+}
+
+.call-btn.selected.tails{
+
+  border-color:var(--silver);
+
+  background:rgba(176,184,200,0.08);
+
+  box-shadow:0 0 24px rgba(176,184,200,0.15);
+
+}
+
+.call-emoji{font-size:32px;display:block;margin-bottom:6px;}
+
+.call-name{font-size:11px;font-weight:700;letter-spacing:1px;}
+
+.call-odds{font-size:9px;color:#444;margin-top:2px;}
+
+.call-btn.selected.heads .call-name{color:var(--gold);}
+
+.call-btn.selected.tails .call-name{color:var(--silver);}
+
+
+
+/* BET */
+
+.bet-row{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+
+.bet-inp{flex:1;background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.08);
+
+  border-radius:8px;padding:12px 14px;color:#e8eaf0;font-family:var(--font);
+
+  font-size:13px;font-weight:700;outline:none;text-align:center;}
+
+.bet-inp:focus{border-color:rgba(255,215,0,0.3);}
+
+.adj{padding:12px 16px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);
+
+  border-radius:8px;color:#666;font-family:var(--font);font-size:12px;cursor:pointer;
+
+  transition:all .15s;}
+
+.adj:hover{border-color:rgba(255,215,0,0.3);color:var(--gold);}
+
+
+
+.quick-row{display:flex;gap:6px;margin-bottom:14px;}
+
+.qb{flex:1;padding:8px 4px;background:rgba(255,215,0,0.06);border:1px solid rgba(255,215,0,0.12);
+
+  border-radius:8px;color:#888;font-family:var(--font);font-size:9px;letter-spacing:1px;
+
+  cursor:pointer;text-align:center;transition:all .15s;}
+
+.qb:hover{border-color:var(--gold);color:var(--gold);}
+
+
+
+/* FLIP BUTTON */
+
+.btn-flip{
+
+  width:100%;padding:18px;border:none;border-radius:14px;
+
+  font-family:var(--font);font-size:14px;font-weight:900;letter-spacing:3px;
+
+  cursor:pointer;transition:all .2s;
+
+}
+
+.btn-flip.heads-mode{
+
+  background:linear-gradient(135deg,#c98000,#ffd700);color:#0a0008;
+
+  box-shadow:0 4px 24px rgba(255,215,0,0.35);
+
+}
+
+.btn-flip.tails-mode{
+
+  background:linear-gradient(135deg,#6a7080,#b0b8c8);color:#0a0008;
+
+  box-shadow:0 4px 24px rgba(176,184,200,0.3);
+
+}
+
+.btn-flip:disabled{opacity:.4;cursor:not-allowed;}
+
+.btn-flip:not(:disabled):hover{transform:translateY(-2px);}
+
+.btn-flip.idle-mode{background:rgba(255,255,255,0.06);color:#444;box-shadow:none;}
+
+
+
+/* STATS */
+
+.stats-bar{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:16px;}
+
+.st{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.05);
+
+  border-radius:10px;padding:8px;text-align:center;}
+
+.st .v{font-size:13px;font-weight:700;color:var(--gold);font-family:monospace;}
+
+.st .l{font-size:8px;color:#444;letter-spacing:1px;margin-top:2px;}
+
+
+
+/* WIN FLASH */
+
+#flash{position:fixed;inset:0;pointer-events:none;opacity:0;z-index:200;}
+
+#flash.gold{background:radial-gradient(ellipse at 50% 50%,rgba(255,215,0,0.3),transparent 70%);}
+
+#flash.red{background:radial-gradient(ellipse at 50% 50%,rgba(255,68,68,0.25),transparent 70%);}
+
+#flash.show{animation:fl .5s ease;}
+
+@keyframes fl{0%,100%{opacity:0;}30%{opacity:1;}}
+
+</style>
+
+    <script src="/static/sound.js"></script>
+
+    <script src="/static/big-win.js"></script>
+
+
+    <script src="/static/balance-animation.js"></script>
+
+
+    <script src="/static/page-transitions.js"></script>
+
+
+    <script src="/static/autoplay.js"></script>
+
+
+<link rel="stylesheet" href="/static/games-shared.css"><script src="/static/js/csrf.js"></script>
+
+
+</head>
+
+<body>
+
+<div id="flash"></div>
+
+<header class="hdr">
+
+  <a class="back" href="/games"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>GAMES</a>
+
+  <span class="title">🪙  COINFLIP</span>
+
+  <span class="bal" id="balDisplay">$—</span>
+
+</header>
+
+<div class="split-bg"></div>
+
+
+
+<div class="page">
+
+  <!-- COIN -->
+
+  <div class="coin-arena">
+
+    <div class="coin-wrap">
+
+      <div class="coin" id="theCoin">
+
+        <div class="coin-face coin-heads"><div class="coin-emoji">👑</div><div class="coin-label">HEADS</div></div>
+
+        <div class="coin-face coin-tails"><div class="coin-emoji">🛡️</div><div class="coin-label">TAILS</div></div>
+
+      </div>
+
+    </div>
+
+    <div class="result-banner idle" id="resultBanner">CHOOSE HEADS OR TAILS</div>
+
+    <div id="flipHist" style="display:flex;gap:3px;flex-wrap:wrap;justify-content:center;padding:8px 0 2px;min-height:24px;"></div>
+
+  </div>
+
+
+
+  <!-- CALL -->
+
+  <div class="call-section">
+
+    <div class="call-label">YOUR CALL</div>
+
+    <div class="call-btns">
+
+      <div class="call-btn heads" id="btnHeads" onclick="setCall('heads')">
+
+        <span class="call-emoji">👑</span>
+
+        <div class="call-name">HEADS</div>
+
+        <div class="call-odds">2× PAYOUT</div>
+
+      </div>
+
+      <div class="call-btn tails" id="btnTails" onclick="setCall('tails')">
+
+        <span class="call-emoji">🛡️</span>
+
+        <div class="call-name">TAILS</div>
+
+        <div class="call-odds">2× PAYOUT</div>
+
+      </div>
+
+    </div>
+
+  </div>
+
+
+
+  <!-- BET -->
+
+  <div class="bet-row">
+
+    <button class="adj" onclick="halveBet()">½</button>
+
+    <input class="bet-inp" id="betInp" type="number" value="500" min="50" step="50">
+
+    <button class="adj" onclick="doubleBet()">2×</button>
+
+  </div>
+
+  <div class="quick-row">
+
+    <div class="qb" onclick="qBet(100)">$100</div>
+
+    <div class="qb" onclick="qBet(500)">$500</div>
+
+    <div class="qb" onclick="qBet(1000)">$1K</div>
+
+    <div class="qb" onclick="qBet(5000)">$5K</div>
+
+    <div class="qb" onclick="qBet(10000)">$10K</div>
+
+  </div>
+
+
+
+  <button class="btn-flip idle-mode" id="flipBtn" onclick="startFlip()" disabled>SELECT A SIDE</button>
+
+
+
+  <div style="display:flex;gap:6px;margin-top:10px;align-items:center;">
+
+
+    <span style="font-size:8px;color:#444;letter-spacing:1px;white-space:nowrap;flex-shrink:0;">FLIPS</span>
+
+
+    <div class="qb" id="cnt1" onclick="setFlipCount(1)" style="flex:1;border-color:rgba(255,215,0,0.4);color:var(--gold);">1×</div>
+
+
+    <div class="qb" id="cnt5" onclick="setFlipCount(5)" style="flex:1;">5×</div>
+
+
+    <div class="qb" id="cnt10" onclick="setFlipCount(10)" style="flex:1;">10×</div>
+
+
+    <div class="qb" id="cnt25" onclick="setFlipCount(25)" style="flex:1;">25×</div>
+
+
+    <button onclick="cfAdvAuto()" style="padding:8px 6px;background:rgba(255,215,0,0.04);border:1px solid rgba(255,215,0,0.1);border-radius:8px;color:#666;font-family:var(--font);font-size:7px;cursor:pointer;">⚙️</button>
+
+
+  </div>
+
+
+  <div id="cfAutoPanel"></div>
+
+
+
+  <div class="stats-bar" style="margin-top:16px;grid-template-columns:repeat(4,1fr);">
+
+    <div class="st"><div class="v" id="stW">0</div><div class="l">WINS</div></div>
+
+    <div class="st"><div class="v" id="stL">0</div><div class="l">LOSSES</div></div>
+
+    <div class="st"><div class="v" id="stSK">—</div><div class="l">STREAK</div></div>
+
+    <div class="st"><div class="v" id="stP">$0</div><div class="l">PROFIT</div></div>
+
+  </div>
+
+</div>
+
+
+
+<script>
+
+let call=null,balance=0,wins=0,losses=0,profit=0,flipping=false;
+
+let flipCount=1,flipHistory=[],streakSide=null,streakCount=0,autoRunning=false;
+
+
+
+async function init(){
+
+  try{const d=await api('/api/user/me');balance=d.balance;updateBal();}catch(e){}
+
+}
+
+
+
+function updateBal(){
+
+
+  var e=document.getElementById('balDisplay'),c=e.textContent||'',n='$'+balance.toLocaleString(undefined,{maximumFractionDigits:0});
+
+
+  if(c&&c!=='$—'&&c!==n){var p=parseFloat(c.replace(/[,$]/g,''));if(!isNaN(p)&&p!==balance){animateBalance(e,'$'+p.toLocaleString(undefined,{maximumFractionDigits:0}),n,balance>=p);return}}
+
+
+  e.textContent=n
+
+
+}
+
+
+
+function setCall(c){
+
+
+  Sound.click();call=c;
+
+  ['btnHeads','btnTails'].forEach(id=>document.getElementById(id).classList.remove('selected'));
+
+  document.getElementById(c==='heads'?'btnHeads':'btnTails').classList.add('selected');
+
+  const btn=document.getElementById('flipBtn');
+
+  btn.disabled=false;
+
+  btn.className='btn-flip '+(c==='heads'?'heads-mode':'tails-mode');
+
+  btn.textContent='🎲 FLIP FOR '+(c==='heads'?'HEADS':'TAILS');
+
+  document.getElementById('resultBanner').className='result-banner idle';
+
+  document.getElementById('resultBanner').textContent='BET PLACED — FLIP WHEN READY';
+
+}
+
+
+
+function qBet(v){Sound.click();document.getElementById('betInp').value=v;}
+
+
+function halveBet(){Sound.click();document.getElementById('betInp').value=Math.max(50,Math.floor(parseInt(document.getElementById('betInp').value||500)/2));}
+
+
+function doubleBet(){Sound.click();document.getElementById('betInp').value=Math.min(balance,parseInt(document.getElementById('betInp').value||500)*2);}
+
+
+
+async function flip(){
+
+
+  if(!call||flipping) return;
+
+
+  const bet=parseInt(document.getElementById('betInp').value)||500;
+
+
+  if(bet>balance){showResult('❌ INSUFFICIENT BALANCE','idle');Sound.error();return;}
+
+  flipping=true;
+
+  document.getElementById('flipBtn').disabled=true;
+
+
+
+  // Animate coin
+
+  const coin=document.getElementById('theCoin');
+
+  const isHeads=call==='heads';
+
+  // Result will come from server — but we flip visually first
+
+  // Visual-only spin count — actual result comes from server
+
+  const spins=Math.floor(Math.random()*3+3)*360;
+
+  coin.style.setProperty('--flip-dur','1.2s');
+
+
+  coin.style.setProperty('--flip-end',(spins+180)+'deg');
+
+
+  coin.classList.add('flip');Sound.coinflip();
+
+
+
+  try{
+
+    const d=await api('/api/games/easy/coinflip',{method:'POST',
+
+      body:JSON.stringify({amount:bet,call})});
+
+
+
+    // Land on correct face
+
+    await delay(800);
+
+    coin.classList.remove('flip');
+
+    coin.style.setProperty('--flip-end',(d.result==='heads'?0:180)+'deg');
+
+    coin.style.transform=`rotateY(${d.result==='heads'?0:180}deg)`;
+
+
+
+    await delay(300);
+
+    balance=await refreshBal();
+
+    updateBal();
+
+
+
+    const profitDelta=d.user_wins?(d.win-bet):-bet;
+
+    profit+=profitDelta;
+
+    if(d.user_wins){Sound.win();wins++;showResult(`✅ ${d.result.toUpperCase()} — YOU WIN $${d.win.toLocaleString(undefined,{maximumFractionDigits:0})}`,'win');flashScreen('gold');if(window.maybeBigWin)await maybeBigWin(bet,d.win);}
+
+
+    else{Sound.loss();losses++;showResult(`❌ ${d.result.toUpperCase()} — YOU LOSE $${bet.toLocaleString(undefined,{maximumFractionDigits:0})}`,'loss');flashScreen('red');}
+
+    updateCFStats(d.result, d.user_wins);
+
+  }catch(e){
+
+    coin.classList.remove('flip');
+
+    showResult('ERROR: '+e.message,'idle');
+
+  }finally{
+
+    flipping=false;
+
+    document.getElementById('flipBtn').disabled=false;
+
+  }
+
+}
+
+
+
+function showResult(text,cls){
+
+  const el=document.getElementById('resultBanner');
+
+  el.className='result-banner '+cls;
+
+  el.textContent=text;
+
+}
+
+function flashScreen(type){
+
+  const el=document.getElementById('flash');
+
+  el.className='';el.className=type;
+
+  void el.offsetWidth;el.classList.add('show');
+
+}
+
+async function refreshBal(){
+
+  try{const d=await api('/api/user/me');return d.balance;}catch(e){return balance;}
+
+}
+
+async function api(url,opts={}){
+
+  const r=await fetch(url,{credentials:'include',headers:{'Content-Type':'application/json'},...opts});
+
+  if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.detail||'Error');}
+
+  return r.json();
+
+}
+
+function delay(ms){return new Promise(r=>setTimeout(r,ms));}
+
+function updateCFStats(result, won){
+
+  flipHistory.push(result);if(flipHistory.length>20) flipHistory.shift();
+
+  if(result===streakSide) streakCount++;else{streakSide=result;streakCount=1;}
+
+  document.getElementById('stW').textContent=wins;
+
+  document.getElementById('stL').textContent=losses;
+
+  document.getElementById('stP').textContent=(profit>=0?'+':'')+profit.toLocaleString(undefined,{maximumFractionDigits:0});
+
+  const sk=document.getElementById('stSK');
+
+  if(streakCount>=2){const ico=streakSide==='heads'?'👑':'🛡️';sk.textContent=ico+' '+streakCount+'×';}
+
+  else sk.textContent='—';
+
+  // History dots
+
+  const el=document.getElementById('flipHist');
+
+  el.innerHTML=flipHistory.map(r=>{
+
+    const isH=r==='heads';
+
+    return `<span title="${r}" style="width:16px;height:16px;border-radius:50%;background:${isH?'#c9900a':'#6a7080'};display:inline-flex;align-items:center;justify-content:center;font-size:7px;flex-shrink:0;">${isH?'H':'T'}</span>`;
+
+  }).join('');
+
+}
+
+function setFlipCount(n){
+
+
+  Sound.click();flipCount=n;
+
+  ['cnt1','cnt5','cnt10','cnt25'].forEach(id=>{
+
+    const el=document.getElementById(id);
+
+    const v=parseInt(el.textContent);
+
+    el.style.borderColor=v===n?'rgba(255,215,0,0.5)':'rgba(255,215,0,0.12)';
+
+    el.style.color=v===n?'var(--gold)':'#888';
+
+  });
+
+}
+
+async function startFlip(){
+
+
+  Sound.click();if(!call||flipping) return;
+
+
+  if(autoRunning){autoRunning=false;return;}
+
+
+  if(flipCount===1){await flip();return;}
+
+
+  autoRunning=true;
+
+
+  const btn=document.getElementById('flipBtn');
+
+
+  for(let i=0;i<flipCount&&autoRunning;i++){
+
+
+    const bet=parseInt(document.getElementById('betInp').value)||500;
+
+
+    if(bet>balance){autoRunning=false;break;}
+
+
+    btn.textContent='⏹️ STOP ('+(flipCount-i)+' left)';
+
+
+    await flip();
+
+
+    if(i<flipCount-1&&autoRunning) await delay(300);
+
+
+  }
+
+
+  autoRunning=false;
+
+
+  const c=call;setCall(c);
+
+
+}
+
+
+
+
+
+// Advanced autoplay with stop conditions
+
+
+let cfAP=null;
+
+
+function cfAdvAuto(){
+
+
+  if(!cfAP){
+
+
+    cfAP=new AutoPlay({
+
+
+      onRound: async()=>{
+
+
+        const bet=parseInt(document.getElementById('betInp').value)||500;
+
+
+        const coin=document.getElementById('theCoin');
+
+
+        const spins=Math.floor(Math.random()*3+3)*360;
+
+
+        coin.style.setProperty('--flip-dur','1.2s');
+
+
+        coin.style.setProperty('--flip-end',(spins+180)+'deg');
+
+
+        coin.classList.add('flip');Sound.coinflip();
+
+
+        try{
+
+
+          const d=await api('/api/games/easy/coinflip',{method:'POST',
+
+
+            body:JSON.stringify({amount:bet,call})});
+
+
+          await delay(800);
+
+
+          coin.classList.remove('flip');
+
+
+          coin.style.setProperty('--flip-end',(d.result==='heads'?0:180)+'deg');
+
+
+          coin.style.transform=`rotateY(${d.result==='heads'?0:180}deg)`;
+
+
+          await delay(300);
+
+
+          balance=d.balance;updateBal();
+
+
+          const profitDelta=d.user_wins?(d.win-bet):-bet;
+
+
+          profit+=profitDelta;
+
+
+          if(d.user_wins){Sound.win();wins++;showResult(`✅ ${d.result.toUpperCase()} WIN`,'win');flashScreen('gold');if(window.maybeBigWin)await maybeBigWin(bet,d.win);}
+
+
+          else{Sound.loss();losses++;showResult(`❌ ${d.result.toUpperCase()} LOSE`,'loss');flashScreen('red');}
+
+
+          updateCFStats(d.result,d.user_wins);
+
+
+          return {win:d.user_wins,multiplier:2,winAmount:d.win};
+
+
+        }catch(e){coin.classList.remove('flip');return null;}
+
+
+      },
+
+
+      onStop: (r)=>{autoRunning=false;},
+
+
+      roundDelay: 800,
+
+
+    });
+
+
+    cfAP.setBalance(balance);
+
+
+  }
+
+
+  const panel=document.getElementById('cfAutoPanel');
+
+
+  if(panel.querySelector('.autoplay-panel')){panel.innerHTML='';return;}
+
+
+  cfAP.bindUI(panel,{defaultRounds:10,getBalance:()=>balance});
+
+
+}
+
+init();
+
+</script>
+
+<script>if("serviceWorker"in navigator){navigator.serviceWorker.register("/static/sw.js").catch(function(){})}</script>
+
+
+<script src="/static/chat.js"></script>
+
+
+</body>
+
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+
+<title>🎯 Aim Trainer — CS2CaseBot</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+
+<style>
+
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+
+:root{--bg:#060408;--cs:#ffd700;--green:#22c55e;--font:'Orbitron',monospace;}
+
+html,body{min-height:100vh;background:var(--bg);font-family:var(--font);overflow-x:hidden;color:#e8d8c0;}
+
+body{background-image:radial-gradient(ellipse 80% 40% at 50% 0%,rgba(255,215,0,0.04) 0%,transparent 70%);}
+
+.hdr{display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(6,4,8,0.98);border-bottom:1px solid rgba(255,215,0,0.1);position:sticky;top:0;z-index:50;}
+
+.back{display:flex;align-items:center;gap:5px;color:#2a2010;font-size:10px;letter-spacing:1px;text-decoration:none;transition:color .2s;}
+
+.back:hover{color:var(--cs);}
+
+.back svg{width:14px;height:14px;}
+
+.title{flex:1;font-size:14px;font-weight:900;letter-spacing:3px;background:linear-gradient(90deg,var(--cs),#ff9500);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+
+.tkts{font-size:12px;font-weight:700;color:var(--cs);font-family:monospace;}
+
+.page{max-width:420px;margin:0 auto;padding:16px 14px 80px;}
+
+.arena{background:rgba(4,2,6,0.99);border:1px solid rgba(255,215,0,0.08);border-radius:20px;padding:16px 14px 18px;margin-bottom:14px;position:relative;overflow:hidden;}
+
+.arena::before{content:'';position:absolute;top:0;left:15%;right:15%;height:1px;background:linear-gradient(90deg,transparent,rgba(255,215,0,0.3),transparent);}
+
+.hud{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding:6px 10px;background:rgba(0,0,0,0.3);border-radius:8px;}
+
+.hud-hits{font-size:13px;}
+
+.hud-hits strong{color:var(--green);font-size:17px;font-family:monospace;}
+
+.hud-hits .denom{color:#333;}
+
+.hud-timer{font-size:13px;}
+
+.hud-timer strong{font-size:17px;font-family:monospace;transition:color .3s,text-shadow .3s;}
+
+.hud-timer .suf{color:#333;}
+
+#aimArea{
+
+  position:relative;height:280px;
+
+  background:rgba(0,0,0,0.5);
+
+  border:1px solid rgba(255,255,255,0.06);
+
+  border-radius:10px;overflow:hidden;cursor:crosshair;
+
+  background-image:linear-gradient(rgba(255,255,255,0.012) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,0.012) 1px,transparent 1px);
+
+  background-size:35px 35px;
+
+}
+
+.hist-row{display:flex;gap:4px;flex-wrap:wrap;align-items:center;min-height:14px;margin-top:14px;}
+
+.hist-lbl{font-size:8px;color:#2a2010;letter-spacing:1px;flex-shrink:0;margin-right:2px;}
+
+.hist-dot{width:12px;height:12px;border-radius:50%;}
+
+.bet-ctrl{background:rgba(0,0,0,0.4);border:1px solid rgba(255,215,0,0.06);border-radius:14px;padding:14px;}
+
+.bl{font-size:8px;color:#2a2010;letter-spacing:2px;margin-bottom:10px;}
+
+.btn-start{width:100%;padding:15px;border:none;border-radius:10px;font-family:var(--font);font-size:13px;font-weight:900;letter-spacing:3px;cursor:pointer;transition:all .2s;background:linear-gradient(135deg,#664400,var(--cs));color:#06040a;box-shadow:0 4px 20px rgba(255,215,0,0.3);}
+
+.btn-start:not(:disabled):hover{transform:translateY(-2px);}
+
+.btn-start:disabled{opacity:.4;cursor:not-allowed;}
+
+.tier-note{text-align:center;font-size:9px;color:#2a2010;letter-spacing:1px;margin-top:8px;}
+
+.result-card{text-align:center;padding:10px 0;}
+
+.r-icon{font-size:52px;margin-bottom:12px;}
+
+.r-score{font-size:32px;font-weight:900;margin-bottom:4px;font-family:monospace;}
+
+.r-lbl{color:#666;font-size:13px;margin-bottom:14px;}
+
+.r-tkt{font-size:18px;font-weight:700;margin-bottom:6px;}
+
+.r-tiers{color:#333;font-size:10px;letter-spacing:1px;margin-bottom:20px;}
+
+.btn-row{display:flex;gap:10px;justify-content:center;}
+
+.btn-again{padding:12px 22px;border:none;border-radius:10px;font-family:var(--font);font-size:10px;font-weight:700;letter-spacing:2px;cursor:pointer;background:linear-gradient(135deg,#664400,var(--cs));color:#06040a;}
+
+.btn-back{padding:12px 18px;border:1px solid rgba(255,215,0,0.15);border-radius:10px;font-family:var(--font);font-size:10px;font-weight:700;letter-spacing:1px;cursor:pointer;background:transparent;color:#2a2010;}
+
+.btn-back:hover{color:var(--cs);}
+
+@keyframes aimPulse{0%{transform:scale(1);}100%{transform:scale(0.88);}}
+
+@keyframes confettiDrop{to{transform:translateY(110vh) rotate(720deg);opacity:0;}}
+
+</style>
+
+    <script src="/static/sound.js"></script>
+
+
+    <script src="/static/page-transitions.js"></script>
+
+
+    <script src="/static/autoplay.js"></script>
+
+    <script src="/static/arcade-celebrate.js"></script>
+
+<link rel="stylesheet" href="/static/games-shared.css"><script src="/static/js/csrf.js"></script>
+
+
+</head>
+
+<body>
+
+<header class="hdr">
+
+  <a class="back" href="/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>BACK</a>
+
+  <span class="title">🎯  AIM TRAINER</span>
+
+  <span class="tkts">🎟️ <span id="tktBal">—</span></span>
+
+</header>
+
+<div class="page">
+
+  <div class="arena" id="arenaWrap">
+
+    <div class="hud">
+
+      <div class="hud-hits">Hits: <strong id="aimHits">0</strong><span class="denom">/20</span></div>
+
+      <div class="hud-timer">Time: <strong id="aimTimer" style="color:var(--green);">15</strong><span class="suf">s</span></div>
+
+    </div>
+
+    <div id="aimArea"></div>
+
+    <div class="hist-row" id="histRow"><span class="hist-lbl">SESSION:</span></div>
+
+  </div>
+
+
+
+  <div id="startCtrl" class="bet-ctrl">
+
+    <div class="bl">TICKET ARCADE · AIM TRAINER</div>
+
+    <button class="btn-start" id="startBtn" onclick="startGame()">🎯 PLAY (1 🎟️)</button>
+
+    <div class="tier-note">20=6🎟️ · 18+=4🎟️ · 15+=3🎟️ · 10+=2🎟️ · 5+=1🎟️ · Moving targets · 15s</div>
+
+  </div>
+
+
+
+  <div id="resultWrap" style="display:none;padding:16px 0;"></div>
+
+  <div id="arcadeLbBox" style="margin-top:14px;"></div>
+
+</div>
+
+<script>
+
+let _aimState=null,_history=[];
+
+async function api(url,opts={}){const r=await fetch(url,{credentials:'include',headers:{'Content-Type':'application/json'},...opts});if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.detail||'Error');}return r.json();}
+
+async function loadBal(){try{const d=await api('/api/tickets/balance');document.getElementById('tktBal').textContent=d.balance??d.tickets??'?';}catch(e){}}
+
+function refreshLb(){
+  const box=document.getElementById('arcadeLbBox');
+  if(box&&window.renderArcadeLeaderboard) renderArcadeLeaderboard(box,'aim',s=>Math.round(s)+' hits');
+}
+
+loadBal();
+refreshLb();
+
+
+
+async function startGame(){
+
+
+  Sound.click();
+
+
+  if(_aimState)return;
+
+
+  document.getElementById('startBtn').disabled=true;
+
+  document.getElementById('resultWrap').style.display='none';
+
+  document.getElementById('aimHits').textContent='0';
+
+  document.getElementById('aimTimer').textContent='15';
+
+  document.getElementById('aimTimer').style.color='var(--green)';
+
+  document.getElementById('aimTimer').style.textShadow='';
+
+  document.getElementById('aimArea').innerHTML='';
+
+  try{
+
+    const data=await api('/api/ticket-games/aim/start',{method:'POST'});
+
+    loadBal();
+
+    _aimState={token:data.token,targets:data.targets,hits:0,idx:0,timer:null,deadline:Date.now()+15000};
+
+    _runTimer();
+
+    _showTarget();
+
+  }catch(e){
+
+    document.getElementById('startBtn').disabled=false;
+
+    const _rw=document.getElementById('resultWrap');_rw.innerHTML='';const _el=document.createElement('div');_el.style.cssText='color:#ef4444;font-size:12px;text-align:center;padding:10px;';_el.textContent=e.message||'Not enough tickets';_rw.appendChild(_el);
+
+    document.getElementById('resultWrap').style.display='';
+
+  }
+
+}
+
+
+
+function _runTimer(){
+
+  if(!_aimState)return;
+
+  const el=document.getElementById('aimTimer');
+
+  const rem=Math.max(0,Math.ceil((_aimState.deadline-Date.now())/1000));
+
+  if(el){
+
+    el.textContent=rem;
+
+    el.style.color=rem>8?'#22c55e':rem>4?'#f59e0b':'#ef4444';
+
+    el.style.textShadow=rem<=3?'0 0 8px currentColor':'';
+
+  }
+
+  if(rem<=0){_endGame();return;}
+
+  _aimState.timer=setTimeout(_runTimer,250);
+
+}
+
+
+
+function _showTarget(){
+
+  if(!_aimState||_aimState.idx>=_aimState.targets.length){_endGame();return;}
+
+  const area=document.getElementById('aimArea');
+
+  if(!area){_endGame();return;}
+
+  const t=_aimState.targets[_aimState.idx];
+
+  const dot=document.createElement('div');
+
+  let cx=t.x,cy=t.y;
+
+  dot.style.cssText=`position:absolute;left:${cx}%;top:${cy}%;width:${t.r*2}px;height:${t.r*2}px;
+
+    margin-left:-${t.r}px;margin-top:-${t.r}px;border-radius:50%;
+
+    background:radial-gradient(circle at 35% 35%,#ff9500,#e74c3c);cursor:crosshair;
+
+    box-shadow:0 0 ${t.r+4}px rgba(255,107,0,0.7),0 0 3px rgba(255,255,255,0.4);
+
+    animation:aimPulse 0.35s ease infinite alternate;transition:none;`;
+
+  let dx=(Math.random()<0.5?1:-1)*(0.28+Math.random()*0.32);
+
+  let dy=(Math.random()<0.5?1:-1)*(0.28+Math.random()*0.32);
+
+  const moveId=setInterval(()=>{
+
+    if(!dot.parentNode){clearInterval(moveId);return;}
+
+    cx+=dx;cy+=dy;
+
+    if(cx<4){cx=4;dx=Math.abs(dx);}
+
+    if(cx>96){cx=96;dx=-Math.abs(dx);}
+
+    if(cy<4){cy=4;dy=Math.abs(dy);}
+
+    if(cy>92){cy=92;dy=-Math.abs(dy);}
+
+    dot.style.left=cx+'%';dot.style.top=cy+'%';
+
+  },16);
+
+  dot.onclick=(e)=>{
+
+
+    e.stopPropagation();
+
+
+    clearInterval(moveId);
+
+
+    if(!_aimState)return;
+
+
+    Sound.shoot();
+
+
+    _aimState.hits++;_aimState.idx++;
+
+
+    const el=document.getElementById('aimHits');
+
+
+    if(el)el.textContent=_aimState.hits;
+
+
+    dot.remove();_showTarget();
+
+
+  };
+
+  area.innerHTML='';
+
+  area.appendChild(dot);
+
+}
+
+
+
+async function _endGame(){
+
+  if(!_aimState)return;
+
+  clearTimeout(_aimState.timer);
+
+  const {token,hits}=_aimState;
+
+  _aimState=null;
+
+  document.getElementById('aimArea').innerHTML='';
+
+  try{
+
+    const res=await api('/api/ticket-games/aim/submit',{method:'POST',body:JSON.stringify({token,hits})});
+
+    const won=res.tickets_won;
+
+    pushHist(won>0);loadBal();
+
+    if(res.is_new_best&&window.celebrateHighScore) celebrateHighScore(won);
+    refreshLb();
+
+    showResult(`
+
+      <div class="result-card">
+
+        <div class="r-icon">${hits>=18?'🏆':hits>=12?'⭐':'💀'}</div>
+
+        <div class="r-score">${hits}/20</div>
+
+        <div class="r-lbl">Targets hit in 15 seconds</div>
+
+        ${won>0?`<div class="r-tkt" style="color:var(--green);">+${won} tickets won!</div>`:`<div class="r-tkt" style="color:#555;">Keep practicing!</div>`}
+
+        <div class="r-tiers">20=6🎟️ · 18+=4🎟️ · 15+=3🎟️ · 10+=2🎟️ · 5+=1🎟️</div>
+
+        <div class="btn-row">
+
+          <button class="btn-again" onclick="startGame()">🔄 PLAY AGAIN</button>
+
+          <button class="btn-back" onclick="location.href='/'">BACK</button>
+
+        </div>
+
+      </div>
+
+    `);
+
+    if(won>0){spawnConfetti();Sound.levelup();}
+
+
+  }catch(e){showResult(`<div style="color:#ef4444;font-size:12px;text-align:center;">${e.message}</div>`);}
+
+
+  document.getElementById('startBtn').disabled=false;
+
+
+}
+
+
+
+function showResult(html){
+
+  document.getElementById('resultWrap').innerHTML=html;
+
+  document.getElementById('resultWrap').style.display='';
+
+}
+
+
+
+function pushHist(win){
+
+  _history.push(win);if(_history.length>20)_history.shift();
+
+  const el=document.getElementById('histRow');if(!el)return;
+
+  el.innerHTML='<span class="hist-lbl">SESSION:</span>';
+
+  _history.forEach(w=>{const d=document.createElement('div');d.className='hist-dot';d.style.background=w?'#22c55e':'#ef4444';el.appendChild(d);});
+
+}
+
+
+
+function spawnConfetti(){
+
+  const cols=['#ffd700','#22c55e','#3b82f6','#a855f7','#ec4899'];
+
+  for(let i=0;i<35;i++){
+
+    const el=document.createElement('div');
+
+    el.style.cssText=`position:fixed;width:7px;height:7px;border-radius:2px;background:${cols[i%cols.length]};left:${Math.random()*100}%;top:-10px;z-index:999;pointer-events:none;animation:confettiDrop ${0.9+Math.random()*1.2}s ease ${Math.random()*0.5}s forwards;`;
+
+    document.body.appendChild(el);setTimeout(()=>el.remove(),2500);
+
+  }
+
+}
+
+</script>
+
+<script>if("serviceWorker"in navigator){navigator.serviceWorker.register("/static/sw.js").catch(function(){})}</script>
+
+
+<script src="/static/chat.js"></script>
+
+
+</body>
+
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

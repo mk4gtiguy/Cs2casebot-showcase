@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="/static/css/site-notices.css">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0a0a12">
+<link rel="manifest" href="/static/manifest.json">
+<link rel="icon" href="/favicon.ico" type="image/x-icon">
+<title>Ranked - CS2CaseBot</title>
+<link rel="stylesheet" href="/static/dashboard.css">
+<style>
+  :root { --bg: #0a0a12; --surface: #14141e; --surface2: #1c1c2a; --accent: #6c5ce7; --accent2: #a29bfe; --gold: #ffd700; --text: #e0e0e0; --muted: #888; --border: #2a2a3a; --danger: #e74c3c; --success: #2ecc71; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; min-height: 100vh; padding-bottom: 80px; }
+  .header { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: var(--surface); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+  .header h1 { font-size: 18px; font-weight: 700; }
+  .header h1 span { color: var(--accent); }
+  .header-actions { display: flex; gap: 8px; align-items: center; }
+  .btn { padding: 8px 16px; border-radius: 8px; border: none; font-weight: 600; font-size: 13px; cursor: pointer; transition: all .2s; }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: #7c6df7; }
+  .btn-primary:disabled { opacity: .5; cursor: not-allowed; }
+  .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+  .btn-outline:hover { border-color: var(--accent); }
+  .btn-danger { background: var(--danger); color: #fff; }
+  .btn-sm { padding: 4px 10px; font-size: 12px; }
+  .container { max-width: 700px; margin: 0 auto; padding: 16px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+  .card h2 { font-size: 16px; margin-bottom: 12px; color: var(--accent2); }
+  .rating-card { display: flex; align-items: center; justify-content: space-between; }
+  .rating-value { font-size: 32px; font-weight: 700; color: var(--gold); }
+  .rating-tier { font-size: 14px; color: var(--accent2); font-weight: 600; margin-top: 2px; }
+  .rating-stats { display: flex; gap: 16px; font-size: 12px; color: var(--muted); }
+  select, input { padding: 8px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 13px; }
+  .queue-row { display: flex; gap: 8px; margin-top: 10px; }
+  .queue-row select { flex: 1; }
+  .queue-status { text-align: center; padding: 20px; color: var(--muted); font-size: 14px; }
+  .tabs { display: flex; gap: 4px; margin-bottom: 16px; background: var(--surface2); border-radius: 8px; padding: 4px; }
+  .tab { flex: 1; padding: 8px; text-align: center; border: none; background: transparent; color: var(--muted); font-size: 13px; font-weight: 600; cursor: pointer; border-radius: 6px; transition: all .2s; }
+  .tab.active { background: var(--accent); color: #fff; }
+  .tab:hover:not(.active) { color: var(--text); }
+  .lb-row { display: flex; align-items: center; gap: 12px; padding: 10px 12px; background: var(--surface2); border-radius: 8px; margin-bottom: 6px; }
+  .lb-rank { width: 28px; text-align: center; font-weight: 700; color: var(--muted); flex-shrink: 0; }
+  .lb-rank.top1 { color: var(--gold); }
+  .lb-rank.top2 { color: #c0c0c0; }
+  .lb-rank.top3 { color: #cd7f32; }
+  .lb-name { flex: 1; font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .lb-value { font-size: 14px; font-weight: 700; color: var(--accent2); flex-shrink: 0; }
+  .lb-sub { font-size: 11px; color: var(--muted); }
+  .lb-empty { text-align: center; color: var(--muted); font-size: 13px; padding: 24px; }
+  .hist-won { color: var(--success); }
+  .hist-lost { color: var(--danger); }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1><span>CS2</span>CaseBot <span style="font-size:14px;color:var(--muted)">Ranked</span></h1>
+  <div class="header-actions">
+    <button class="btn btn-outline btn-sm" onclick="location.href='/'">Dashboard</button>
+  </div>
+</div>
+
+<div class="container">
+
+  <div class="card">
+    <h2>Your Rank</h2>
+    <div class="rating-card">
+      <div>
+        <div class="rating-value" id="myRating">—</div>
+        <div class="rating-tier" id="myTier">—</div>
+      </div>
+      <div class="rating-stats">
+        <div><span id="myWins">0</span> W</div>
+        <div><span id="myLosses">0</span> L</div>
+        <div>#<span id="myRankPos">—</span></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Find a Match</h2>
+    <div id="queueIdle">
+      <div class="queue-row">
+        <select id="gameTypeSelect">
+          <option value="dice_duel">🎲 Dice Duel</option>
+          <option value="weapon_duel">🔫 Weapon Duel</option>
+          <option value="reaction_duel">⚡ Reaction Duel</option>
+          <option value="case_draft_duel">🃏 Case Draft Duel</option>
+          <option value="case_battles">⚔️ Case Battles</option>
+          <option value="ladder_race">🪜 Ladder Race</option>
+          <option value="mines_race">💣 Mines Race</option>
+        </select>
+        <button class="btn btn-primary" onclick="joinQueue()">Queue Up ($10 stake)</button>
+      </div>
+    </div>
+    <div id="queueActive" style="display:none;">
+      <div class="queue-status" id="queueStatusText">Searching for an opponent…</div>
+      <button class="btn btn-outline" style="width:100%;" onclick="leaveQueue()">Cancel Queue</button>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" onclick="switchTab('leaderboard')">🏆 Leaderboard</button>
+    <button class="tab" onclick="switchTab('history')">📜 My History</button>
+  </div>
+
+  <div class="card">
+    <div id="rankedList"><div class="lb-empty">Loading…</div></div>
+  </div>
+
+</div>
+
+<script>
+
+let currentTab = 'leaderboard';
+let pollTimer = null;
+
+const GAME_LABELS = {
+  dice_duel: '🎲 Dice Duel', weapon_duel: '🔫 Weapon Duel', reaction_duel: '⚡ Reaction Duel',
+  case_draft_duel: '🃏 Case Draft Duel', case_battles: '⚔️ Case Battles',
+  ladder_race: '🪜 Ladder Race', mines_race: '💣 Mines Race',
+};
+const GAME_PAGES = {
+  dice_duel: '/games/dice-duel.html', weapon_duel: '/games/weapon-duel.html',
+  reaction_duel: '/games/reaction-duel.html', case_draft_duel: '/games/case-draft-duel.html',
+  ladder_race: '/games/ladder-race.html', mines_race: '/games/mines-race.html',
+};
+const GAME_PARAM = { ladder_race: 'round', mines_race: 'round' };
+
+async function api(url, opts = {}) {
+  const r = await fetch(url, { credentials: 'include', headers: { 'Content-Type': 'application/json' }, ...opts });
+  if (!r.ok) { const e = await r.json().catch(() => ({ detail: r.statusText })); throw new Error(e.detail || 'Request failed'); }
+  return r.json();
+}
+
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+async function loadMe() {
+  try {
+    const data = await api('/api/ranked/me');
+    document.getElementById('myRating').textContent = data.rating;
+    document.getElementById('myTier').textContent = data.tier;
+    document.getElementById('myWins').textContent = data.wins;
+    document.getElementById('myLosses').textContent = data.losses;
+    document.getElementById('myRankPos').textContent = data.rank_position;
+  } catch (e) {}
+}
+
+async function joinQueue() {
+  const gameType = document.getElementById('gameTypeSelect').value;
+  try {
+    await api('/api/ranked/queue/join', { method: 'POST', body: JSON.stringify({ game_type: gameType }) });
+    document.getElementById('queueIdle').style.display = 'none';
+    document.getElementById('queueActive').style.display = 'block';
+    document.getElementById('queueStatusText').textContent = `Searching for a ${GAME_LABELS[gameType] || gameType} opponent…`;
+    pollQueueStatus();
+  } catch (e) {
+    alert(e.message || 'Could not join queue');
+  }
+}
+
+async function leaveQueue() {
+  try { await api('/api/ranked/queue/leave', { method: 'POST' }); } catch (e) {}
+  if (pollTimer) clearTimeout(pollTimer);
+  document.getElementById('queueIdle').style.display = 'block';
+  document.getElementById('queueActive').style.display = 'none';
+}
+
+async function pollQueueStatus() {
+  try {
+    const data = await api('/api/ranked/queue/status');
+    if (data.matched && data.game_room_id) {
+      let url;
+      if (data.game_type === 'case_battles') {
+        url = `/battle?id=${data.game_room_id}&fee=10&rounds=3&win=total_value&mode=pvp`;
+      } else {
+        const param = GAME_PARAM[data.game_type] || 'duel';
+        url = `${GAME_PAGES[data.game_type]}?${param}=${data.game_room_id}`;
+      }
+      document.getElementById('queueStatusText').textContent = 'Match found! Joining…';
+      setTimeout(() => { location.href = url; }, 800);
+      return;
+    }
+    if (!data.queued) {
+      document.getElementById('queueIdle').style.display = 'block';
+      document.getElementById('queueActive').style.display = 'none';
+      return;
+    }
+  } catch (e) {}
+  pollTimer = setTimeout(pollQueueStatus, 2000);
+}
+
+function switchTab(tab) {
+  currentTab = tab;
+  document.querySelectorAll('.tabs .tab').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+  loadRankedList();
+}
+
+async function loadRankedList() {
+  const listEl = document.getElementById('rankedList');
+  listEl.innerHTML = '<div class="lb-empty">Loading…</div>';
+  try {
+    if (currentTab === 'leaderboard') {
+      const data = await api('/api/ranked/leaderboard?limit=25');
+      renderLeaderboard(data.users || []);
+    } else {
+      const data = await api('/api/ranked/history?limit=20');
+      renderHistory(data.matches || []);
+    }
+  } catch (e) {
+    listEl.innerHTML = '<div class="lb-empty">Could not load.</div>';
+  }
+}
+
+function medalRank(i) {
+  if (i === 0) return 'top1';
+  if (i === 1) return 'top2';
+  if (i === 2) return 'top3';
+  return '';
+}
+
+function renderLeaderboard(users) {
+  const listEl = document.getElementById('rankedList');
+  if (!users.length) {
+    listEl.innerHTML = '<div class="lb-empty">No ranked matches played yet — be the first!</div>';
+    return;
+  }
+  listEl.innerHTML = users.map((u, i) => `
+    <div class="lb-row">
+      <div class="lb-rank ${medalRank(i)}">${i + 1}</div>
+      <div class="lb-name">${esc(u.username || 'Unknown')}<div class="lb-sub">${esc(u.tier)} · ${u.wins}W-${u.losses}L</div></div>
+      <div class="lb-value">${u.rating}</div>
+    </div>
+  `).join('');
+}
+
+function renderHistory(matches) {
+  const listEl = document.getElementById('rankedList');
+  if (!matches.length) {
+    listEl.innerHTML = '<div class="lb-empty">No ranked match history yet.</div>';
+    return;
+  }
+  listEl.innerHTML = matches.map(m => `
+    <div class="lb-row">
+      <div class="lb-name">${GAME_LABELS[m.game_type] || m.game_type} vs ${esc(m.opponent || 'Unknown')}
+        <div class="lb-sub">${m.status === 'cancelled' ? 'Cancelled (refunded)' : (m.won ? 'Won' : 'Lost')}</div>
+      </div>
+      <div class="lb-value ${m.won === true ? 'hist-won' : (m.won === false ? 'hist-lost' : '')}">${m.rating_change != null ? (m.won ? '+' : '-') + Math.abs(m.rating_change) : '—'}</div>
+    </div>
+  `).join('');
+}
+
+async function init() {
+  await loadMe();
+  try {
+    const status = await api('/api/ranked/queue/status');
+    if (status.queued || status.matched) {
+      document.getElementById('queueIdle').style.display = 'none';
+      document.getElementById('queueActive').style.display = 'block';
+      pollQueueStatus();
+    }
+  } catch (e) {}
+  loadRankedList();
+}
+
+init();
+
+</script>
+</body>
+</html>

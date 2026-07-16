@@ -1,0 +1,4554 @@
+<!DOCTYPE html>
+
+
+<html lang="en">
+
+
+<head>
+
+
+<meta charset="UTF-8">
+<link rel="stylesheet" href="/static/css/site-notices.css">
+
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+
+<title>⚔️ Case Battle Arena — CS2CaseBot</title>
+
+
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&display=swap" rel="stylesheet">
+
+
+<style>
+
+
+/* ------------------------------------------------------------
+
+
+   RESET & TOKENS
+
+
+------------------------------------------------------------ */
+
+
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+
+
+
+
+:root {
+
+
+  --bg:       #07080f;
+
+
+  --surface:  rgba(12,12,24,0.95);
+
+
+  --gold:     #ffd700;
+
+
+  --red:      #ff3333;
+
+
+  --purple:   #9b4dff;
+
+
+  --green:    #22c55e;
+
+
+  --blue-r:   #4488ff;
+
+
+  --pink-r:   #ff69b4;
+
+
+  --border:   rgba(255,215,0,0.1);
+
+
+  --text:     #e8e8f0;
+
+
+  --muted:    #55576a;
+
+
+  --font:     'Orbitron','Segoe UI',sans-serif;
+
+
+  --mono:     'Courier New','Consolas',monospace;
+
+
+}
+
+
+
+
+
+html, body {
+
+
+  width: 100%; min-height: 100vh;
+
+
+  background: var(--bg);
+
+
+  color: var(--text);
+
+
+  font-family: var(--font);
+
+
+  overflow-x: hidden;
+
+
+}
+
+
+
+
+
+/* ------------------------------------------------------------
+
+
+   COUNTDOWN CINEMATIC
+
+
+------------------------------------------------------------ */
+
+
+#cinematic {
+
+
+  position: fixed; inset: 0;
+
+
+  background: #000;
+
+
+  z-index: 1000;
+
+
+  display: flex; align-items: center; justify-content: center;
+
+
+  flex-direction: column;
+
+
+}
+
+
+#cinematic.hidden { display: none; }
+
+
+
+
+
+.cin-num {
+
+
+  font-size: clamp(96px, 25vw, 180px);
+
+
+  font-weight: 900;
+
+
+  letter-spacing: -4px;
+
+
+  background: linear-gradient(135deg, var(--gold), #ff9500);
+
+
+  -webkit-background-clip: text;
+
+
+  -webkit-text-fill-color: transparent;
+
+
+  animation: cin-pop .6s cubic-bezier(.34,1.56,.64,1) forwards;
+
+
+  opacity: 0;
+
+
+}
+
+
+.cin-start {
+
+
+  font-size: clamp(32px, 8vw, 60px);
+
+
+  font-weight: 900;
+
+
+  letter-spacing: 8px;
+
+
+  color: #fff;
+
+
+  text-shadow: 0 0 60px rgba(255,215,0,.8);
+
+
+  animation: cin-pop .5s cubic-bezier(.34,1.56,.64,1) forwards;
+
+
+  opacity: 0;
+
+
+}
+
+
+@keyframes cin-pop {
+
+
+  0%   { opacity:0; transform: scale(2.5); }
+
+
+  100% { opacity:1; transform: scale(1); }
+
+
+}
+
+
+@keyframes cin-shake {
+
+
+  0%,100% { transform: translate(0,0); }
+
+
+  20%      { transform: translate(-12px,6px); }
+
+
+  40%      { transform: translate(12px,-6px); }
+
+
+  60%      { transform: translate(-8px,4px); }
+
+
+  80%      { transform: translate(8px,-4px); }
+
+
+}
+
+
+
+
+
+/* ------------------------------------------------------------
+
+
+   HEADER
+
+
+------------------------------------------------------------ */
+
+
+.arena-header {
+
+
+  display: flex; align-items: center; gap: 12px;
+
+
+  padding: 10px 14px;
+
+
+  background: rgba(7,8,15,0.96);
+
+
+  backdrop-filter: blur(12px);
+
+
+  border-bottom: 1px solid var(--border);
+
+
+  position: sticky; top: 0; z-index: 50;
+
+
+}
+
+
+.btn-home {
+
+
+  color: var(--muted); font-size: 10px; letter-spacing: 1px;
+
+
+  text-decoration: none; display: flex; align-items: center; gap: 4px;
+
+
+  transition: color .2s;
+
+
+}
+
+
+.btn-home:hover { color: var(--gold); }
+
+
+.btn-home svg { width: 14px; height: 14px; }
+
+
+
+
+
+.header-center { flex: 1; text-align: center; }
+
+
+.round-label {
+
+
+  font-size: 11px; font-weight: 700; letter-spacing: 2px;
+
+
+  color: var(--gold);
+
+
+}
+
+
+.round-sub { font-size: 9px; color: var(--muted); letter-spacing: 1px; }
+
+
+
+
+
+.spectator-badge {
+
+
+  display: flex; align-items: center; gap: 5px;
+
+
+  font-size: 10px; color: var(--muted);
+
+
+  background: rgba(255,255,255,0.04);
+
+
+  border: 1px solid rgba(255,255,255,0.07);
+
+
+  border-radius: 20px; padding: 4px 10px;
+
+
+}
+
+
+.spectator-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--red); animation: blink 1.4s infinite; }
+
+
+@keyframes blink { 0%,100%{opacity:1;} 50%{opacity:.3;} }
+
+
+.spectator-count { font-weight: 700; color: var(--text); font-family: var(--mono); }
+
+
+
+
+
+/* ------------------------------------------------------------
+
+
+   TUG-OF-WAR PROGRESS BAR
+
+
+------------------------------------------------------------ */
+
+
+.tug-bar-wrap {
+
+
+  height: 4px;
+
+
+  background: rgba(255,255,255,0.06);
+
+
+  position: relative; overflow: hidden;
+
+
+}
+
+
+.tug-bar {
+
+
+  position: absolute; inset: 0;
+
+
+  background: linear-gradient(90deg, var(--green) 0%, var(--green) 50%, var(--red) 50%, var(--red) 100%);
+
+
+  transition: clip-path .8s cubic-bezier(.4,0,.2,1);
+
+
+  clip-path: inset(0 50% 0 0);
+
+
+}
+
+
+/* clip-path driven by JS: left side = you winning, right = opp winning */
+
+
+
+
+
+/* ------------------------------------------------------------
+
+
+   MAIN ARENA — SPLIT LAYOUT
+
+
+------------------------------------------------------------ */
+
+
+.arena-body {
+
+
+  display: grid;
+
+
+  grid-template-columns: 1fr 3px 1fr;
+
+
+  min-height: calc(100vh - 90px);
+
+
+}
+
+
+
+
+
+/* -- DIVIDER -- */
+
+
+.divider {
+
+
+  background: linear-gradient(180deg,
+
+
+    transparent 0%,
+
+
+    rgba(255,215,0,0.15) 20%,
+
+
+    rgba(255,215,0,0.4) 50%,
+
+
+    rgba(255,215,0,0.15) 80%,
+
+
+    transparent 100%);
+
+
+  position: relative;
+
+
+  animation: div-pulse 2s ease-in-out infinite;
+
+
+}
+
+
+@keyframes div-pulse {
+
+
+  0%,100% { opacity:.7; }
+
+
+  50%      { opacity:1; box-shadow: 0 0 20px rgba(255,215,0,.3); }
+
+
+}
+
+
+.divider::after {
+
+
+  content: 'VS';
+
+
+  position: absolute; top: 50%; left: 50%;
+
+
+  transform: translate(-50%,-50%);
+
+
+  font-size: 11px; font-weight: 900; letter-spacing: 2px;
+
+
+  color: var(--gold);
+
+
+  background: var(--bg);
+
+
+  padding: 8px 0;
+
+
+  writing-mode: vertical-rl;
+
+
+  text-orientation: mixed;
+
+
+}
+
+
+
+
+
+/* -- PLAYER SIDE -- */
+
+
+.player-side {
+
+
+  display: flex; flex-direction: column;
+
+
+  padding: 14px 12px;
+
+
+  position: relative;
+
+
+  transition: background .5s;
+  min-width: 0;
+
+
+}
+
+
+.player-side.win-flash  { animation: side-win  .8s ease forwards; }
+
+
+.player-side.lose-flash { animation: side-lose .8s ease forwards; }
+
+
+@keyframes side-win  { 0%,100%{background:transparent;} 40%{background:rgba(34,197,94,.08);} }
+
+
+@keyframes side-lose { 0%,100%{background:transparent;} 40%{background:rgba(255,51,51,.06);} }
+
+
+
+
+
+/* player info strip */
+
+
+.p-info {
+
+
+  display: flex; align-items: center; gap: 10px;
+
+
+  margin-bottom: 10px;
+
+
+}
+
+
+.p-avatar {
+
+
+  width: 36px; height: 36px; border-radius: 50%;
+
+
+  background: rgba(255,255,255,0.06);
+
+
+  border: 2px solid rgba(255,255,255,0.1);
+
+
+  display: flex; align-items: center; justify-content: center;
+
+
+  font-size: 16px; flex-shrink: 0; overflow: hidden;
+
+
+}
+
+
+.p-avatar img { width:100%; height:100%; object-fit:cover; border-radius:50%; }
+
+
+.p-name   { font-size: 11px; font-weight: 700; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+
+.p-tag    { font-size: 9px; color: var(--muted); letter-spacing: 1px; }
+
+
+
+
+
+/* score */
+
+
+.p-score {
+
+
+  text-align: center;
+
+
+  margin-bottom: 12px;
+
+
+}
+
+
+.score-val {
+
+
+  font-size: clamp(20px,5vw,28px);
+
+
+  font-weight: 900;
+
+
+  font-family: var(--mono);
+
+
+  color: var(--gold);
+
+
+  transition: color .3s;
+
+
+  display: inline-block;
+
+
+}
+
+
+.score-up { animation: score-pop .4s ease; }
+
+
+@keyframes score-pop {
+
+
+  0%   { transform: scale(1);   color: var(--gold); }
+
+
+  40%  { transform: scale(1.25);color: #fff; }
+
+
+  100% { transform: scale(1);   color: var(--gold); }
+
+
+}
+
+
+.score-sub { font-size: 9px; color: var(--muted); letter-spacing: 2px; }
+
+
+.gold-badge {
+
+
+  display: inline-flex; align-items: center; gap: 3px;
+
+
+  background: rgba(255,215,0,0.12); border: 1px solid rgba(255,215,0,0.25);
+
+
+  border-radius: 12px; padding: 2px 8px;
+
+
+  font-size: 9px; color: var(--gold); margin-left: 6px;
+
+
+}
+
+
+
+
+
+/* --- CASE REEL --- */
+
+
+.reel-wrap {
+
+
+  position: relative;
+
+
+  overflow: hidden;
+
+
+  border-radius: 12px;
+
+
+  background: rgba(0,0,0,0.4);
+
+
+  border: 1px solid rgba(255,255,255,0.05);
+
+
+  height: 110px;
+
+
+  margin-bottom: 10px;
+
+
+}
+
+
+
+
+
+/* spotlight in center */
+
+
+.reel-spotlight {
+
+
+  position: absolute; inset: 0;
+
+
+  background: linear-gradient(90deg,
+
+
+    rgba(0,0,0,0.7) 0%,
+
+
+    transparent 35%,
+
+
+    transparent 65%,
+
+
+    rgba(0,0,0,0.7) 100%);
+
+
+  z-index: 2; pointer-events: none;
+
+
+}
+
+
+.reel-pointer {
+
+
+  position: absolute; top: 0; bottom: 0;
+
+
+  left: 50%; transform: translateX(-50%);
+
+
+  width: 90px;
+
+
+  border-left: 2px solid rgba(255,215,0,0.5);
+
+
+  border-right: 2px solid rgba(255,215,0,0.5);
+
+
+  z-index: 3; pointer-events: none;
+
+
+  background: rgba(255,215,0,0.04);
+
+
+}
+
+
+
+
+
+.reel-track {
+
+
+  display: flex; align-items: center;
+
+
+  height: 100%;
+
+
+  gap: 6px;
+
+
+  padding: 0 calc(50% - 42px);
+
+
+  will-change: transform;
+
+
+  /* JS sets transform: translateX() */
+
+
+}
+
+
+
+
+
+.reel-item {
+
+
+  flex-shrink: 0;
+
+
+  width: 84px; height: 90px;
+
+
+  display: flex; flex-direction: column;
+
+
+  align-items: center; justify-content: center;
+
+
+  border-radius: 10px;
+
+
+  background: rgba(255,255,255,0.04);
+
+
+  border: 1px solid rgba(255,255,255,0.08);
+
+
+  font-size: 11px; text-align: center;
+
+
+  padding: 6px 4px;
+
+
+  gap: 4px;
+
+
+}
+
+
+.reel-item .r-emoji { font-size: 26px; line-height: 1; }
+
+
+.reel-item .r-name  { font-size: 7px; color: var(--muted); line-height: 1.2; overflow: hidden; max-height: 24px; }
+.reel-item .r-img   { width: 42px; height: 42px; object-fit: contain; filter: drop-shadow(0 2px 6px rgba(0,0,0,0.5)); }
+
+
+
+
+
+/* rarity glow classes applied to center item after spin */
+
+
+.reel-item.glow-Blue   { border-color: var(--blue-r); box-shadow: 0 0 16px rgba(68,136,255,.4); }
+
+
+.reel-item.glow-Purple { border-color: var(--purple); box-shadow: 0 0 16px rgba(155,77,255,.4); }
+
+
+.reel-item.glow-Pink   { border-color: var(--pink-r); box-shadow: 0 0 16px rgba(255,105,180,.5); }
+
+
+.reel-item.glow-Red    { border-color: var(--red);    box-shadow: 0 0 24px rgba(255,51,51,.6); }
+
+
+.reel-item.glow-Gold   { border-color: var(--gold);   box-shadow: 0 0 32px rgba(255,215,0,.8); }
+
+
+
+
+
+/* idle state */
+
+
+.reel-idle {
+
+
+  display: flex; flex-direction: column;
+
+
+  align-items: center; justify-content: center;
+
+
+  height: 100%; gap: 6px;
+
+
+}
+
+
+.reel-idle .ri-emoji { font-size: 36px; opacity: .4; }
+
+
+.reel-idle .ri-text  { font-size: 9px; color: var(--muted); letter-spacing: 2px; }
+
+
+
+
+
+/* last item strip */
+
+
+.last-item {
+
+
+  background: rgba(0,0,0,0.3);
+
+
+  border: 1px solid rgba(255,255,255,0.05);
+
+
+  border-radius: 10px;
+
+
+  padding: 8px 10px;
+
+
+  display: flex; align-items: center; gap: 8px;
+
+
+  min-height: 44px;
+
+
+  transition: all .3s;
+
+
+}
+
+
+.last-item.empty .li-name { color: var(--muted); font-size: 10px; }
+
+
+.li-rarity { font-size: 16px; flex-shrink: 0; }
+.li-img    { width: 28px; height: 28px; object-fit: contain; flex-shrink: 0; }
+/* Condition badges -- same color scale used across the rest of the app */
+.cond-badge { font-size: 8px; font-weight: 700; padding: 1px 5px; border-radius: 3px; text-transform: uppercase; letter-spacing: .4px; display: inline-block; flex-shrink: 0; }
+.cond-fn { background: rgba(74,222,128,.15);  color: #4ade80; border: 1px solid rgba(74,222,128,.3); }
+.cond-mw { background: rgba(134,239,172,.12); color: #86efac; border: 1px solid rgba(134,239,172,.25); }
+.cond-ft { background: rgba(251,191,36,.12);  color: #fbbf24; border: 1px solid rgba(251,191,36,.25); }
+.cond-ww { background: rgba(249,115,22,.12);  color: #f97316; border: 1px solid rgba(249,115,22,.25); }
+.cond-bs { background: rgba(239,68,68,.12);   color: #ef4444; border: 1px solid rgba(239,68,68,.25); }
+.float-val { font-size: 8px; color: var(--muted); font-family: var(--mono); flex-shrink: 0; }
+
+
+.li-name   { font-size: 10px; font-weight: 700; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+
+.li-price  { font-size: 10px; color: var(--gold); font-family: var(--mono); flex-shrink: 0; }
+
+
+
+
+
+/* round history mini-grid */
+
+
+.history-grid {
+
+
+  display: flex; flex-direction: column; gap: 4px;
+
+
+  margin-top: 8px;
+
+
+  max-height: 140px; overflow-y: auto;
+
+
+}
+
+
+.history-grid::-webkit-scrollbar { width: 3px; }
+
+
+.history-grid::-webkit-scrollbar-thumb { background: rgba(255,215,0,0.2); border-radius: 2px; }
+
+
+
+
+
+.hist-item {
+
+
+  display: flex; align-items: center; gap: 6px;
+
+
+  background: rgba(255,255,255,0.02);
+
+
+  border-radius: 6px; padding: 4px 8px;
+
+
+  font-size: 9px; color: var(--muted);
+
+
+  border-left: 2px solid transparent;
+
+
+}
+
+
+.hist-item.rarity-Gold   { border-left-color: var(--gold); }
+
+
+.hist-item.rarity-Red    { border-left-color: var(--red); }
+
+
+.hist-item.rarity-Pink   { border-left-color: var(--pink-r); }
+
+
+.hist-item.rarity-Purple { border-left-color: var(--purple); }
+
+
+.hist-item.rarity-Blue   { border-left-color: var(--blue-r); }
+
+
+.hist-img   { width: 18px; height: 18px; object-fit: contain; flex-shrink: 0; }
+.hist-name  { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text); }
+
+
+.hist-price { font-family: var(--mono); color: var(--gold); }
+
+
+
+
+
+/* ------------------------------------------------------------
+
+
+   BOTTOM ACTION BAR
+
+
+------------------------------------------------------------ */
+
+
+.action-bar {
+
+
+  position: sticky; bottom: 0; z-index: 40;
+
+
+  background: rgba(7,8,15,0.97);
+
+
+  backdrop-filter: blur(16px);
+
+
+  border-top: 1px solid var(--border);
+
+
+  padding: 10px 14px 14px;
+
+
+}
+
+
+
+
+
+/* timer row */
+
+
+.timer-row {
+
+
+  display: flex; align-items: center; gap: 10px;
+
+
+  margin-bottom: 10px;
+
+
+}
+
+
+.timer-ring {
+
+
+  flex-shrink: 0;
+
+
+  width: 44px; height: 44px; position: relative;
+
+
+}
+
+
+.timer-ring svg { transform: rotate(-90deg); }
+
+
+.tr-bg   { fill:none; stroke:rgba(255,255,255,.06); stroke-width:4; }
+
+
+.tr-fill { fill:none; stroke:var(--gold); stroke-width:4; stroke-linecap:round;
+
+
+           transition: stroke-dashoffset .9s linear, stroke .3s; }
+
+
+.tr-num {
+
+
+  position:absolute; inset:0;
+
+
+  display:flex; align-items:center; justify-content:center;
+
+
+  font-size: 13px; font-weight:900; font-family:var(--mono);
+
+
+}
+
+
+
+
+
+.timer-info { flex: 1; }
+
+
+.timer-label { font-size: 10px; color: var(--muted); letter-spacing: 1px; }
+
+
+.timer-status { font-size: 12px; font-weight: 700; color: var(--text); }
+
+
+
+
+
+/* open button */
+
+
+.btn-open {
+
+
+  width: 100%;
+
+
+  padding: 16px;
+
+
+  border: none; border-radius: 12px;
+
+
+  font-family: var(--font); font-size: 14px; font-weight: 900;
+
+
+  letter-spacing: 3px; cursor: pointer;
+
+
+  background: linear-gradient(135deg, #c9a800, var(--gold));
+
+
+  color: #07080f;
+
+
+  box-shadow: 0 4px 24px rgba(255,215,0,.35);
+
+
+  transition: all .2s;
+
+
+  position: relative; overflow: hidden;
+
+
+}
+
+
+.btn-open::after {
+
+
+  content: '';
+
+
+  position: absolute; inset: 0;
+
+
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,.2), transparent);
+
+
+  transform: translateX(-100%);
+
+
+}
+
+
+.btn-open:not(:disabled):hover { transform: translateY(-2px); box-shadow: 0 6px 36px rgba(255,215,0,.55); }
+
+
+.btn-open:not(:disabled):hover::after { transition: transform .5s; transform: translateX(100%); }
+
+
+.btn-open:disabled { opacity: .45; cursor: not-allowed; transform: none !important; }
+
+
+.btn-open.waiting {
+
+
+  background: rgba(255,255,255,0.07);
+
+
+  color: var(--muted);
+
+
+  box-shadow: none;
+
+
+}
+
+
+
+
+
+/* ------------------------------------------------------------
+
+
+   REACTION BAR
+
+
+------------------------------------------------------------ */
+
+
+.reaction-bar {
+
+
+  display: flex; justify-content: center;
+
+
+  gap: 10px; padding: 8px 0 4px;
+
+
+}
+
+
+.rxn-btn {
+
+
+  font-size: 20px; cursor: pointer;
+
+
+  background: none; border: none; padding: 4px 6px;
+
+
+  border-radius: 8px;
+
+
+  transition: transform .15s;
+
+
+  line-height: 1;
+
+
+}
+
+
+.rxn-btn:active { transform: scale(1.5); }
+
+
+
+
+
+/* floating reaction pop */
+
+
+.rxn-float {
+
+
+  position: fixed;
+
+
+  pointer-events: none;
+
+
+  font-size: 28px;
+
+
+  z-index: 200;
+
+
+  animation: rxn-rise 2s ease forwards;
+
+
+}
+
+
+@keyframes rxn-rise {
+
+
+  0%   { opacity:1; transform: translateY(0) scale(1); }
+
+
+  100% { opacity:0; transform: translateY(-180px) scale(1.6); }
+
+
+}
+
+
+
+
+
+/* ------------------------------------------------------------
+
+
+   RARITY CEREMONY OVERLAYS
+
+
+------------------------------------------------------------ */
+
+
+/* Gold takeover */
+
+
+#goldOverlay {
+
+
+  position: fixed; inset: 0; z-index: 300;
+
+
+  background: rgba(0,0,0,0);
+
+
+  pointer-events: none;
+
+
+  display: flex; align-items: center; justify-content: center;
+
+
+  flex-direction: column; gap: 12px;
+
+
+  opacity: 0; transition: background .3s, opacity .3s;
+
+
+}
+
+
+#goldOverlay.show {
+
+
+  opacity: 1;
+
+
+  background: rgba(0,0,0,0.75);
+
+
+  pointer-events: all;
+
+
+}
+
+
+.gold-title {
+
+
+  font-size: clamp(22px,6vw,44px); font-weight: 900;
+
+
+  letter-spacing: 6px;
+
+
+  background: linear-gradient(135deg, var(--gold), #ff9500, var(--gold));
+
+
+  background-size: 200%;
+
+
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+
+
+  animation: gold-shimmer 1.5s linear infinite;
+
+
+}
+
+
+@keyframes gold-shimmer { 0%{background-position:0%} 100%{background-position:200%} }
+
+
+.gold-item-name {
+
+
+  font-size: clamp(14px,4vw,22px); color: #fff;
+
+
+  text-align: center; padding: 0 24px;
+
+
+}
+
+
+.gold-price { font-size: clamp(18px,5vw,32px); font-weight: 900; color: var(--gold); font-family: var(--mono); }
+
+
+
+
+
+/* Rarity flash (full-screen color pulse) */
+
+
+#rarityFlash {
+
+
+  position: fixed; inset: 0; z-index: 200;
+
+
+  pointer-events: none; opacity: 0;
+
+
+  transition: opacity .1s;
+
+
+}
+
+
+#rarityFlash.flash { animation: rarity-flash-anim .6s ease forwards; }
+
+
+@keyframes rarity-flash-anim {
+
+
+  0%   { opacity: 0; }
+
+
+  20%  { opacity: 1; }
+
+
+  100% { opacity: 0; }
+
+
+}
+
+
+
+
+
+/* ------------------------------------------------------------
+
+
+   CONFETTI CANVAS
+
+
+------------------------------------------------------------ */
+
+
+#confettiCanvas {
+
+
+  position: fixed; inset: 0; z-index: 250;
+
+
+  pointer-events: none;
+
+
+}
+
+
+
+
+
+/* ------------------------------------------------------------
+
+
+   RECONNECT OVERLAY
+
+
+------------------------------------------------------------ */
+
+
+#reconnectOverlay {
+
+
+  position: fixed; inset: 0; z-index: 500;
+
+
+  background: rgba(7,8,15,0.92);
+
+
+  backdrop-filter: blur(8px);
+
+
+  display: none;
+
+
+  flex-direction: column;
+
+
+  align-items: center; justify-content: center;
+
+
+  gap: 16px;
+
+
+}
+
+
+#reconnectOverlay.show { display: flex; }
+
+
+.rc-spinner {
+
+
+  width: 48px; height: 48px;
+
+
+  border: 3px solid rgba(255,215,0,0.15);
+
+
+  border-top-color: var(--gold);
+
+
+  border-radius: 50%;
+
+
+  animation: spin 1s linear infinite;
+
+
+}
+
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+
+.rc-text { font-size: 13px; color: var(--muted); letter-spacing: 2px; }
+
+
+
+
+
+/* ------------------------------------------------------------
+
+
+   BATTLE END SCREEN
+
+
+------------------------------------------------------------ */
+
+
+#endScreen {
+
+
+  position: fixed; inset: 0; z-index: 400;
+
+
+  background: var(--bg);
+
+
+  display: none;
+
+
+  flex-direction: column;
+
+
+  align-items: center;
+
+
+  overflow-y: auto;
+
+
+}
+
+
+#endScreen.show { display: flex; }
+
+
+
+
+
+.end-header {
+
+
+  width: 100%;
+
+
+  padding: 40px 24px 24px;
+
+
+  text-align: center;
+
+
+  position: relative;
+
+
+}
+
+
+.end-result {
+
+
+  font-size: clamp(36px,10vw,72px); font-weight: 900;
+
+
+  letter-spacing: 8px;
+
+
+  animation: end-slam .6s cubic-bezier(.34,1.56,.64,1) forwards;
+
+
+  opacity: 0;
+
+
+}
+
+
+.end-result.victory {
+
+
+  background: linear-gradient(135deg, var(--gold), #ff9500, var(--gold));
+
+
+  background-size: 200%;
+
+
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+
+
+  animation: end-slam .6s cubic-bezier(.34,1.56,.64,1) forwards,
+
+
+             gold-shimmer 2s linear 0.6s infinite;
+
+
+  text-shadow: none;
+
+
+}
+
+
+.end-result.defeated { color: var(--red); text-shadow: 0 0 40px rgba(255,51,51,.5); }
+
+
+@keyframes end-slam {
+
+
+  0%   { opacity:0; transform: scale(3) translateY(-20px); }
+
+
+  100% { opacity:1; transform: scale(1) translateY(0); }
+
+
+}
+
+
+
+
+
+.end-prize {
+
+
+  font-size: clamp(22px,6vw,42px); font-weight: 900;
+
+
+  color: var(--gold); font-family: var(--mono);
+
+
+  margin-top: 8px;
+
+
+}
+
+
+.end-prize-label { font-size: 10px; color: var(--muted); letter-spacing: 3px; }
+
+
+
+
+
+/* comparison grid */
+
+
+.end-compare {
+
+
+  width: 100%; max-width: 480px;
+
+
+  padding: 0 16px 16px;
+
+
+  display: grid; grid-template-columns: 1fr 1fr;
+
+
+  gap: 12px;
+
+
+}
+
+
+.end-col { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 14px 12px; }
+
+
+.end-col.winner { border-color: var(--gold); background: rgba(255,215,0,0.05); }
+
+
+.end-col .ec-name { font-size: 11px; font-weight: 700; margin-bottom: 10px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+
+.end-col .ec-total { font-size: 18px; font-weight: 900; color: var(--gold); font-family: var(--mono); }
+
+
+.end-col .ec-items { margin-top: 8px; display: flex; flex-direction: column; gap: 4px; max-height: 220px; overflow-y: auto; }
+
+
+.ec-item { font-size: 9px; color: var(--muted); display: flex; justify-content: space-between; padding: 3px 0; border-bottom: 1px solid rgba(255,255,255,0.04); }
+
+
+.ec-item .ec-iv { color: var(--gold); font-family: var(--mono); }
+
+
+
+
+
+/* end buttons */
+
+
+.end-btns { display: flex; gap: 12px; padding: 8px 16px 40px; flex-wrap: wrap; justify-content: center; width: 100%; max-width: 480px; }
+
+
+.btn-end {
+
+
+  flex: 1; min-width: 140px;
+
+
+  padding: 14px 20px; border-radius: 12px; border: none;
+
+
+  font-family: var(--font); font-size: 12px; font-weight: 700;
+
+
+  letter-spacing: 2px; cursor: pointer; transition: all .2s;
+
+
+}
+
+
+.btn-rematch {
+
+
+  background: linear-gradient(135deg, var(--gold), #ff9500);
+
+
+  color: #07080f;
+
+
+  box-shadow: 0 4px 20px rgba(255,215,0,.3);
+
+
+}
+
+
+.btn-rematch:hover { box-shadow: 0 4px 36px rgba(255,215,0,.55); transform: translateY(-2px); }
+
+
+.btn-home-end {
+
+
+  background: rgba(255,255,255,0.06);
+
+
+  color: var(--muted);
+
+
+  border: 1px solid rgba(255,255,255,0.1);
+
+
+}
+
+
+.btn-home-end:hover { border-color: rgba(255,255,255,0.2); color: var(--text); }
+
+
+
+
+
+/* ------------------------------------------------------------
+
+
+   MOBILE STACK
+
+
+------------------------------------------------------------ */
+
+
+@media (max-width: 600px) {
+
+
+  .arena-body { grid-template-columns: 1fr; grid-template-rows: 1fr 3px 1fr; }
+
+
+  .divider {
+
+
+    background: linear-gradient(90deg, transparent, rgba(255,215,0,.4), transparent);
+
+
+    height: 3px;
+
+
+  }
+
+
+  .divider::after {
+
+
+    writing-mode: horizontal-tb;
+
+
+    top: 50%; left: 50%;
+
+
+    transform: translate(-50%,-50%);
+
+
+    padding: 0 8px;
+
+
+    background: var(--bg);
+
+
+  }
+
+
+  .reel-wrap { height: 90px; }
+
+
+  .history-grid { max-height: 80px; }
+
+
+}
+
+
+</style>
+
+
+<script src="/static/js/csrf.js"></script>
+
+
+
+</head>
+
+
+<body>
+
+
+
+
+
+<!-- ------------ COUNTDOWN CINEMATIC ------------ -->
+
+
+<div id="cinematic">
+
+
+  <div id="cinContent"></div>
+
+
+</div>
+
+
+
+
+
+<!-- ------------ RARITY FLASH ------------ -->
+
+
+<div id="rarityFlash"></div>
+
+
+
+
+
+<!-- ------------ GOLD OVERLAY ------------ -->
+
+
+<div id="goldOverlay">
+
+
+  <div style="font-size:48px; animation: bolt-pulse 1s infinite;">⚡</div>
+
+
+  <div class="gold-title">★ LEGENDARY DROP ★</div>
+
+
+  <div class="gold-item-name" id="goldItemName">—</div>
+
+
+  <div class="gold-price" id="goldItemPrice">—</div>
+
+
+</div>
+
+
+
+
+
+<!-- ------------ CONFETTI ------------ -->
+
+
+<canvas id="confettiCanvas"></canvas>
+
+
+
+
+
+<!-- ------------ RECONNECT ------------ -->
+
+
+<div id="reconnectOverlay">
+
+
+  <div class="rc-spinner"></div>
+
+
+  <div class="rc-text">RECONNECTING…</div>
+
+
+</div>
+
+
+
+
+
+<!-- ------------ HEADER ------------ -->
+
+
+<header class="arena-header">
+
+
+  <a class="btn-home" href="/">
+
+
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+
+
+    HOME
+
+
+  </a>
+
+
+  <div class="header-center">
+
+
+    <div class="round-label" id="roundLabel">ROUND — / —</div>
+
+
+    <div class="round-sub" id="roundSub">WAITING</div>
+
+
+    <div id="caseIndicator" style="display:flex;align-items:center;justify-content:center;gap:4px;margin-top:2px;"></div>
+
+
+  </div>
+
+
+  <div class="spectator-badge">
+
+
+    <div class="spectator-dot"></div>
+
+
+    <span class="spectator-count" id="spectatorCount">0</span>
+
+
+    <span style="font-size:9px;">LIVE</span>
+
+
+  </div>
+
+
+</header>
+
+
+
+
+
+<!-- ------------ TUG BAR ------------ -->
+
+
+<div class="tug-bar-wrap"><div class="tug-bar" id="tugBar"></div></div>
+
+
+
+
+
+<!-- ------------ ARENA BODY ------------ -->
+
+
+<div class="arena-body">
+
+
+
+
+
+  <!-- YOUR SIDE -->
+
+
+  <div class="player-side" id="sideYou">
+
+
+    <div class="p-info">
+
+
+      <div class="p-avatar" id="yourAvatar">⚔️</div>
+
+
+      <div>
+
+
+        <div class="p-name" id="yourName">You</div>
+
+
+        <div class="p-tag">YOUR SIDE</div>
+
+
+      </div>
+
+
+    </div>
+
+
+    <div class="p-score">
+
+
+      <div class="score-val" id="yourScore">$0.00</div>
+
+
+      <div class="score-sub">TOTAL VALUE <span class="gold-badge" id="yourGolds">⭐ 0</span></div>
+
+
+    </div>
+
+
+    <div class="reel-wrap" id="reelYou">
+
+
+      <div class="reel-spotlight"></div>
+
+
+      <div class="reel-pointer"></div>
+
+
+      <div class="reel-idle">
+
+
+        <div class="ri-emoji">📦</div>
+
+
+        <div class="ri-text">WAITING</div>
+
+
+      </div>
+
+
+    </div>
+
+
+    <div class="last-item empty" id="lastYou">
+
+
+      <span class="li-rarity">—</span>
+
+
+      <span class="li-name" style="color:var(--muted)">No item yet</span>
+
+
+    </div>
+
+
+    <div class="history-grid" id="histYou"></div>
+
+
+  </div>
+
+
+
+
+
+  <!-- DIVIDER -->
+
+
+  <div class="divider"></div>
+
+
+
+
+
+  <!-- OPPONENT SIDE -->
+
+
+  <div class="player-side" id="sideOpp">
+
+
+    <div class="p-info">
+
+
+      <div class="p-avatar" id="oppAvatar">❓</div>
+
+
+      <div>
+
+
+        <div class="p-name" id="oppName">Opponent</div>
+
+
+        <div class="p-tag" id="oppTag">OPPONENT</div>
+
+
+      </div>
+
+
+    </div>
+
+
+    <div class="p-score">
+
+
+      <div class="score-val" id="oppScore">$0.00</div>
+
+
+      <div class="score-sub">TOTAL VALUE <span class="gold-badge" id="oppGolds">⭐ 0</span></div>
+
+
+    </div>
+
+
+    <div class="reel-wrap" id="reelOpp">
+
+
+      <div class="reel-spotlight"></div>
+
+
+      <div class="reel-pointer"></div>
+
+
+      <div class="reel-idle">
+
+
+        <div class="ri-emoji">🤖</div>
+
+
+        <div class="ri-text">WAITING</div>
+
+
+      </div>
+
+
+    </div>
+
+
+    <div class="last-item empty" id="lastOpp">
+
+
+      <span class="li-rarity">—</span>
+
+
+      <span class="li-name" style="color:var(--muted)">No item yet</span>
+
+
+    </div>
+
+
+    <div class="history-grid" id="histOpp"></div>
+
+
+  </div>
+
+
+
+
+
+</div><!-- /arena-body -->
+
+
+
+
+
+<!-- ------------ ACTION BAR ------------ -->
+
+
+<div class="action-bar">
+
+
+  <div class="timer-row">
+
+
+    <div class="timer-ring">
+
+
+      <svg width="44" height="44" viewBox="0 0 44 44">
+
+
+        <circle class="tr-bg" cx="22" cy="22" r="18"/>
+
+
+        <circle class="tr-fill" id="timerFill" cx="22" cy="22" r="18"
+
+
+                stroke-dasharray="113.1" stroke-dashoffset="0"/>
+
+
+      </svg>
+
+
+      <div class="tr-num" id="timerNum">—</div>
+
+
+    </div>
+
+
+    <div class="timer-info">
+
+
+      <div class="timer-label">TIME REMAINING</div>
+
+
+      <div class="timer-status" id="timerStatus">Waiting for battle…</div>
+
+
+    </div>
+
+
+    <div style="font-size:11px; color:var(--muted); text-align:right; font-family:var(--mono);">
+
+
+      <div id="entryFeeLabel">—</div>
+
+
+      <div id="winCondLabel" style="font-size:9px; margin-top:2px;"></div>
+
+
+    </div>
+
+
+  </div>
+
+
+  <button class="btn-open waiting" id="btnOpen" disabled onclick="openCase()">
+
+
+    ? WAITING…
+
+
+  </button>
+
+
+  <!-- Reaction bar -->
+
+
+  <div class="reaction-bar" id="reactionBar">
+
+
+    <button class="rxn-btn" onclick="sendReaction('🔥')">🔥</button>
+
+
+    <button class="rxn-btn" onclick="sendReaction('😱')">😱</button>
+
+
+    <button class="rxn-btn" onclick="sendReaction('🍀')">🍀</button>
+
+
+    <button class="rxn-btn" onclick="sendReaction('💀')">💀</button>
+
+
+    <button class="rxn-btn" onclick="sendReaction('👀')">👀</button>
+
+
+    <button class="rxn-btn" onclick="sendReaction('💎')">💎</button>
+
+
+  </div>
+
+
+</div>
+
+
+
+
+
+<!-- ------------ END SCREEN ------------ -->
+
+
+<div id="endScreen">
+
+
+  <div class="end-header">
+
+
+    <div class="end-result" id="endResult">VICTORY</div>
+
+
+    <div class="end-prize-label">PRIZE WON</div>
+
+
+    <div class="end-prize" id="endPrize">$0</div>
+
+
+  </div>
+
+
+  <div class="end-compare" id="endCompare"></div>
+
+
+  <div class="end-btns">
+
+
+    <button class="btn-end btn-rematch" onclick="rematch()">🔄 REMATCH</button>
+
+
+    <button class="btn-end btn-home-end" onclick="goHome()">🏠 HOME</button>
+
+
+  </div>
+
+
+</div>
+
+
+
+
+
+<style>
+
+
+@keyframes bolt-pulse {
+
+
+  0%,100%{filter:drop-shadow(0 0 8px rgba(255,215,0,.6));}
+
+
+  50%{filter:drop-shadow(0 0 24px rgba(255,215,0,1));}
+
+
+}
+
+
+</style>
+
+
+
+
+
+<script src="/static/page-transitions.js"></script>
+
+
+<script>
+
+
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+// Condition/float display -- mirrors the same standard CS float ranges used
+// server-side (shared.py get_skin_condition), so old rounds that only ever
+// had float_value persisted (no condition column) can still show a badge.
+const CONDITION_SHORT = { 'Factory New':'FN', 'Minimal Wear':'MW', 'Field-Tested':'FT', 'Well-Worn':'WW', 'Battle-Scarred':'BS' };
+function conditionFromFloat(fv) {
+  if (fv === null || fv === undefined) return null;
+  if (fv <= 0.07) return 'Factory New';
+  if (fv <= 0.15) return 'Minimal Wear';
+  if (fv <= 0.38) return 'Field-Tested';
+  if (fv <= 0.45) return 'Well-Worn';
+  return 'Battle-Scarred';
+}
+function condBadgeHtml(floatValue) {
+  const cond = conditionFromFloat(floatValue);
+  if (!cond) return '';
+  const short = CONDITION_SHORT[cond];
+  return `<span class="cond-badge cond-${short.toLowerCase()}">${short}</span>`;
+}
+function floatValHtml(floatValue) {
+  if (floatValue === null || floatValue === undefined) return '';
+  return `<span class="float-val">${Number(floatValue).toFixed(4)}</span>`;
+}
+
+
+// ----------------------------------------------------------
+
+
+//  STATE
+
+
+// ----------------------------------------------------------
+
+
+const URL_PARAMS  = new URLSearchParams(location.search);
+
+
+const BATTLE_ID   = parseInt(URL_PARAMS.get('id'));
+
+
+const ENTRY_FEE   = parseFloat(URL_PARAMS.get('fee'))  || 1000;
+
+
+const TOTAL_ROUNDS= parseInt(URL_PARAMS.get('rounds')) || 3;
+
+
+const WIN_COND    = URL_PARAMS.get('win')  || 'total_value';
+
+
+const DIFFICULTY  = URL_PARAMS.get('diff') || 'normal';
+
+
+const CASE_ID     = URL_PARAMS.get('case') || null;
+
+
+const BATTLE_MODE = URL_PARAMS.get('mode') || 'pve'; // 'pvp' | 'pve'
+
+
+
+
+
+const S = {
+
+
+  myUserId:    null,
+
+
+  oppUserId:   null,
+
+
+  myScore:     0,
+
+
+  oppScore:    0,
+
+
+  myGolds:     0,
+
+
+  oppGolds:    0,
+
+
+  myItems:     [],
+
+
+  oppItems:    [],
+
+
+  currentRound:0,
+
+
+  totalRounds: TOTAL_ROUNDS,
+
+
+  hasOpened:   false,
+
+
+  battleOver:  false,
+
+
+  ws:          null,
+
+
+  wsRetries:   0,
+
+
+  maxRetries:  10,
+
+
+  timerTotal:  15,
+
+
+  spectators:  0,
+
+
+};
+
+
+
+
+
+// Rarity ? colour/emoji
+
+
+const RARITY = {
+
+
+  Gold:   { color:'#ffd700', flash:'rgba(255,215,0,0.35)',  emoji:'⭐' },
+
+
+  Red:    { color:'#ff3333', flash:'rgba(255,51,51,0.3)',   emoji:'🔴' },
+
+
+  Pink:   { color:'#ff69b4', flash:'rgba(255,105,180,0.3)',  emoji:'💗' },
+
+
+  Purple: { color:'#9b4dff', flash:'rgba(155,77,255,0.25)', emoji:'🟪' },
+
+
+  Blue:   { color:'#4488ff', flash:'rgba(68,136,255,0.15)', emoji:'🟦' },
+
+
+};
+
+
+
+
+
+// Dummy items for reel filler (lots of variety)
+
+
+const FILLER = [
+
+
+  {emoji:'🔫',name:'AK-47 | Uncharted'},
+
+
+  {emoji:'🔫',name:'AWP | Atheris'},
+
+
+  {emoji:'🔫',name:'M4A4 | Poly Mag'},
+
+
+  {emoji:'🔫',name:'USP-S | 27'},
+
+
+  {emoji:'🔫',name:'Glock-18 | Winterized'},
+
+
+  {emoji:'🔫',name:'Desert Eagle | Naga'},
+
+
+  {emoji:'🔫',name:'P250 | Verdigris'},
+
+
+  {emoji:'🔫',name:'MP9 | Featherweight'},
+
+
+  {emoji:'🔫',name:'MAC-10 | Aloha'},
+
+
+  {emoji:'🔫',name:'SG 553 | Aerial'},
+
+
+  {emoji:'🗡️', name:'★ Butterfly Knife'},
+
+
+  {emoji:'⭐', name:'Gold Drop'},
+
+
+  {emoji:'🟪', name:'Purple Skin'},
+
+
+  {emoji:'💗', name:'Pink Skin'},
+
+
+  {emoji:'🔴', name:'Red Skin'},
+
+
+  {emoji:'🔷', name:'Blue Skin'},
+
+
+];
+
+
+
+
+
+// ----------------------------------------------------------
+
+
+//  BOOT
+
+
+// ----------------------------------------------------------
+
+
+async function boot() {
+
+
+  if (!BATTLE_ID) { location.href = '/'; return; }
+
+
+
+
+
+  document.getElementById('entryFeeLabel').textContent = '$' + ENTRY_FEE.toLocaleString();
+
+
+  document.getElementById('winCondLabel').textContent  = WIN_COND.replace(/_/g,' ').toUpperCase();
+
+  if (CASE_ID) {
+    try {
+      const casesData = await api('/api/cases');
+      const c = (casesData.cases || []).find(x => x.id === CASE_ID);
+      if (c) {
+        document.getElementById('caseIndicator').innerHTML =
+          `<img src="/api/case-image/${encodeURIComponent(c.id)}" alt="${esc(c.name)}" style="width:16px;height:16px;object-fit:contain;" onerror="this.style.display='none';"><span style="font-size:8px;color:var(--muted);">${esc(c.name)}</span>`;
+      }
+    } catch (e) {}
+  }
+
+
+
+
+
+  // Load user
+
+
+  try {
+
+
+    const me = await api('/api/user/me');
+
+
+    S.myUserId = parseInt(me.user_id);
+
+
+    document.getElementById('yourName').textContent = me.username || 'You';
+
+
+    if (me.avatar_url) {
+
+
+      document.getElementById('yourAvatar').innerHTML = `<img src="${me.avatar_url}" alt="">`;
+
+
+    }
+
+
+  } catch(e) {}
+
+
+
+
+
+  // Countdown then connect
+
+
+  await runCinematic();
+
+
+  connectWS();
+
+
+}
+
+
+
+
+
+// ----------------------------------------------------------
+
+
+//  CINEMATIC COUNTDOWN
+
+
+// ----------------------------------------------------------
+
+
+async function runCinematic() {
+
+
+  const cin = document.getElementById('cinematic');
+
+
+  const content = document.getElementById('cinContent');
+
+
+  for (const n of ['3','2','1']) {
+
+
+    content.innerHTML = `<div class="cin-num">${n}</div>`;
+
+
+    cin.style.animation = 'cin-shake .3s ease';
+
+
+    await delay(700);
+
+
+    cin.style.animation = '';
+
+
+    content.innerHTML = '';
+
+
+    await delay(100);
+
+
+  }
+
+
+  content.innerHTML = `<div class="cin-start">BATTLE START</div>`;
+
+
+  await delay(800);
+
+
+  cin.classList.add('hidden');
+
+
+}
+
+
+
+
+
+// ----------------------------------------------------------
+
+
+//  WEBSOCKET
+
+
+// ----------------------------------------------------------
+
+
+function connectWS() {
+
+
+  const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+
+
+  const ws = new WebSocket(`${proto}//${location.host}/api/battles/ws/${BATTLE_ID}`);
+
+
+  S.ws = ws;
+
+
+
+
+
+  ws.onopen = () => {
+
+
+    S.wsRetries = 0;
+
+
+    hideReconnect();
+
+
+  };
+
+
+
+
+
+  ws.onmessage = (ev) => {
+
+
+    try { handleMsg(JSON.parse(ev.data)); } catch(e) { console.warn('WS parse error', e); }
+
+
+  };
+
+
+
+
+
+  ws.onerror = () => {};
+
+
+
+
+
+  ws.onclose = () => {
+
+
+    if (S.battleOver) return;
+
+
+    if (S.wsRetries < S.maxRetries) {
+
+
+      S.wsRetries++;
+
+
+      showReconnect();
+
+
+      setTimeout(connectWS, 2000);
+
+
+    }
+
+
+  };
+
+
+
+
+
+  // Heartbeat
+
+
+  setInterval(() => {
+
+
+    if (ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({type:'ping'}));
+
+
+  }, 20000);
+
+
+}
+
+
+
+
+
+function showReconnect() { document.getElementById('reconnectOverlay').classList.add('show'); }
+
+
+function hideReconnect() { document.getElementById('reconnectOverlay').classList.remove('show'); }
+
+
+
+
+
+// ----------------------------------------------------------
+
+
+//  MESSAGE HANDLER
+
+
+// ----------------------------------------------------------
+
+
+function handleMsg(msg) {
+
+
+  switch(msg.type) {
+
+
+
+
+
+    case 'state':
+
+
+      applyState(msg);
+
+
+      break;
+
+
+
+
+
+    case 'battle_started':
+
+
+      S.totalRounds = msg.total_rounds || TOTAL_ROUNDS;
+
+
+      setStatus('BATTLE ACTIVE');
+
+
+      enableOpen();
+
+
+      break;
+
+
+
+
+
+    case 'round_start':
+
+
+      S.currentRound = msg.round;
+
+
+      S.hasOpened = false;
+
+
+      updateRoundLabel();
+
+
+      enableOpen();
+
+
+      setStatus(`ROUND ${msg.round} — OPEN YOUR CASE!`);
+
+
+      // Reset reels to idle
+
+
+      setReelIdle('reelYou', '📦');
+
+
+      setReelIdle('reelOpp', '📦');
+
+
+      break;
+
+
+
+
+
+    case 'round_tick':
+
+
+      updateTimer(msg.seconds_remaining, S.timerTotal);
+
+
+      break;
+
+
+
+
+
+    case 'round_update':
+
+
+      onRoundUpdate(msg);
+
+
+      break;
+
+
+
+
+
+    case 'round_missed':
+
+
+      onRoundMissed(msg);
+
+
+      break;
+
+
+
+
+
+    case 'reaction':
+
+
+      showFloatingReaction(msg.reaction, msg.user_id === S.myUserId ? 'left' : 'right');
+
+
+      break;
+
+
+
+
+
+    case 'player_left':
+
+
+      if (msg.user_id !== S.myUserId) setStatus('Opponent disconnected…');
+
+
+      break;
+
+
+
+
+
+    case 'battle_complete':
+
+
+      onBattleComplete(msg);
+
+
+      break;
+
+
+
+
+    case 'battle_cancelled':
+
+
+      S.battleOver = true;
+
+
+      disableOpen('❌ BATTLE CANCELLED — REFUNDED');
+
+
+      setStatus(msg.message || 'This battle was cancelled and your entry was refunded.');
+
+
+      break;
+
+
+
+
+
+    case 'pong':
+
+
+      break;
+
+
+  }
+
+
+}
+
+
+
+
+
+// ----------------------------------------------------------
+
+
+//  STATE APPLY  (initial snapshot)
+
+
+// ----------------------------------------------------------
+
+
+function applyState(msg) {
+
+
+  S.totalRounds = msg.total_rounds || TOTAL_ROUNDS;
+
+
+  updateRoundLabel();
+
+
+
+
+
+  if (!msg.participants) return;
+
+
+  msg.participants.forEach(p => {
+
+
+    const isMe = p.user_id === S.myUserId;
+
+
+    if (!isMe && !p.is_bot) {
+
+
+      S.oppUserId = p.user_id;
+
+
+      document.getElementById('oppName').textContent  = p.username || 'Opponent';
+
+
+      document.getElementById('oppTag').textContent   = 'OPPONENT';
+
+
+    }
+
+
+    if (!isMe && p.is_bot) {
+
+
+      document.getElementById('oppName').textContent = `🤖 Bot [${DIFFICULTY}]`;
+
+
+      document.getElementById('oppTag').textContent  = 'BOT OPPONENT';
+
+
+      document.getElementById('oppAvatar').innerHTML = `<img src="/static/images/agents/5504.webp" alt="Bot" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" onerror="this.parentElement.textContent='🤖'">`;
+
+
+    }
+
+
+
+
+
+    const score = parseFloat(p.total_value) || 0;
+
+
+    const golds = parseInt(p.gold_count)    || 0;
+
+
+    if (isMe) {
+
+
+      S.myScore  = score; S.myGolds = golds;
+
+
+      setScore('yourScore', score, false);
+
+
+      document.getElementById('yourGolds').textContent = `✨ ${golds}`;
+
+
+    } else {
+
+
+      S.oppScore = score; S.oppGolds = golds;
+
+
+      setScore('oppScore', score, false);
+
+
+      document.getElementById('oppGolds').textContent = `✨ ${golds}`;
+
+
+    }
+
+
+  });
+
+
+
+
+
+  // Replay rounds into history
+
+
+  if (msg.rounds && msg.participants) {
+
+
+    msg.rounds.forEach(r => {
+
+
+      const owner = msg.participants.find(p => p.id === r.participant_id || p.user_id === r.participant_id);
+
+
+      if (!owner) return;
+
+
+      const isMe = owner.user_id === S.myUserId;
+
+
+      addHistoryItem(isMe ? 'histYou' : 'histOpp', r.item_name, r.rarity, r.value, r.float_value);
+
+      (isMe ? S.myItems : S.oppItems).push({ name: r.item_name, rarity: r.rarity, value: parseFloat(r.value) || 0 });
+
+
+    });
+
+
+  }
+
+
+
+
+
+  if (msg.status === 'active') {
+
+
+    enableOpen();
+
+
+    setStatus('YOUR TURN — OPEN A CASE!');
+
+
+  } else if (msg.status === 'cancelled') {
+
+
+    S.battleOver = true;
+
+
+    disableOpen('❌ BATTLE CANCELLED — REFUNDED');
+
+
+    setStatus('This battle was cancelled and your entry was refunded.');
+
+
+  }
+
+
+
+
+
+  updateTugBar();
+
+
+  updateSpectatorCount();
+
+
+}
+
+
+
+
+
+// ----------------------------------------------------------
+
+
+//  ROUND UPDATE  (someone opened)
+
+
+// ----------------------------------------------------------
+
+
+async function onRoundUpdate(msg) {
+
+
+  const isMe = msg.user_id === S.myUserId;
+
+
+  const item  = msg.item || {};
+
+
+  const rarity = item.rarity || 'Blue';
+
+
+
+
+
+  if (isMe) {
+
+
+    // Spin my reel
+
+
+    await spinReel('reelYou', item, true);
+
+
+    S.myScore += parseFloat(msg.value) || 0;
+
+
+    if (rarity === 'Gold') S.myGolds++;
+
+
+    setScore('yourScore', S.myScore, true);
+
+
+    document.getElementById('yourGolds').textContent = `✨ ${S.myGolds}`;
+
+
+    setLastItem('lastYou', item);
+
+
+    addHistoryItem('histYou', item.name || item.display_name, rarity, msg.value, item.float);
+
+    S.myItems.push({ name: item.name || item.display_name, rarity, value: parseFloat(msg.value) || 0 });
+
+
+  } else {
+
+
+    await spinReel('reelOpp', item, false);
+
+
+    S.oppScore += parseFloat(msg.value) || 0;
+
+
+    if (rarity === 'Gold') S.oppGolds++;
+
+
+    setScore('oppScore', S.oppScore, true);
+
+
+    document.getElementById('oppGolds').textContent = `✨ ${S.oppGolds}`;
+
+
+    setLastItem('lastOpp', item);
+
+
+    addHistoryItem('histOpp', item.name || item.display_name, rarity, msg.value, item.float);
+
+    S.oppItems.push({ name: item.name || item.display_name, rarity, value: parseFloat(msg.value) || 0 });
+
+
+  }
+
+
+
+
+
+  updateTugBar();
+
+
+}
+
+
+
+
+
+function onRoundMissed(msg) {
+
+
+  const isMe = msg.user_id === S.myUserId;
+
+
+  setReelIdle(isMe ? 'reelYou' : 'reelOpp', '⏰');
+
+
+  addHistoryItem(isMe ? 'histYou' : 'histOpp', 'Missed Round', 'Blue', 0);
+
+
+}
+
+
+
+
+
+// ----------------------------------------------------------
+
+
+//  REEL SPIN ANIMATION
+
+
+// ----------------------------------------------------------
+
+
+async function spinReel(reelId, item, isMe) {
+
+
+  const wrap = document.getElementById(reelId);
+
+
+  const rarity = item.rarity || 'Blue';
+
+
+  const rarityInfo = RARITY[rarity] || RARITY.Blue;
+
+
+
+
+
+  // Build track
+
+
+  const track = document.createElement('div');
+
+
+  track.className = 'reel-track';
+
+
+  track.style.transform = 'translateX(0)';
+
+
+
+
+
+  // 40 filler + target in position 35
+
+
+  const targetPos = 34;
+
+
+  const totalItems = 40;
+
+
+  const allItems = [];
+
+
+  for (let i = 0; i < totalItems; i++) {
+
+
+    const f = i === targetPos
+
+
+      ? { emoji: rarityInfo.emoji, name: item.name || item.display_name || 'Item', imgUrl: item.image_url || `/api/skin-image?name=${encodeURIComponent(item.name || item.display_name || '')}` }
+
+
+      : FILLER[Math.floor(Math.random() * FILLER.length)];
+
+
+    allItems.push(f);
+
+
+  }
+
+
+
+
+
+  allItems.forEach((f, idx) => {
+
+
+    const el = document.createElement('div');
+
+
+    el.className = 'reel-item';
+
+
+    el.id = `ri-${reelId}-${idx}`;
+
+
+    el.innerHTML = f.imgUrl
+      ? `<img class="r-img" src="${esc(f.imgUrl)}" alt="${esc(f.name)}" onerror="this.style.display='none';this.nextElementSibling.style.display='block';"><div class="r-emoji" style="display:none;">${esc(f.emoji)}</div><div class="r-name">${esc(f.name)}</div>`
+      : `<div class="r-emoji">${esc(f.emoji)}</div><div class="r-name">${esc(f.name)}</div>`;
+
+
+    track.appendChild(el);
+
+
+  });
+
+
+
+
+
+  wrap.innerHTML = '';
+
+
+  const spotlight = document.createElement('div'); spotlight.className = 'reel-spotlight';
+
+
+  const pointer   = document.createElement('div'); pointer.className   = 'reel-pointer';
+
+
+  wrap.appendChild(spotlight);
+
+
+  wrap.appendChild(pointer);
+
+
+  wrap.appendChild(track);
+
+
+
+
+
+  // Item width + gap
+
+
+  const ITEM_W = 84 + 6;
+
+
+  const start  = 0;
+
+
+  const end    = -(targetPos * ITEM_W);
+
+
+
+
+
+  // Animate with easeOutQuint
+
+
+  const dur = rarity === 'Gold' ? 3200 : rarity === 'Red' ? 2800 : 2400;
+
+
+  await animateReel(track, start, end, dur);
+
+
+
+
+
+  // Glow the center item
+
+
+  const centerEl = track.children[targetPos];
+
+
+  if (centerEl) centerEl.classList.add(`glow-${rarity}`);
+
+
+
+
+
+  // Rarity ceremony
+
+
+  await rarityEffect(rarity, item, isMe);
+
+
+}
+
+
+
+
+
+function animateReel(track, from, to, duration) {
+
+
+  return new Promise(resolve => {
+
+
+    const start = performance.now();
+
+
+    function step(now) {
+
+
+      const t = Math.min((now - start) / duration, 1);
+
+
+      const e = easeOutQuint(t);
+
+
+      track.style.transform = `translateX(${from + (to - from) * e}px)`;
+
+
+      if (t < 1) requestAnimationFrame(step);
+
+
+      else resolve();
+
+
+    }
+
+
+    requestAnimationFrame(step);
+
+
+  });
+
+
+}
+
+
+
+
+
+function easeOutQuint(t) { return 1 - Math.pow(1 - t, 5); }
+
+
+
+
+
+// ----------------------------------------------------------
+
+
+//  RARITY CEREMONY
+
+
+// ----------------------------------------------------------
+
+
+async function rarityEffect(rarity, item, isMe) {
+
+
+  const flash = document.getElementById('rarityFlash');
+
+
+  const info  = RARITY[rarity] || RARITY.Blue;
+
+
+
+
+
+  if (rarity === 'Gold') {
+
+
+    // Full gold takeover
+
+
+    document.getElementById('goldItemName').textContent  = item.name || '★ Gold Item';
+
+
+    document.getElementById('goldItemPrice').textContent = '$' + (parseFloat(item.price || 0)).toFixed(2);
+
+
+    document.getElementById('goldOverlay').classList.add('show');
+
+
+    shootConfetti('gold');
+
+
+    flashSide(isMe ? 'sideYou' : 'sideOpp', 'win-flash');
+
+
+    await delay(2200);
+
+
+    document.getElementById('goldOverlay').classList.remove('show');
+
+
+
+
+
+  } else if (rarity === 'Red') {
+
+
+    flash.style.background = info.flash;
+
+
+    flash.classList.add('flash');
+
+
+    shootConfetti('red');
+
+
+    flashSide(isMe ? 'sideYou' : 'sideOpp', 'win-flash');
+
+
+    await delay(100);
+
+
+    flash.classList.remove('flash');
+
+
+    await delay(400);
+
+
+
+
+
+  } else if (rarity === 'Pink') {
+
+
+    flash.style.background = info.flash;
+
+
+    flash.classList.add('flash');
+
+
+    flashSide(isMe ? 'sideYou' : 'sideOpp', 'win-flash');
+
+
+    setTimeout(() => flash.classList.remove('flash'), 400);
+
+
+    await delay(300);
+
+
+
+
+
+  } else {
+
+
+    await delay(200);
+
+
+  }
+
+
+}
+
+
+
+
+
+function flashSide(sideId, cls) {
+
+
+  const el = document.getElementById(sideId);
+
+
+  el.classList.remove(cls);
+
+
+  void el.offsetWidth;
+
+
+  el.classList.add(cls);
+
+
+  setTimeout(() => el.classList.remove(cls), 900);
+
+
+}
+
+
+
+
+
+// ----------------------------------------------------------
+
+
+//  CONFETTI
+
+
+// ----------------------------------------------------------
+
+
+const canvas = document.getElementById('confettiCanvas');
+
+
+const ctx    = canvas.getContext('2d');
+
+
+let confettiPieces = [];
+
+
+
+
+
+function resizeCanvas() {
+
+
+  canvas.width  = window.innerWidth;
+
+
+  canvas.height = window.innerHeight;
+
+
+}
+
+
+window.addEventListener('resize', resizeCanvas);
+
+
+resizeCanvas();
+
+
+
+
+
+function shootConfetti(type) {
+
+
+  const colors = type === 'gold'
+
+
+    ? ['#ffd700','#ff9500','#ffcc00','#fff','#ff6b00']
+
+
+    : ['#ff3333','#ff9500','#ff6666','#fff','#cc0000'];
+
+
+  const count = type === 'gold' ? 120 : 60;
+
+
+  for (let i = 0; i < count; i++) {
+
+
+    confettiPieces.push({
+
+
+      x: Math.random() * canvas.width,
+
+
+      y: -10,
+
+
+      vx: (Math.random() - 0.5) * 6,
+
+
+      vy: Math.random() * 4 + 2,
+
+
+      w: Math.random() * 10 + 4,
+
+
+      h: Math.random() * 6 + 3,
+
+
+      rot: Math.random() * 360,
+
+
+      rspeed: (Math.random() - 0.5) * 8,
+
+
+      color: colors[Math.floor(Math.random() * colors.length)],
+
+
+      life: 1,
+
+
+    });
+
+
+  }
+
+
+}
+
+
+
+
+
+function tickConfetti() {
+
+
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+
+  confettiPieces = confettiPieces.filter(p => p.life > 0.01);
+
+
+  confettiPieces.forEach(p => {
+
+
+    p.x   += p.vx;
+
+
+    p.y   += p.vy;
+
+
+    p.rot += p.rspeed;
+
+
+    p.vy  += 0.15; // gravity
+
+
+    p.life -= 0.008;
+
+
+    ctx.save();
+
+
+    ctx.globalAlpha = p.life;
+
+
+    ctx.translate(p.x, p.y);
+
+
+    ctx.rotate(p.rot * Math.PI / 180);
+
+
+    ctx.fillStyle = p.color;
+
+
+    ctx.fillRect(-p.w/2, -p.h/2, p.w, p.h);
+
+
+    ctx.restore();
+
+
+  });
+
+
+  requestAnimationFrame(tickConfetti);
+
+
+}
+
+
+tickConfetti();
+
+
+
+
+
+// ----------------------------------------------------------
+
+
+//  TIMER
+
+
+// ----------------------------------------------------------
+
+
+function updateTimer(secondsLeft, total) {
+
+
+  total = total || S.timerTotal || 15;
+
+
+  S.timerTotal = total;
+
+
+  const circ   = 113.1;
+
+
+  const pct    = secondsLeft / total;
+
+
+  const offset = circ * (1 - pct);
+
+
+  const fill   = document.getElementById('timerFill');
+
+
+  fill.style.strokeDashoffset = offset;
+
+
+  fill.style.stroke = secondsLeft <= 4 ? '#ff3333' : secondsLeft <= 7 ? '#ff9500' : 'var(--gold)';
+
+
+  document.getElementById('timerNum').textContent = secondsLeft;
+
+
+  if (secondsLeft <= 4) document.getElementById('timerNum').style.color = '#ff3333';
+
+
+  else document.getElementById('timerNum').style.color = 'var(--text)';
+
+
+}
+
+
+
+
+
+// ----------------------------------------------------------
+
+
+//  OPEN CASE
+
+
+// ----------------------------------------------------------
+
+
+function enableOpen() {
+
+
+  if (S.hasOpened || S.battleOver) return;
+
+
+  const btn = document.getElementById('btnOpen');
+
+
+  btn.disabled = false;
+
+
+  btn.className = 'btn-open';
+
+
+  btn.textContent = '🎰 OPEN CASE';
+
+
+}
+
+
+
+
+
+function disableOpen(text = '⏳ WAITING…') {
+
+
+  const btn = document.getElementById('btnOpen');
+
+
+  btn.disabled = true;
+
+
+  btn.className = 'btn-open waiting';
+
+
+  btn.textContent = text;
+
+
+}
+
+
+
+
+
+function openCase() {
+
+
+  if (S.hasOpened || S.battleOver || !S.ws) return;
+
+
+  S.hasOpened = true;
+
+
+  disableOpen('✅ OPENED');
+
+
+  S.ws.send(JSON.stringify({ type: 'open_case', case_id: CASE_ID }));
+
+
+}
+
+
+
+
+
+// ----------------------------------------------------------
+
+
+//  REACTIONS
+
+
+// ----------------------------------------------------------
+
+
+function sendReaction(rxn) {
+
+
+  if (S.ws && S.ws.readyState === WebSocket.OPEN) {
+
+
+    S.ws.send(JSON.stringify({ type: 'reaction', reaction: rxn }));
+
+
+  }
+
+
+  showFloatingReaction(rxn, 'left');
+
+
+}
+
+
+
+
+
+function showFloatingReaction(rxn, side) {
+
+
+  const el = document.createElement('div');
+
+
+  el.className = 'rxn-float';
+
+
+  el.textContent = rxn;
+
+
+  const x = side === 'left'
+
+
+    ? 20 + Math.random() * 30
+
+
+    : 50 + Math.random() * 30;
+
+
+  el.style.left   = x + '%';
+
+
+  el.style.bottom = '140px';
+
+
+  document.body.appendChild(el);
+
+
+  setTimeout(() => el.remove(), 2100);
+
+
+}
+
+
+
+
+
+// ----------------------------------------------------------
+
+
+//  TUG-OF-WAR BAR
+
+
+// ----------------------------------------------------------
+
+
+function updateTugBar() {
+
+
+  const total = S.myScore + S.oppScore;
+
+
+  if (total === 0) return;
+
+
+  const myPct = S.myScore / total;
+
+
+  const bar   = document.getElementById('tugBar');
+
+
+  bar.style.clipPath = `inset(0 ${(1 - myPct) * 100}% 0 0)`;
+
+
+}
+
+
+
+
+
+// ----------------------------------------------------------
+
+
+//  SPECTATOR COUNT  (fake realistic sim)
+
+
+// ----------------------------------------------------------
+
+
+function updateSpectatorCount() {
+
+
+  // Simulates realistic spectator count based on entry fee
+
+
+  const base = Math.floor(ENTRY_FEE / 200) + 2;
+
+
+  S.spectators = base + Math.floor(Math.random() * 8);
+
+
+  document.getElementById('spectatorCount').textContent = S.spectators;
+
+
+}
+
+
+
+
+
+setInterval(() => {
+
+
+  // Drift spectator count naturally
+
+
+  const drift = Math.floor(Math.random() * 3) - 1;
+
+
+  S.spectators = Math.max(1, S.spectators + drift);
+
+
+  document.getElementById('spectatorCount').textContent = S.spectators;
+
+
+}, 7000);
+
+
+
+
+
+// ----------------------------------------------------------
+
+
+//  UI HELPERS
+
+
+// ----------------------------------------------------------
+
+
+function setScore(elId, val, animate) {
+
+
+  const el = document.getElementById(elId);
+
+
+  el.textContent = '$' + val.toFixed(2);
+
+
+  if (animate) {
+
+
+    el.classList.remove('score-up');
+
+
+    void el.offsetWidth;
+
+
+    el.classList.add('score-up');
+
+
+  }
+
+
+}
+
+
+
+
+
+function setStatus(text) {
+
+
+  document.getElementById('timerStatus').textContent = text;
+
+
+}
+
+
+
+
+
+function updateRoundLabel() {
+
+
+  document.getElementById('roundLabel').textContent =
+
+
+    `ROUND ${S.currentRound || '—'} / ${S.totalRounds}`;
+
+
+}
+
+
+
+
+
+function setReelIdle(reelId, emoji) {
+
+
+  const wrap = document.getElementById(reelId);
+
+
+  wrap.innerHTML = `
+
+
+    <div class="reel-spotlight"></div>
+
+
+    <div class="reel-pointer"></div>
+
+
+    <div class="reel-idle">
+
+
+      <div class="ri-emoji">${emoji}</div>
+
+
+      <div class="ri-text">WAITING</div>
+
+
+    </div>`;
+
+
+}
+
+
+
+
+
+function setLastItem(elId, item) {
+  const el   = document.getElementById(elId);
+  const r    = item.rarity || 'Blue';
+  const info = RARITY[r] || RARITY.Blue;
+  el.className = 'last-item';
+  el.innerHTML = '';
+
+  const img = document.createElement('img');
+  img.className = 'li-img';
+  img.src = item.image_url || `/api/skin-image?name=${encodeURIComponent(item.name || item.display_name || '')}`;
+  img.alt = '';
+  img.onerror = function() { this.style.display = 'none'; };
+
+  const spanRarity = document.createElement('span');
+  spanRarity.className = 'li-rarity';
+  spanRarity.textContent = info.emoji;
+
+  const spanName = document.createElement('span');
+  spanName.className = 'li-name';
+  spanName.textContent = item.name || item.display_name || '-';
+
+  const condWrap = document.createElement('span');
+  condWrap.innerHTML = condBadgeHtml(item.float) + floatValHtml(item.float);
+
+  const spanPrice = document.createElement('span');
+  spanPrice.className = 'li-price';
+  spanPrice.textContent = '$' + parseFloat(item.price || 0).toFixed(2);
+
+  el.appendChild(img);
+  el.appendChild(spanRarity);
+  el.appendChild(spanName);
+  if (item.float !== undefined && item.float !== null) el.appendChild(condWrap);
+  el.appendChild(spanPrice);
+}
+
+
+
+
+
+function addHistoryItem(gridId, name, rarity, value, floatValue) {
+  const grid = document.getElementById(gridId);
+  const el   = document.createElement('div');
+  el.className = `hist-item rarity-${rarity}`;
+
+  if (name !== 'Missed Round') {
+    const img = document.createElement('img');
+    img.className = 'hist-img';
+    img.src = `/api/skin-image?name=${encodeURIComponent(name || '')}`;
+    img.alt = '';
+    img.onerror = function() { this.style.display = 'none'; };
+    el.appendChild(img);
+  }
+
+  const spanName = document.createElement('span');
+  spanName.className = 'hist-name';
+  spanName.textContent = name;
+
+  const condWrap = document.createElement('span');
+  condWrap.innerHTML = condBadgeHtml(floatValue) + floatValHtml(floatValue);
+
+  const spanPrice = document.createElement('span');
+  spanPrice.className = 'hist-price';
+  spanPrice.textContent = '$' + parseFloat(value || 0).toFixed(2);
+
+  el.appendChild(spanName);
+  if (floatValue !== undefined && floatValue !== null) el.appendChild(condWrap);
+  el.appendChild(spanPrice);
+
+  grid.insertBefore(el, grid.firstChild);
+}
+
+
+
+
+
+// ----------------------------------------------------------
+
+
+//  BATTLE COMPLETE
+
+
+// ----------------------------------------------------------
+
+
+async function onBattleComplete(msg) {
+
+
+  S.battleOver = true;
+
+
+  disableOpen('🏁 BATTLE OVER');
+
+
+  updateTimer(0, S.timerTotal);
+
+
+
+
+
+  const iWon = msg.winner_id === S.myUserId;
+
+
+
+
+
+  if (iWon) shootConfetti('gold');
+
+
+
+
+
+  await delay(1200);
+
+
+
+
+
+  // Build end screen
+
+
+  document.getElementById('endResult').textContent  = iWon ? 'VICTORY' : 'DEFEATED';
+
+
+  document.getElementById('endResult').className    = `end-result ${iWon ? 'victory' : 'defeated'}`;
+
+
+  document.getElementById('endPrize').textContent   = iWon ? '+$' + parseFloat(msg.prize||0).toFixed(0) : '';
+
+
+
+
+
+  // Build comparison columns
+
+
+  const compare = document.getElementById('endCompare');
+
+
+  compare.innerHTML = '';
+
+
+  if (msg.scores) {
+
+
+    // My col first, then opponent
+
+
+    const sorted = [...msg.scores].sort((a,b) => b.total_value - a.total_value);
+
+
+    sorted.forEach(p => {
+
+
+      const isWinner = p.user_id === msg.winner_id;
+
+
+      const isMe     = p.user_id === S.myUserId;
+
+
+      const col      = document.createElement('div');
+
+
+      col.className  = `end-col${isWinner ? ' winner' : ''}`;
+
+
+      const pulls    = isMe ? S.myItems : S.oppItems;
+
+
+      const itemsHtml = pulls.map(it => {
+        const rc = (RARITY[it.rarity] || {}).color || 'var(--muted)';
+        return `<div class="ec-item"><span style="color:${rc};overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${esc(it.name)}</span><span class="ec-iv">$${it.value.toFixed(2)}</span></div>`;
+      }).join('');
+
+
+      col.innerHTML  = `
+
+
+        <div class="ec-name">${isWinner ? '🏆 ' : ''}${esc(p.username || (isMe ? 'You' : 'Opponent'))}</div>
+
+
+        <div class="ec-total">$${parseFloat(p.total_value||0).toFixed(2)}</div>
+
+
+        <div style="font-size:9px;color:var(--muted);margin-top:4px;">⭐ ${p.gold_count || 0} golds</div>
+
+        <div class="ec-items">${itemsHtml}</div>`;
+
+
+      compare.appendChild(col);
+
+
+    });
+
+
+  }
+
+
+
+
+
+  document.getElementById('endScreen').classList.add('show');
+
+
+}
+
+
+
+
+
+// ----------------------------------------------------------
+
+
+//  REMATCH  (mode-aware)
+
+
+// ----------------------------------------------------------
+
+
+function rematch() {
+
+
+  if (BATTLE_MODE === 'pve') {
+
+
+    // Restart PvE with same settings
+
+
+    fetch('/api/battles/pve/start', {
+
+
+      method: 'POST',
+
+
+      credentials: 'include',
+
+
+      headers: { 'Content-Type': 'application/json' },
+
+
+      body: JSON.stringify({
+
+
+        fee: ENTRY_FEE, rounds: TOTAL_ROUNDS,
+
+
+        win_condition: WIN_COND, difficulty: DIFFICULTY,
+
+
+      }),
+
+
+    })
+
+
+    .then(r => r.json())
+
+
+    .then(d => {
+
+
+      if (d.success) {
+
+
+        location.href = `/battle?id=${d.battle_id}&fee=${ENTRY_FEE}&rounds=${TOTAL_ROUNDS}` +
+
+
+                        `&win=${WIN_COND}&diff=${DIFFICULTY}&case=${CASE_ID}&mode=pve`;
+
+
+      }
+
+
+    })
+
+
+    .catch(() => goHome());
+
+
+  } else {
+
+
+    // PvP — go back to setup
+
+
+    location.href = `/battle-setup?fee=${ENTRY_FEE}&rounds=${TOTAL_ROUNDS}&win=${WIN_COND}`;
+
+
+  }
+
+
+}
+
+
+
+
+
+function goHome() { location.href = '/'; }
+
+
+
+
+
+// ----------------------------------------------------------
+
+
+//  API HELPER
+
+
+// ----------------------------------------------------------
+
+
+async function api(url, opts = {}) {
+
+
+  const res = await fetch(url, {
+
+
+    credentials: 'include',
+
+
+    headers: { 'Content-Type': 'application/json', ...(opts.headers || {}) },
+
+
+    ...opts,
+
+
+  });
+
+
+  if (!res.ok) throw new Error('API error');
+
+
+  return res.json();
+
+
+}
+
+
+
+
+
+function delay(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+
+
+
+
+// ----------------------------------------------------------
+
+
+//  GO
+
+
+// ----------------------------------------------------------
+
+
+boot();
+
+
+</script>
+
+
+<script>if("serviceWorker"in navigator){navigator.serviceWorker.register("/static/sw.js").catch(function(){})}</script>
+
+
+
+<script src="/static/chat.js"></script>
+<script src="/static/js/site-notices.js"></script>
+
+<script src="/static/js/agent-egg.js"></script>
+
+
+</body>
+
+
+</html>
+
+
+
+
+
+
+
+
+
+

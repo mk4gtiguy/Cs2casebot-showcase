@@ -1,0 +1,601 @@
+﻿<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+
+<title>🏗️  Tower — CS2CaseBot</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+
+<style>
+
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+
+:root{--bg:#06080a;--amber:#ffb800;--red:#ef4444;--green:#22c55e;--font:'Orbitron',monospace;}
+
+html,body{min-height:100vh;background:var(--bg);font-family:var(--font);overflow-x:hidden;color:#c8c0b0;}
+
+body{background-image:linear-gradient(180deg,rgba(255,184,0,0.04) 0%,transparent 40%);}
+
+.hdr{display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(6,8,10,0.98);border-bottom:1px solid rgba(255,184,0,0.1);position:sticky;top:0;z-index:50;}
+
+.back{display:flex;align-items:center;gap:5px;color:#2a2418;font-size:10px;letter-spacing:1px;text-decoration:none;transition:color .2s;}
+
+.back:hover{color:var(--amber);}
+
+.back svg{width:14px;height:14px;}
+
+.title{flex:1;font-size:14px;font-weight:900;letter-spacing:3px;color:var(--amber);}
+
+.bal{font-size:13px;font-weight:700;color:var(--amber);font-family:monospace;}
+
+.page{max-width:400px;margin:0 auto;padding:16px 14px 80px;}
+
+
+
+/* TOWER CONTAINER */
+
+.tower-wrap{background:rgba(4,6,8,0.98);border:1px solid rgba(255,184,0,0.1);border-radius:18px;padding:14px;margin-bottom:14px;position:relative;overflow:hidden;}
+
+.tower-wrap::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--amber),transparent);}
+
+
+
+/* PROGRESS INDICATOR */
+
+.progress-bar{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+
+.floor-label{font-size:10px;color:var(--amber);font-weight:700;font-family:monospace;min-width:64px;}
+
+.floor-track{flex:1;height:4px;background:rgba(255,255,255,0.06);border-radius:2px;overflow:hidden;}
+
+.floor-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,#aa5500,var(--amber));transition:width .4s;}
+
+.mult-badge{font-size:11px;color:var(--amber);font-weight:900;font-family:monospace;min-width:48px;text-align:right;}
+
+
+
+/* FLOOR GRID */
+
+.floor-display{display:flex;flex-direction:column;gap:6px;margin-bottom:14px;}
+
+.floor-row{display:flex;gap:6px;align-items:center;}
+
+.floor-num{font-size:8px;color:#3a2a18;width:20px;text-align:right;flex-shrink:0;}
+
+.floor-boxes{display:flex;gap:5px;flex:1;}
+
+.box{flex:1;aspect-ratio:1;border-radius:8px;border:1px solid rgba(255,184,0,0.1);background:rgba(255,184,0,0.04);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:clamp(14px,4vw,20px);transition:all .15s;-webkit-tap-highlight-color:transparent;max-height:50px;}
+
+.box:hover:not(.revealed){border-color:rgba(255,184,0,0.3);background:rgba(255,184,0,0.1);}
+
+.box.safe{background:rgba(34,197,94,0.2);border-color:var(--green);animation:box-safe .3s cubic-bezier(.34,1.56,.64,1);}
+
+@keyframes box-safe{0%{transform:scale(0.6);}100%{transform:scale(1);}}
+
+.box.bomb{background:rgba(239,68,68,0.25);border-color:var(--red);animation:box-bomb .15s ease 4;}
+
+@keyframes box-bomb{0%,100%{background:rgba(239,68,68,0.25);}50%{background:rgba(239,68,68,0.6);}}
+
+.box.empty-bomb{background:rgba(239,68,68,0.08);border-color:rgba(239,68,68,0.15);cursor:default;opacity:.6;}
+
+.box.inactive{cursor:default;opacity:.4;}
+
+.box.current{border-color:rgba(255,184,0,0.4);box-shadow:0 0 12px rgba(255,184,0,0.2);}
+
+
+
+/* RESULT */
+
+.result-line{text-align:center;min-height:28px;font-size:11px;font-weight:700;letter-spacing:2px;display:flex;align-items:center;justify-content:center;margin-bottom:12px;}
+
+.result-line.win{color:var(--amber);}
+
+.result-line.boom{color:var(--red);}
+
+.result-line.idle{color:#3a2a18;}
+
+
+
+/* CASHOUT STRIP */
+
+.co-strip{display:flex;gap:10px;align-items:center;margin-bottom:12px;}
+
+.btn-cashout{flex:1;padding:13px;border:1px solid rgba(255,184,0,0.3);border-radius:10px;background:rgba(255,184,0,0.08);color:var(--amber);font-family:var(--font);font-size:11px;font-weight:700;letter-spacing:1px;cursor:pointer;transition:all .2s;}
+
+.btn-cashout:not(:disabled):hover{background:rgba(255,184,0,0.15);border-color:var(--amber);}
+
+.btn-cashout:disabled{opacity:.3;cursor:not-allowed;}
+
+.pot-disp{text-align:center;font-size:11px;}
+
+.pot-val{font-size:18px;font-weight:900;color:var(--amber);font-family:monospace;}
+
+.pot-label{font-size:8px;color:#3a2a18;letter-spacing:1px;}
+
+
+
+/* DIFF + BET */
+
+.diff-row{display:flex;gap:6px;margin-bottom:12px;}
+
+.df{flex:1;padding:9px 4px;border-radius:8px;border:1px solid rgba(255,184,0,0.12);background:rgba(255,184,0,0.04);text-align:center;cursor:pointer;transition:all .15s;font-size:8px;letter-spacing:1px;color:#3a2a18;}
+
+.df:hover,.df.active{border-color:var(--amber);color:var(--amber);background:rgba(255,184,0,0.1);}
+
+.bet-ctrl{background:rgba(0,0,0,0.4);border:1px solid rgba(255,184,0,0.06);border-radius:14px;padding:14px;}
+
+.bl{font-size:8px;color:#3a2a18;letter-spacing:2px;margin-bottom:8px;}
+
+.bet-row{display:flex;gap:8px;margin-bottom:8px;}
+
+.bet-inp{flex:1;background:rgba(0,0,0,0.5);border:1px solid rgba(255,184,0,0.1);border-radius:8px;padding:10px 12px;color:#c8c0b0;font-family:var(--font);font-size:13px;font-weight:700;outline:none;text-align:center;}
+
+.bet-inp:focus{border-color:rgba(255,184,0,0.3);}
+
+.adj{padding:10px 14px;background:rgba(255,184,0,0.04);border:1px solid rgba(255,184,0,0.08);border-radius:8px;color:#3a2a18;font-family:var(--font);font-size:11px;cursor:pointer;transition:all .15s;}
+
+.adj:hover{color:var(--amber);}
+
+.qrow{display:flex;gap:5px;margin-bottom:10px;}
+
+.qb{flex:1;padding:7px 3px;background:rgba(255,184,0,0.04);border:1px solid rgba(255,184,0,0.08);border-radius:6px;color:#3a2a18;font-size:8px;letter-spacing:1px;cursor:pointer;text-align:center;transition:all .15s;}
+
+.qb:hover{border-color:var(--amber);color:var(--amber);}
+
+.btn-start{width:100%;padding:15px;border:none;border-radius:10px;font-family:var(--font);font-size:13px;font-weight:900;letter-spacing:3px;cursor:pointer;transition:all .2s;background:linear-gradient(135deg,#664400,var(--amber));color:#06080a;box-shadow:0 4px 20px rgba(255,184,0,0.3);}
+
+.btn-start:not(:disabled):hover{transform:translateY(-2px);box-shadow:0 6px 32px rgba(255,184,0,0.5);}
+
+.btn-start:disabled{opacity:.4;cursor:not-allowed;transform:none!important;}
+
+
+
+.hist-row{display:flex;gap:4px;flex-wrap:wrap;align-items:center;min-height:14px;margin-top:10px;}
+
+.hist-lbl{font-size:8px;color:#3a2a18;letter-spacing:1px;flex-shrink:0;margin-right:2px;}
+
+.hist-dot{width:12px;height:12px;border-radius:50%;}
+
+.mini-stats{display:flex;gap:8px;margin-bottom:12px;}
+
+.ms-box{flex:1;background:rgba(255,184,0,0.05);border:1px solid rgba(255,184,0,0.1);border-radius:8px;padding:8px;text-align:center;}
+
+.ms-box .sv{font-size:14px;font-weight:900;color:var(--amber);font-family:monospace;}
+
+.ms-box .sl{font-size:8px;color:#3a2a18;letter-spacing:1px;margin-top:2px;}
+
+#expl{position:fixed;inset:0;pointer-events:none;opacity:0;z-index:200;background:radial-gradient(ellipse at 50% 50%,rgba(239,68,68,0.3),transparent 70%);}
+
+#expl.show{animation:exanim .4s ease;}
+
+@keyframes exanim{0%{opacity:0;}20%{opacity:1;}100%{opacity:0;}}
+
+</style>
+
+    <script src="/static/sound.js"></script>
+
+    <script src="/static/big-win.js"></script>
+
+
+    <script src="/static/balance-animation.js"></script>
+
+
+    <script src="/static/page-transitions.js"></script>
+
+
+    <script src="/static/autoplay.js"></script>
+
+
+<link rel="stylesheet" href="/static/games-shared.css"><script src="/static/js/csrf.js"></script>
+
+
+</head>
+
+<body>
+
+<div id="expl"></div>
+
+<header class="hdr">
+
+  <a class="back" href="/games"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>GAMES</a>
+
+  <span class="title">🏗️  TOWER</span>
+
+  <span class="bal" id="balDisplay">$—</span>
+
+</header>
+
+<div class="page">
+
+  <div class="tower-wrap">
+
+    <div class="progress-bar">
+
+      <span class="floor-label" id="floorLabel">FLOOR 0</span>
+
+      <div class="floor-track"><div class="floor-fill" id="floorFill" style="width:0%"></div></div>
+
+      <span class="mult-badge" id="multBadge">1.00×</span>
+
+    </div>
+
+    <div class="floor-display" id="floorDisplay"></div>
+
+    <div class="result-line idle" id="resultLine">CHOOSE DIFFICULTY AND START</div>
+
+    <div class="co-strip">
+
+      <div style="text-align:center"><div class="pot-val" id="potVal">$0</div><div class="pot-label">POTENTIAL WIN</div></div>
+
+      <button class="btn-cashout" id="coBtn" onclick="cashoutTower()" disabled>💰  CASH OUT</button>
+
+    </div>
+
+  </div>
+
+
+
+  <div class="mini-stats">
+
+    <div class="ms-box"><div class="sv" id="bestFloorDisp">0</div><div class="sl">BEST FLOOR</div></div>
+
+    <div class="ms-box"><div class="sv" id="winStreakDisp">0</div><div class="sl">WIN STREAK</div></div>
+
+  </div>
+
+
+
+  <div class="diff-row">
+
+    <div class="df active" id="dfEasy" onclick="setDiff('easy')">🟢  EASY<br><span style="font-size:7px">3 BOX · 1 BOMB</span></div>
+
+    <div class="df" id="dfMedium" onclick="setDiff('medium')">🟡  MEDIUM<br><span style="font-size:7px">3 BOX · 1 BOMB</span></div>
+
+    <div class="df" id="dfHard" onclick="setDiff('hard')">🔴  HARD<br><span style="font-size:7px">2 BOX · 1 BOMB</span></div>
+
+    <div class="df" id="dfExpert" onclick="setDiff('expert')">💀  EXPERT<br><span style="font-size:7px">2 BOX · 16 FLR</span></div>
+
+  </div>
+
+
+
+  <div class="bet-ctrl">
+
+    <div class="bl">BET AMOUNT</div>
+
+    <div class="bet-row">
+
+      <button class="adj" onclick="halveBet()">½</button>
+
+      <input class="bet-inp" id="betInp" type="number" value="500" min="50">
+
+      <button class="adj" onclick="doubleBet()">2×</button>
+
+    </div>
+
+    <div class="qrow">
+
+      <div class="qb" onclick="qb(100)">$100</div><div class="qb" onclick="qb(500)">$500</div>
+
+      <div class="qb" onclick="qb(1000)">$1K</div><div class="qb" onclick="qb(5000)">$5K</div><div class="qb" onclick="qb(10000)">$10K</div>
+
+    </div>
+
+    <button class="btn-start" id="startBtn" onclick="startTower()">🏗️  BEGIN CLIMB</button>
+
+    <div style="display:flex;align-items:center;gap:8px;margin-top:10px;">
+
+      <label style="display:flex;align-items:center;gap:5px;font-size:8px;color:#3a2a18;letter-spacing:1px;cursor:pointer;">
+
+        <input type="checkbox" id="autoClimb" style="accent-color:var(--amber);"> AUTO-CLIMB
+
+      </label>
+
+      <span style="font-size:8px;color:#2a1808;letter-spacing:1px;">(picks random box every 0.8s)</span>
+
+    </div>
+
+    <div class="hist-row" id="tHistRow"><span class="hist-lbl">SESSION:</span></div>
+
+  </div>
+
+</div>
+
+<script>
+
+const DIFF_CFG={easy:{floors:8,boxes:3},medium:{floors:10,boxes:3},hard:{floors:12,boxes:2},expert:{floors:16,boxes:2}};
+
+let diff='easy',balance=0,gameActive=false,currentFloor=0,totalFloors=8,boxCount=3,acting=false,bet=500,tHistory=[],bestFloor=0,tStreak=0;
+
+async function init(){try{const d=await api('/api/user/me');balance=d.balance;updateBal();}catch(e){}buildFloor();}
+
+function updateBal(){var e=document.getElementById('balDisplay'),c=e.textContent||'',n='$'+balance.toLocaleString(undefined,{maximumFractionDigits:0});if(c&&c!=='$—'&&c!==n){var p=parseFloat(c.replace(/[,$]/g,''));if(!isNaN(p)&&p!==balance){animateBalance(e,'$'+p.toLocaleString(undefined,{maximumFractionDigits:0}),n,balance>=p);return}}e.textContent=n}
+
+function setDiff(d){diff=d;Object.keys(DIFF_CFG).forEach(k=>{document.getElementById('df'+k.charAt(0).toUpperCase()+k.slice(1)).classList.toggle('active',k===d);});if(!gameActive)buildFloor();}
+
+function qb(v){document.getElementById('betInp').value=v;}
+
+function halveBet(){document.getElementById('betInp').value=Math.max(50,Math.floor(parseInt(document.getElementById('betInp').value||500)/2));}
+
+function doubleBet(){document.getElementById('betInp').value=Math.min(balance,parseInt(document.getElementById('betInp').value||500)*2);}
+
+function buildFloor(){
+
+  const cfg=DIFF_CFG[diff];
+
+  const disp=document.getElementById('floorDisplay');disp.innerHTML='';
+
+  // Show a preview of a few floors
+
+  for(let f=Math.min(cfg.floors,6);f>=0;f--){
+
+    const row=document.createElement('div');row.className='floor-row';
+
+    const numEl=document.createElement('div');numEl.className='floor-num';numEl.textContent=f;
+
+    const boxes=document.createElement('div');boxes.className='floor-boxes';
+
+    for(let b=0;b<cfg.boxes;b++){
+
+      const box=document.createElement('div');box.className='box inactive';box.textContent='?';boxes.appendChild(box);
+
+    }
+
+    row.appendChild(numEl);row.appendChild(boxes);disp.appendChild(row);
+
+  }
+
+}
+
+async function startTower(){
+
+  if(gameActive||acting) return;
+
+  bet=parseInt(document.getElementById('betInp').value)||500;
+
+  if(bet>balance){setResult('❌ INSUFFICIENT BALANCE','idle');Sound.error();return;}
+
+  Sound.click();acting=true;document.getElementById('startBtn').disabled=true;
+
+
+  const cfg=DIFF_CFG[diff];totalFloors=cfg.floors;boxCount=cfg.boxes;currentFloor=0;
+
+  try{
+
+    await api('/api/games/medium/tower/start',{method:'POST',body:JSON.stringify({amount:bet,difficulty:diff})});
+
+    gameActive=true;balance=await refreshBal();updateBal();
+
+    renderTower();setResult('PICK THE SAFE BOX!','idle');
+
+    document.getElementById('coBtn').disabled=true;
+
+    updateProgress(0,1,bet);
+
+  }catch(e){setResult('ERROR: '+e.message,'idle');}
+
+  finally{acting=false;document.getElementById('startBtn').disabled=false;}
+
+}
+
+function renderTower(){
+
+  const disp=document.getElementById('floorDisplay');disp.innerHTML='';
+
+  const showFloors=Math.min(totalFloors,6);
+
+  const startFloor=Math.max(0,currentFloor-1);
+
+  for(let f=startFloor+showFloors-1;f>=startFloor;f--){
+
+    const row=document.createElement('div');row.className='floor-row';
+
+    const numEl=document.createElement('div');numEl.className='floor-num';numEl.textContent=f+1;
+
+    const boxes=document.createElement('div');boxes.className='floor-boxes';
+
+    for(let b=0;b<boxCount;b++){
+
+      const box=document.createElement('div');
+
+      if(f===currentFloor&&gameActive){
+
+        box.className='box current';box.textContent='?';
+
+        const boxIdx=b;box.onclick=()=>pickBox(boxIdx);
+
+      }else if(f<currentFloor){
+
+        box.className='box safe';box.textContent='💎';
+
+      }else{
+
+        box.className='box inactive';box.textContent='?';
+
+      }
+
+      boxes.appendChild(box);
+
+    }
+
+    row.appendChild(numEl);row.appendChild(boxes);disp.appendChild(row);
+
+  }
+
+}
+
+async function pickBox(boxIdx){
+
+  if(!gameActive||acting) return;
+
+  acting=true;
+
+  try{
+
+    const d=await api('/api/games/medium/tower/pick',{method:'POST',body:JSON.stringify({box:boxIdx})});
+
+    if(d.hit_bomb){
+
+
+      Sound.explosion();Sound.loss();
+
+
+      // Reveal bomb
+
+      const rows=document.querySelectorAll('.floor-row');
+
+      const topRow=rows[0];if(topRow){const boxes=topRow.querySelectorAll('.box');boxes.forEach((b,i)=>{b.className='box'+(i===boxIdx?' bomb':' empty-bomb');b.textContent=i===boxIdx?'💣':'💣';b.onclick=null;});}
+
+      gameActive=false;document.getElementById('coBtn').disabled=true;
+
+      setResult('💥 HIT A BOMB — FLOOR '+(d.bust_floor+1),'boom');
+
+      doExplode();balance=await refreshBal();updateBal();
+
+      pushTHist(false);
+
+    }else{
+
+      currentFloor++;
+
+
+      Sound.step();
+
+
+      if(currentFloor>bestFloor){bestFloor=currentFloor;document.getElementById('bestFloorDisp').textContent=bestFloor;}
+
+      if(d.at_top){
+
+        gameActive=false;tStreak++;document.getElementById('winStreakDisp').textContent=tStreak;
+
+
+        Sound.win();
+
+
+        setResult('🏆 SUMMIT REACHED! +$'+d.auto_win.toLocaleString(undefined,{maximumFractionDigits:0}),'win');
+
+        balance=await refreshBal();updateBal();
+
+        document.getElementById('coBtn').disabled=true;
+
+        pushTHist(true);
+
+      }else{
+
+        updateProgress(currentFloor,d.multiplier,d.potential_win);
+
+        setResult('✅ FLOOR '+(currentFloor)+' CLEAR · '+d.multiplier.toFixed(2)+'×','win');
+
+        document.getElementById('coBtn').disabled=false;
+
+        if(document.getElementById('autoClimb').checked&&gameActive) setTimeout(()=>{if(!gameActive||acting)return;if(!document.getElementById('autoClimb').checked)return;pickBox(Math.floor(Math.random()*boxCount));},800);
+
+      }
+
+      renderTower();
+
+    }
+
+  }catch(e){setResult('ERROR','idle');}
+
+  finally{acting=false;}
+
+}
+
+async function cashoutTower(){
+
+
+  if(!gameActive||acting) return;
+
+
+  Sound.cashout();
+
+
+  acting=true;gameActive=false;document.getElementById('coBtn').disabled=true;
+
+  try{
+
+    const d=await api('/api/games/medium/tower/cashout',{method:'POST'});
+
+    balance=await refreshBal();updateBal();
+
+    Sound.win();
+
+
+    tStreak++;document.getElementById('winStreakDisp').textContent=tStreak;
+
+
+    setResult('💰 CASHED OUT FLOOR '+currentFloor+' · '+d.multiplier.toFixed(2)+'× · +$'+d.win.toLocaleString(undefined,{maximumFractionDigits:0}),'win');
+    if(window.maybeBigWin)maybeBigWin(bet,d.win);
+
+    pushTHist(true);
+
+  }catch(e){setResult('ERROR','idle');}
+
+  finally{acting=false;}
+
+}
+
+function updateProgress(floor,mult,pot){
+
+  document.getElementById('floorLabel').textContent='FLOOR '+floor+'/'+totalFloors;
+
+  document.getElementById('floorFill').style.width=(floor/totalFloors*100)+'%';
+
+  document.getElementById('multBadge').textContent=parseFloat(mult).toFixed(2)+'×';
+
+  document.getElementById('potVal').textContent='$'+parseFloat(pot).toLocaleString(undefined,{maximumFractionDigits:0});
+
+}
+
+function setResult(t,c){const el=document.getElementById('resultLine');el.className='result-line '+c;el.textContent=t;}
+
+function doExplode(){const el=document.getElementById('expl');el.classList.remove('show');void el.offsetWidth;el.classList.add('show');}
+
+function pushTHist(win){tHistory.push(win);if(tHistory.length>20)tHistory.shift();if(!win){tStreak=0;document.getElementById('winStreakDisp').textContent=0;}const el=document.getElementById('tHistRow');if(!el)return;el.innerHTML='<span class="hist-lbl">SESSION:</span>';tHistory.forEach(w=>{const d=document.createElement('div');d.className='hist-dot';d.style.background=w?'#22c55e':'#ef4444';el.appendChild(d);});}
+
+async function refreshBal(){try{const d=await api('/api/user/me');return d.balance;}catch(e){return balance;}}
+
+async function api(url,opts={}){const r=await fetch(url,{credentials:'include',headers:{'Content-Type':'application/json'},...opts});if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.detail||'Error');}return r.json();}
+
+init();
+
+</script>
+
+<script>if("serviceWorker"in navigator){navigator.serviceWorker.register("/static/sw.js").catch(function(){})}</script>
+
+
+<script src="/static/chat.js"></script>
+
+
+</body>
+
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

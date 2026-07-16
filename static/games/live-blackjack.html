@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>♠️  Live Blackjack — CS2CaseBot</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+:root{--bg:#06070a;--accent:#ffd700;--green:#22c55e;--red:#ef4444;--muted:#556;--font:'Orbitron',monospace;}
+html,body{min-height:100vh;background:var(--bg);font-family:var(--font);overflow-x:hidden;color:#c8d0e8;}
+.hdr{display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(6,7,10,0.98);border-bottom:1px solid rgba(255,215,0,0.12);position:sticky;top:0;z-index:50;}
+.back{display:flex;align-items:center;gap:5px;color:#2a2a3a;font-size:10px;letter-spacing:1px;text-decoration:none;}
+.back svg{width:14px;height:14px;}
+.title{flex:1;font-size:14px;font-weight:900;letter-spacing:3px;color:var(--accent);}
+.bal{font-size:13px;font-weight:700;color:var(--accent);font-family:monospace;}
+.page{max-width:460px;margin:0 auto;padding:16px 14px 100px;}
+
+.table-status{text-align:center;font-size:11px;font-weight:700;letter-spacing:2px;color:var(--accent);margin-bottom:6px;}
+.table-status.playing{color:#ff8800;}
+.table-status.settled{color:var(--green);}
+.table-timer{text-align:center;font-size:clamp(22px,6vw,28px);font-weight:900;color:var(--accent);font-family:monospace;margin-bottom:14px;}
+
+.dealer-zone{text-align:center;margin-bottom:16px;}
+.dealer-label{font-size:9px;letter-spacing:2px;color:var(--muted);margin-bottom:6px;}
+.hand-cards{display:flex;gap:4px;justify-content:center;flex-wrap:wrap;}
+.card{width:34px;height:48px;background:#fff;color:#111;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;}
+.card.hidden{background:linear-gradient(135deg,#333,#111);color:transparent;}
+.hand-value{font-size:11px;color:var(--accent);margin-top:4px;font-family:monospace;}
+
+.seats-grid{display:flex;flex-direction:column;gap:10px;margin-bottom:14px;}
+.seat-box{background:rgba(0,0,0,0.4);border:2px solid rgba(255,255,255,0.06);border-radius:12px;padding:10px 12px;}
+.seat-box.me{border-color:rgba(255,215,0,0.35);}
+.seat-box.acting{border-color:var(--accent);box-shadow:0 0 14px rgba(255,215,0,0.3);}
+.seat-box.won{border-color:var(--green);background:rgba(34,197,94,0.08);}
+.seat-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;font-size:10px;color:#ccc;}
+.seat-empty{text-align:center;color:var(--muted);font-size:10px;padding:8px;}
+.hand-row{margin-bottom:6px;}
+.seat-result{text-align:center;font-size:10px;color:var(--muted);margin-top:4px;}
+.seat-result.win{color:var(--green);font-weight:700;}
+
+.action-bar{position:fixed;bottom:0;left:0;right:0;background:rgba(6,7,10,0.98);border-top:1px solid rgba(255,215,0,0.15);padding:12px 14px;display:none;gap:8px;max-width:460px;margin:0 auto;}
+.action-bar.show{display:flex;}
+.action-bar button{flex:1;padding:14px 4px;border:none;border-radius:10px;font-family:var(--font);font-size:10px;font-weight:900;letter-spacing:1px;cursor:pointer;background:rgba(255,255,255,0.08);color:#fff;}
+.action-bar button.primary{background:linear-gradient(135deg,#7a5c00,var(--accent));color:#06070a;}
+.action-bar button:disabled{opacity:.3;cursor:not-allowed;}
+
+.join-panel{background:rgba(0,0,0,0.4);border:1px solid rgba(255,215,0,0.1);border-radius:14px;padding:16px;}
+.bet-row{display:flex;gap:8px;margin-bottom:10px;}
+.bet-row input{flex:1;background:rgba(0,0,0,0.5);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:10px;color:#fff;font-family:monospace;font-size:14px;}
+.btn-join{width:100%;padding:15px;border:none;border-radius:12px;font-family:var(--font);font-size:12px;font-weight:900;letter-spacing:2px;cursor:pointer;background:linear-gradient(135deg,#7a5c00,var(--accent));color:#06070a;}
+.insurance-banner{background:rgba(255,136,0,0.1);border:1px solid rgba(255,136,0,0.3);border-radius:10px;padding:12px;text-align:center;margin-bottom:12px;}
+.insurance-banner button{margin-top:8px;padding:10px 20px;border:none;border-radius:8px;background:var(--accent);color:#06070a;font-family:var(--font);font-weight:900;font-size:10px;cursor:pointer;}
+.disclaimer-inline{font-size:10px;color:var(--muted);margin-top:18px;text-align:center;line-height:1.5;}
+</style>
+    <script src="/static/sound.js"></script>
+    <script src="/static/big-win.js"></script>
+    <script src="/static/balance-animation.js"></script>
+    <script src="/static/page-transitions.js"></script>
+<link rel="stylesheet" href="/static/games-shared.css"><script src="/static/js/csrf.js"></script>
+</head>
+<body>
+
+<header class="hdr">
+  <a class="back" href="/games"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>GAMES</a>
+  <span class="title">♠️  LIVE BLACKJACK</span>
+  <span class="bal" id="balDisplay">$—</span>
+</header>
+
+<div class="page">
+
+  <div id="joinView">
+    <div class="join-panel">
+      <div style="font-size:9px;letter-spacing:2px;color:var(--muted);margin-bottom:10px;">JOIN A TABLE (UP TO 7 SEATS)</div>
+      <div class="bet-row"><input type="number" id="betInput" value="100" min="50" max="750000"></div>
+      <button class="btn-join" onclick="joinTable()">♠️  SIT DOWN — JOIN TABLE</button>
+    </div>
+    <div class="disclaimer-inline">⚠️ A shared dealer hand, seat-order turns, 30s to act or you auto-stand. This is a simulation; balances have no real-world value.</div>
+  </div>
+
+  <div id="tableView" style="display:none;">
+    <div class="table-status" id="tableStatusEl">WAITING FOR PLAYERS</div>
+    <div class="table-timer" id="tableTimerEl"></div>
+
+    <div id="insurancePanel" style="display:none;">
+      <div class="insurance-banner">
+        <div>Dealer shows an Ace — buy insurance?</div>
+        <button onclick="buyInsurance()">BUY INSURANCE</button>
+      </div>
+    </div>
+
+    <div class="dealer-zone">
+      <div class="dealer-label">DEALER</div>
+      <div class="hand-cards" id="dealerCards"></div>
+      <div class="hand-value" id="dealerValue"></div>
+    </div>
+
+    <div class="seats-grid" id="seatsGrid"></div>
+
+    <div style="text-align:center;">
+      <button class="btn-join" style="background:rgba(255,255,255,0.06);color:#ccc;" onclick="leaveTable()">LEAVE TABLE</button>
+    </div>
+  </div>
+
+</div>
+
+<div class="action-bar" id="actionBar">
+  <button onclick="doAction('hit')">HIT</button>
+  <button class="primary" onclick="doAction('stand')">STAND</button>
+  <button id="doubleBtn" onclick="doAction('double')">DOUBLE</button>
+  <button id="splitBtn" onclick="doAction('split')">SPLIT</button>
+</div>
+
+<script>
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+let balance = 0, myUserId = null;
+let balDisplayInited = false;
+let currentTableId = null;
+let ws = null;
+let myHandIdx = 0;
+
+async function init(){
+  try{ const d = await api('/api/user/me'); balance = d.balance; myUserId = String(d.user_id); updateBal(); }catch(e){}
+  const params = new URLSearchParams(location.search);
+  const tableParam = params.get('table');
+  if (tableParam){
+    document.getElementById('joinView').style.display = 'none';
+    document.getElementById('tableView').style.display = 'block';
+    enterTable(Number(tableParam), null);
+  }
+}
+
+function updateBal(){
+  const e = document.getElementById('balDisplay');
+  const n = '$'+balance.toLocaleString(undefined,{maximumFractionDigits:0});
+  if (balDisplayInited && window.animateBalance) { animateBalance(e, e.textContent, n, true); }
+  else { e.textContent = n; }
+  balDisplayInited = true;
+}
+async function refreshBal(){ try{ const d = await api('/api/user/me'); return d.balance; }catch(e){ return balance; } }
+
+async function joinTable(){
+  const amount = parseFloat(document.getElementById('betInput').value) || 100;
+  try{
+    const data = await api('/api/games/live-blackjack/join', { method: 'POST', body: JSON.stringify({ amount }) });
+    balance = await refreshBal(); updateBal();
+    document.getElementById('joinView').style.display = 'none';
+    document.getElementById('tableView').style.display = 'block';
+    enterTable(data.table_id, data.round);
+  }catch(e){
+    showToast(e.message || 'Could not join table');
+  }
+}
+
+async function leaveTable(){
+  try{
+    await api('/api/games/live-blackjack/leave', { method: 'POST' });
+  }catch(e){}
+  closeWS();
+  currentTableId = null;
+  document.getElementById('tableView').style.display = 'none';
+  document.getElementById('joinView').style.display = 'block';
+  balance = await refreshBal(); updateBal();
+}
+
+function enterTable(tableId, round){
+  currentTableId = tableId;
+  if (round) renderTable(round);
+  connectWS(tableId);
+}
+
+function cardHtml(c){
+  if (!c) return '';
+  if (c.rank === '?') return '<div class="card hidden">??</div>';
+  return `<div class="card">${esc(c.rank)}${esc(c.suit)}</div>`;
+}
+
+function renderTable(t){
+  const statusEl = document.getElementById('tableStatusEl');
+  statusEl.className = 'table-status ' + t.status;
+  const labels = {
+    waiting: 'WAITING FOR PLAYERS', betting: 'MORE PLAYERS CAN JOIN…', dealing: 'DEALING…',
+    insurance: 'INSURANCE OPEN', playing: 'HANDS IN PLAY', dealer_turn: "DEALER'S TURN",
+    settled: 'HAND COMPLETE',
+  };
+  statusEl.textContent = labels[t.status] || t.status.toUpperCase();
+
+  document.getElementById('insurancePanel').style.display = t.status === 'insurance' ? 'block' : 'none';
+
+  const dealerCards = document.getElementById('dealerCards');
+  dealerCards.innerHTML = (t.dealer_hand || []).map(cardHtml).join('');
+  document.getElementById('dealerValue').textContent = '';
+
+  const grid = document.getElementById('seatsGrid');
+  const seats = t.seats || [];
+  grid.innerHTML = seats.map(s => {
+    const isMe = String(s.user_id) === myUserId;
+    const isActing = t.action_uid && String(t.action_uid) === String(s.user_id);
+    return `
+      <div class="seat-box ${isMe ? 'me' : ''} ${isActing ? 'acting' : ''}" id="seat-${s.user_id}">
+        <div class="seat-top">
+          <span>#${s.seat} ${esc(s.username)}${isMe ? ' (you)' : ''}</span>
+          <span>$${Number(s.bet).toFixed(2)}</span>
+        </div>
+        ${(s.hands || []).map((h, i) => `
+          <div class="hand-row">
+            <div class="hand-cards">${h.map(cardHtml).join('')}</div>
+          </div>
+        `).join('')}
+        <div class="seat-result" id="result-${s.user_id}"></div>
+      </div>
+    `;
+  }).join('') || '<div class="seat-empty">No one seated yet.</div>';
+
+  // Show/hide action bar for my own turn
+  const isMyTurn = t.action_uid && String(t.action_uid) === myUserId;
+  document.getElementById('actionBar').classList.toggle('show', !!isMyTurn);
+  if (isMyTurn) myHandIdx = t.action_hand_idx || 0;
+}
+
+async function doAction(action){
+  try{
+    await api('/api/games/live-blackjack/action', { method: 'POST', body: JSON.stringify({ action, hand_idx: myHandIdx }) });
+  }catch(e){
+    showToast(e.message || 'Could not take that action');
+  }
+}
+
+async function buyInsurance(){
+  try{
+    await api('/api/games/live-blackjack/insurance', { method: 'POST' });
+    document.getElementById('insurancePanel').style.display = 'none';
+    balance = await refreshBal(); updateBal();
+  }catch(e){
+    showToast(e.message || 'Could not buy insurance');
+  }
+}
+
+function connectWS(tableId){
+  closeWS();
+  const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  ws = new WebSocket(proto + '//' + location.host + '/api/games/live-blackjack/ws/' + tableId);
+  ws.onmessage = (ev) => handleWSMsg(JSON.parse(ev.data));
+  ws.onclose = () => { if (currentTableId === tableId) setTimeout(() => { if (currentTableId === tableId) connectWS(tableId); }, 2000); };
+}
+
+function closeWS(){
+  if (ws) { try{ ws.close(); }catch(e){} ws = null; }
+}
+
+function handleWSMsg(msg){
+  if (msg.type === 'room_state'){
+    renderTable(msg);
+  } else if (msg.type === 'player_joined' || msg.type === 'dealt' || msg.type === 'turn_change'){
+    renderTable(msg.round);
+  } else if (msg.type === 'betting_tick'){
+    document.getElementById('tableTimerEl').textContent = msg.seconds;
+  } else if (msg.type === 'insurance_open'){
+    document.getElementById('tableStatusEl').textContent = 'INSURANCE OPEN';
+    document.getElementById('insurancePanel').style.display = 'block';
+  } else if (msg.type === 'your_turn'){
+    myHandIdx = msg.hand_idx || 0;
+    document.getElementById('actionBar').classList.add('show');
+    document.getElementById('doubleBtn').disabled = !msg.can_double;
+    document.getElementById('splitBtn').disabled = !msg.can_split;
+    Sound && Sound.click && Sound.click();
+  } else if (msg.type === 'action_taken'){
+    if (String(msg.user_id) !== myUserId) return;   // full re-render comes via turn_change/result
+  } else if (msg.type === 'dealer_turn'){
+    document.getElementById('dealerCards').innerHTML = (msg.dealer_hand || []).map(cardHtml).join('');
+    document.getElementById('dealerValue').textContent = 'VALUE: ' + msg.dealer_value;
+    document.getElementById('actionBar').classList.remove('show');
+  } else if (msg.type === 'result'){
+    onResult(msg);
+  } else if (msg.type === 'player_left'){
+    // no-op; next room_state/result will reflect it
+  }
+}
+
+async function onResult(msg){
+  document.getElementById('actionBar').classList.remove('show');
+  document.getElementById('tableStatusEl').className = 'table-status settled';
+  document.getElementById('tableStatusEl').textContent = 'HAND COMPLETE';
+  document.getElementById('dealerCards').innerHTML = (msg.dealer_hand || []).map(cardHtml).join('');
+  document.getElementById('dealerValue').textContent = 'VALUE: ' + msg.dealer_value;
+
+  let myWin = 0, myBet = 0;
+  (msg.players || []).forEach(p => {
+    const resultEl = document.getElementById('result-' + p.user_id);
+    const seatEl = document.getElementById('seat-' + p.user_id);
+    if (resultEl){
+      const summary = (p.hands || []).map(h => `${h.result} $${Number(h.win).toFixed(2)}`).join(' | ');
+      resultEl.textContent = summary;
+      resultEl.className = 'seat-result' + (p.total_win > 0 ? ' win' : '');
+    }
+    if (seatEl && p.total_win > 0) seatEl.classList.add('won');
+    if (String(p.user_id) === myUserId){
+      myWin = p.total_win;
+      myBet = (p.hands || []).reduce((s, h) => s + Number(h.bet), 0);
+    }
+  });
+
+  balance = await refreshBal(); updateBal();
+  if (myWin > 0){
+    Sound && Sound.win && Sound.win();
+    spawnConfettiSafe();
+    if (window.maybeBigWin && myBet > 0) maybeBigWin(myBet, myWin / myBet);
+  } else if (myBet > 0){
+    Sound && Sound.loss && Sound.loss();
+  }
+
+  setTimeout(async () => {
+    closeWS();
+    currentTableId = null;
+    document.getElementById('tableView').style.display = 'none';
+    document.getElementById('joinView').style.display = 'block';
+  }, 4000);
+}
+
+function spawnConfettiSafe(){
+  try{ if (window.spawnConfettiExplosion) spawnConfettiExplosion(); else if (window.spawnConfetti) spawnConfetti('Gold', 60); }catch(e){}
+}
+
+function showToast(msg){
+  let t = document.getElementById('lbToast');
+  if (!t){
+    t = document.createElement('div');
+    t.id = 'lbToast';
+    t.style.cssText = 'position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:rgba(20,20,30,0.95);border:1px solid rgba(255,215,0,0.3);color:#fff;padding:10px 18px;border-radius:10px;font-size:11px;z-index:500;max-width:90vw;text-align:center;';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.style.opacity = '1';
+  clearTimeout(t._hideTimer);
+  t._hideTimer = setTimeout(() => { t.style.opacity = '0'; }, 3000);
+}
+
+async function api(url, opts = {}){
+  const r = await fetch(url, { credentials: 'include', headers: { 'Content-Type': 'application/json' }, ...opts });
+  if (!r.ok){ const e = await r.json().catch(() => ({})); throw new Error(e.detail || 'Error'); }
+  return r.json();
+}
+
+init();
+</script>
+<script>if("serviceWorker"in navigator){navigator.serviceWorker.register("/static/sw.js").catch(function(){})}</script>
+<script src="/static/chat.js"></script>
+
+</body>
+</html>

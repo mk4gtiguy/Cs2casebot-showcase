@@ -1,0 +1,518 @@
+﻿<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+
+<title>🎯  Slide — CS2CaseBot</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+
+<style>
+
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+
+:root{--bg:#06060a;--ice:#00bfff;--gold:#ffd700;--red:#ef4444;--font:'Orbitron',monospace;}
+
+html,body{min-height:100vh;background:var(--bg);font-family:var(--font);overflow-x:hidden;color:#c8d8e8;}
+
+body{background-image:radial-gradient(ellipse 80% 40% at 50% 50%,rgba(0,191,255,0.04) 0%,transparent 70%);}
+
+.hdr{display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(6,6,10,0.98);border-bottom:1px solid rgba(0,191,255,0.1);position:sticky;top:0;z-index:50;}
+
+.back{display:flex;align-items:center;gap:5px;color:#2a3040;font-size:10px;letter-spacing:1px;text-decoration:none;transition:color .2s;}
+
+.back:hover{color:var(--ice);}
+
+.back svg{width:14px;height:14px;}
+
+.title{flex:1;font-size:14px;font-weight:900;letter-spacing:3px;color:var(--ice);}
+
+.bal{font-size:13px;font-weight:700;color:var(--gold);font-family:monospace;}
+
+.page{max-width:420px;margin:0 auto;padding:16px 14px 80px;}
+
+
+
+/* SLIDE TRACK */
+
+.track-wrap{background:rgba(4,4,8,0.99);border:1px solid rgba(0,191,255,0.1);border-radius:20px;padding:20px 16px;margin-bottom:16px;position:relative;overflow:hidden;}
+
+.track-wrap::before{content:'';position:absolute;top:0;left:10%;right:10%;height:1px;background:linear-gradient(90deg,transparent,var(--ice),transparent);opacity:.4;}
+
+
+
+/* ZONE DISPLAY */
+
+.zones{display:flex;gap:3px;margin-bottom:16px;border-radius:10px;overflow:hidden;}
+
+.zone{flex:1;padding:8px 4px;text-align:center;cursor:pointer;transition:all .3s;border:2px solid transparent;}
+
+.zone .z-mult{font-size:11px;font-weight:900;font-family:monospace;}
+
+.zone .z-pos{font-size:7px;letter-spacing:1px;margin-top:2px;opacity:.6;}
+
+.zone-0,.zone-8{background:rgba(239,68,68,0.12);border-color:rgba(239,68,68,0.2);}
+
+.zone-0 .z-mult,.zone-8 .z-mult{color:var(--red);}
+
+.zone-1,.zone-7{background:rgba(255,107,0,0.1);border-color:rgba(255,107,0,0.15);}
+
+.zone-1 .z-mult,.zone-7 .z-mult{color:#ff9500;}
+
+.zone-2,.zone-6{background:rgba(255,215,0,0.06);border-color:rgba(255,215,0,0.1);}
+
+.zone-2 .z-mult,.zone-6 .z-mult{color:var(--gold);}
+
+.zone-3,.zone-5{background:rgba(34,197,94,0.06);border-color:rgba(34,197,94,0.1);}
+
+.zone-3 .z-mult,.zone-5 .z-mult{color:#22c55e;}
+
+.zone-4{background:rgba(200,200,200,0.04);border-color:rgba(200,200,200,0.08);}
+
+.zone-4 .z-mult{color:#668;}
+
+.zone.lit{transform:scaleY(1.08);border-width:2px!important;}
+
+.zone-0.lit,.zone-8.lit{border-color:var(--red)!important;box-shadow:0 0 16px rgba(239,68,68,0.5);}
+
+.zone-1.lit,.zone-7.lit{border-color:#ff9500!important;box-shadow:0 0 12px rgba(255,149,0,0.4);}
+
+.zone-2.lit,.zone-6.lit{border-color:var(--gold)!important;box-shadow:0 0 14px rgba(255,215,0,0.4);}
+
+.zone-3.lit,.zone-5.lit{border-color:#22c55e!important;box-shadow:0 0 14px rgba(34,197,94,0.4);}
+
+
+
+/* PUCK */
+
+.puck-track{position:relative;height:44px;margin:0 4px 16px;background:rgba(0,0,0,0.4);border-radius:22px;border:1px solid rgba(0,191,255,0.1);}
+
+.puck{
+
+  position:absolute;top:50%;left:50%;
+
+  width:36px;height:36px;border-radius:50%;
+
+  background:radial-gradient(circle at 35% 35%,var(--ice),#0066aa);
+
+  box-shadow:0 0 16px rgba(0,191,255,0.5);
+
+  transform:translate(-50%,-50%);
+
+  transition:left 0s;
+
+}
+
+.puck.sliding{transition:left 0.8s cubic-bezier(.25,.46,.45,.94);}
+
+
+
+/* POWER SLIDER */
+
+.power-section{margin-bottom:14px;}
+
+.pow-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;}
+
+.pow-label{font-size:9px;color:#2a3040;letter-spacing:2px;}
+
+.pow-val{font-size:18px;font-weight:900;color:var(--ice);font-family:monospace;}
+
+input[type=range]{-webkit-appearance:none;width:100%;height:6px;background:linear-gradient(90deg,rgba(0,191,255,0.2),rgba(0,191,255,0.6));border-radius:3px;outline:none;cursor:pointer;}
+
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:24px;height:24px;border-radius:50%;background:radial-gradient(circle at 35% 35%,var(--ice),#0066aa);box-shadow:0 0 12px rgba(0,191,255,0.5);cursor:pointer;}
+
+.aim-guide{display:flex;justify-content:space-between;font-size:8px;color:#2a3040;margin-top:4px;}
+
+
+
+/* RESULT */
+
+.result-slide{text-align:center;min-height:28px;font-size:12px;font-weight:700;letter-spacing:2px;margin-bottom:14px;display:flex;align-items:center;justify-content:center;}
+
+.result-slide.win{color:var(--gold);}
+
+.result-slide.big{color:#fff;text-shadow:0 0 20px var(--ice);font-size:15px;}
+
+.result-slide.idle{color:#2a3040;}
+
+.result-slide.near{color:#ff9500;}
+
+
+
+/* BET */
+
+.bet-ctrl{background:rgba(0,0,0,0.4);border:1px solid rgba(0,191,255,0.06);border-radius:14px;padding:14px;}
+
+.bl{font-size:8px;color:#2a3040;letter-spacing:2px;margin-bottom:8px;}
+
+.bet-row{display:flex;gap:8px;margin-bottom:8px;}
+
+.bet-inp{flex:1;background:rgba(0,0,0,0.5);border:1px solid rgba(0,191,255,0.1);border-radius:8px;padding:10px 12px;color:#c8d8e8;font-family:var(--font);font-size:13px;font-weight:700;outline:none;text-align:center;}
+
+.bet-inp:focus{border-color:rgba(0,191,255,0.3);}
+
+.adj{padding:10px 14px;background:rgba(0,191,255,0.04);border:1px solid rgba(0,191,255,0.08);border-radius:8px;color:#2a3040;font-family:var(--font);font-size:11px;cursor:pointer;transition:all .15s;}
+
+.adj:hover{color:var(--ice);}
+
+.qrow{display:flex;gap:5px;margin-bottom:10px;}
+
+.qb{flex:1;padding:7px 3px;background:rgba(0,191,255,0.04);border:1px solid rgba(0,191,255,0.08);border-radius:6px;color:#2a3040;font-size:8px;letter-spacing:1px;cursor:pointer;text-align:center;transition:all .15s;}
+
+.qb:hover{border-color:var(--ice);color:var(--ice);}
+
+.btn-slide{width:100%;padding:15px;border:none;border-radius:10px;font-family:var(--font);font-size:13px;font-weight:900;letter-spacing:3px;cursor:pointer;transition:all .2s;background:linear-gradient(135deg,#003366,var(--ice));color:#06060a;box-shadow:0 4px 20px rgba(0,191,255,0.3);}
+
+.btn-slide:not(:disabled):hover{transform:translateY(-2px);box-shadow:0 6px 32px rgba(0,191,255,0.5);}
+
+.btn-slide:disabled{opacity:.4;cursor:not-allowed;transform:none!important;}
+
+
+
+#flash{position:fixed;inset:0;pointer-events:none;opacity:0;z-index:200;}
+
+#flash.b{background:radial-gradient(ellipse at 50% 50%,rgba(0,191,255,0.3),transparent 70%);}
+
+#flash.show{animation:fl .5s ease;}
+
+@keyframes fl{0%,100%{opacity:0;}30%{opacity:1;}}
+
+</style>
+
+    <script src="/static/sound.js"></script>
+
+    <script src="/static/big-win.js"></script>
+
+
+    <script src="/static/balance-animation.js"></script>
+
+
+    <script src="/static/page-transitions.js"></script>
+
+
+    <script src="/static/autoplay.js"></script>
+
+
+<link rel="stylesheet" href="/static/games-shared.css"><script src="/static/js/csrf.js"></script>
+
+
+</head>
+
+<body>
+
+<div id="flash"></div>
+
+<header class="hdr">
+
+  <a class="back" href="/games"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>GAMES</a>
+
+  <span class="title">🎯  SLIDE</span>
+
+  <span class="bal" id="balDisplay">$—</span>
+
+</header>
+
+<div class="page">
+
+  <div class="track-wrap">
+
+    <!-- Zone labels -->
+
+    <div class="zones" id="zonesRow">
+
+      <div class="zone zone-0" id="zone0"><div class="z-mult">5×</div><div class="z-pos">LEFT</div></div>
+
+      <div class="zone zone-1" id="zone1"><div class="z-mult">3×</div><div class="z-pos">L2</div></div>
+
+      <div class="zone zone-2" id="zone2"><div class="z-mult">2×</div><div class="z-pos">L3</div></div>
+
+      <div class="zone zone-3" id="zone3"><div class="z-mult">1.5×</div><div class="z-pos">L4</div></div>
+
+      <div class="zone zone-4" id="zone4"><div class="z-mult">0.5×</div><div class="z-pos">CTR</div></div>
+
+      <div class="zone zone-5" id="zone5"><div class="z-mult">1.5×</div><div class="z-pos">R4</div></div>
+
+      <div class="zone zone-6" id="zone6"><div class="z-mult">2×</div><div class="z-pos">R3</div></div>
+
+      <div class="zone zone-7" id="zone7"><div class="z-mult">3×</div><div class="z-pos">R2</div></div>
+
+      <div class="zone zone-8" id="zone8"><div class="z-mult">5×</div><div class="z-pos">RIGHT</div></div>
+
+    </div>
+
+
+
+    <!-- Puck track -->
+
+    <div class="puck-track">
+
+      <div class="puck" id="thePuck"></div>
+
+    </div>
+
+
+
+    <!-- Power slider -->
+
+    <div class="power-section">
+
+      <div class="pow-header">
+
+        <span class="pow-label">LAUNCH POWER</span>
+
+        <span class="pow-val" id="powVal">50%</span>
+
+      </div>
+
+      <input type="range" id="powerSlider" min="0" max="100" value="50" oninput="onPower()">
+
+      <div class="aim-guide"><span>⬅️ LEFT 5×</span><span>CENTER 0.5×</span><span>RIGHT 5× ➡️</span></div>
+
+      <button onclick="randomAim()" style="margin-top:8px;width:100%;padding:7px;background:rgba(0,191,255,0.04);border:1px solid rgba(0,191,255,0.1);border-radius:8px;color:#2a3040;font-family:var(--font);font-size:8px;letter-spacing:1px;cursor:pointer;">🎲 RANDOM AIM</button>
+
+    </div>
+
+
+
+    <div class="result-slide idle" id="resultSlide">AIM WITH THE SLIDER · LAUNCH THE PUCK</div>
+
+    <div id="slideHist" style="display:flex;gap:3px;flex-wrap:wrap;justify-content:center;padding:6px 0 0;min-height:20px;"></div>
+
+  </div>
+
+
+
+  <div class="bet-ctrl">
+
+    <div class="bl">BET AMOUNT</div>
+
+    <div class="bet-row">
+
+      <button class="adj" onclick="halveBet()">½</button>
+
+      <input class="bet-inp" id="betInp" type="number" value="500" min="50">
+
+      <button class="adj" onclick="doubleBet()">2×</button>
+
+    </div>
+
+    <div class="qrow">
+
+      <div class="qb" onclick="qb(100)">$100</div><div class="qb" onclick="qb(500)">$500</div>
+
+      <div class="qb" onclick="qb(1000)">$1K</div><div class="qb" onclick="qb(5000)">$5K</div><div class="qb" onclick="qb(10000)">$10K</div>
+
+    </div>
+
+    <button class="btn-slide" id="slideBtn" onclick="launch()">🎯  LAUNCH PUCK</button>
+
+  </div>
+
+</div>
+
+<script>
+
+const ZONE_MULTS=[5,3,2,1.5,0.5,1.5,2,3,5];
+
+let balance=0,sliding=false,slideHistory=[];
+
+
+
+function randomAim(){
+
+  const v=Math.floor(Math.random()*101);
+
+  document.getElementById('powerSlider').value=v;onPower();
+
+}
+
+
+
+function pushSlideHist(mult,win){
+
+  slideHistory.push({mult,win});
+
+  if(slideHistory.length>20) slideHistory.shift();
+
+  const el=document.getElementById('slideHist');el.innerHTML='';
+
+  slideHistory.forEach(s=>{
+
+    const color=s.win>0?(s.mult>=5?'#ffd700':s.mult>=2?'#22c55e':s.mult>=1.5?'#ff9500':'#446'):'#222';
+
+    const d=document.createElement('div');
+
+    d.style.cssText='width:15px;height:15px;border-radius:50%;background:'+color+';display:flex;align-items:center;justify-content:center;font-size:5px;color:#fff;font-weight:700;flex-shrink:0;';
+
+    d.textContent=s.mult||'×';
+
+    el.appendChild(d);
+
+  });
+
+}
+
+async function init(){try{const d=await api('/api/user/me');balance=d.balance;updateBal();}catch(e){}onPower();}
+
+function updateBal(){var e=document.getElementById('balDisplay'),c=e.textContent||'',n='$'+balance.toLocaleString(undefined,{maximumFractionDigits:0});if(c&&c!=='$—'&&c!==n){var p=parseFloat(c.replace(/[,$]/g,''));if(!isNaN(p)&&p!==balance){animateBalance(e,'$'+p.toLocaleString(undefined,{maximumFractionDigits:0}),n,balance>=p);return}}e.textContent=n}
+
+function qb(v){document.getElementById('betInp').value=v;}
+
+function halveBet(){document.getElementById('betInp').value=Math.max(50,Math.floor(parseInt(document.getElementById('betInp').value||500)/2));}
+
+function doubleBet(){document.getElementById('betInp').value=Math.min(balance,parseInt(document.getElementById('betInp').value||500)*2);}
+
+function onPower(){
+
+  const p=parseInt(document.getElementById('powerSlider').value);
+
+  document.getElementById('powVal').textContent=p+'%';
+
+  // Move puck preview
+
+  const puck=document.getElementById('thePuck');
+
+  puck.style.left=(p)+'%';
+
+}
+
+async function launch(){
+
+  if(sliding) return;
+
+  const bet=parseInt(document.getElementById('betInp').value)||500;
+
+  const power=parseInt(document.getElementById('powerSlider').value)/100;
+
+  if(bet>balance){setResult('❌ INSUFFICIENT BALANCE','idle');Sound.error();return;}
+
+  Sound.click();Sound.whoosh();sliding=true;document.getElementById('slideBtn').disabled=true;
+
+
+  document.querySelectorAll('.zone').forEach(z=>z.classList.remove('lit'));
+
+
+  setResult('LAUNCHING…','idle');
+
+
+  // Animate puck moving
+
+  const puck=document.getElementById('thePuck');
+
+  puck.classList.add('sliding');
+
+  try{
+
+    const d=await api('/api/games/hard/slide',{method:'POST',body:JSON.stringify({amount:bet,power})});
+
+    // Land puck at actual_power position
+
+    puck.style.left=(d.actual_power*100)+'%';
+
+    await delay(900);
+
+    // Light winning zone
+
+    document.getElementById('zone'+d.zone).classList.add('lit');
+
+    balance=await refreshBal();updateBal();
+
+    pushSlideHist(d.mult||0,d.win||0);
+
+    const bet2=parseInt(document.getElementById('betInp').value)||500;
+
+    if(d.win>=bet2){
+
+
+      Sound.win();
+
+
+      setResult(d.zone_name+' · +$'+d.win.toLocaleString(undefined,{maximumFractionDigits:0}),d.mult>=5?'big':'win');
+      if(window.maybeBigWin)maybeBigWin(bet,d.win);
+
+
+      flashIce();
+
+
+    }else if(d.win>0){
+
+
+      Sound.win();
+
+
+      setResult(d.zone_name+' · +$'+d.win.toLocaleString(undefined,{maximumFractionDigits:0}),'near');
+
+
+    }else{
+
+
+      Sound.loss();
+
+
+      setResult('MISSED — 0 WIN','idle');
+
+
+    }
+
+  }catch(e){setResult('ERROR: '+e.message,'idle');}
+
+  finally{
+
+    setTimeout(()=>{puck.classList.remove('sliding');puck.style.left='50%';},200);
+
+    sliding=false;document.getElementById('slideBtn').disabled=false;
+
+  }
+
+}
+
+function setResult(t,c){const el=document.getElementById('resultSlide');el.className='result-slide '+c;el.textContent=t;}
+
+function flashIce(){const el=document.getElementById('flash');el.className='b';void el.offsetWidth;el.classList.add('show');}
+
+async function refreshBal(){try{const d=await api('/api/user/me');return d.balance;}catch(e){return balance;}}
+
+async function api(url,opts={}){const r=await fetch(url,{credentials:'include',headers:{'Content-Type':'application/json'},...opts});if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.detail||'Error');}return r.json();}
+
+function delay(ms){return new Promise(r=>setTimeout(r,ms));}
+
+init();
+
+</script>
+
+<script>if("serviceWorker"in navigator){navigator.serviceWorker.register("/static/sw.js").catch(function(){})}</script>
+
+
+<script src="/static/chat.js"></script>
+
+
+</body>
+
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

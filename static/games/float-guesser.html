@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+
+<title>🔬 Float Guesser — CS2CaseBot</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+
+<style>
+
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+
+:root{--bg:#060408;--cs:#ffd700;--green:#22c55e;--font:'Orbitron',monospace;}
+
+html,body{min-height:100vh;background:var(--bg);font-family:var(--font);overflow-x:hidden;color:#e8d8c0;}
+
+body{background-image:radial-gradient(ellipse 80% 40% at 50% 0%,rgba(255,215,0,0.04) 0%,transparent 70%);}
+
+.hdr{display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(6,4,8,0.98);border-bottom:1px solid rgba(255,215,0,0.1);position:sticky;top:0;z-index:50;}
+
+.back{display:flex;align-items:center;gap:5px;color:#2a2010;font-size:10px;letter-spacing:1px;text-decoration:none;transition:color .2s;}
+
+.back:hover{color:var(--cs);}
+
+.back svg{width:14px;height:14px;}
+
+.title{flex:1;font-size:14px;font-weight:900;letter-spacing:3px;background:linear-gradient(90deg,var(--cs),#ff9500);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+
+.tkts{font-size:12px;font-weight:700;color:var(--cs);font-family:monospace;}
+
+.page{max-width:420px;margin:0 auto;padding:16px 14px 80px;}
+
+.arena{background:rgba(4,2,6,0.99);border:1px solid rgba(255,215,0,0.08);border-radius:20px;padding:18px 14px 20px;margin-bottom:14px;position:relative;overflow:hidden;}
+
+.arena::before{content:'';position:absolute;top:0;left:15%;right:15%;height:1px;background:linear-gradient(90deg,transparent,rgba(255,215,0,0.3),transparent);}
+
+.skin-img{text-align:center;margin-bottom:10px;}
+
+.skin-img img{max-height:110px;max-width:100%;object-fit:contain;}
+
+.skin-name{text-align:center;font-size:13px;font-weight:700;margin-bottom:14px;color:#e8d8c0;letter-spacing:1px;}
+
+.float-range{display:flex;justify-content:space-between;font-size:10px;color:#333;margin-bottom:6px;letter-spacing:1px;}
+
+#floatSlider{width:100%;accent-color:var(--cs);margin-bottom:10px;height:24px;cursor:pointer;}
+
+.guess-display{text-align:center;font-size:26px;font-weight:900;color:var(--cs);font-family:monospace;margin-bottom:18px;}
+
+.lock-btn{width:100%;padding:14px;border:none;border-radius:10px;font-family:var(--font);font-size:12px;font-weight:900;letter-spacing:2px;cursor:pointer;transition:all .2s;background:linear-gradient(135deg,#1e3a5f,#3b82f6);color:#fff;box-shadow:0 4px 16px rgba(59,130,246,0.3);}
+
+.lock-btn:hover{transform:translateY(-1px);}
+
+.lock-btn:disabled{opacity:.4;cursor:not-allowed;}
+
+.tier-strip{display:flex;justify-content:space-between;font-size:9px;color:#2a2010;letter-spacing:1px;margin-bottom:14px;}
+
+.tier-strip span{color:var(--cs);}
+
+.hist-row{display:flex;gap:4px;flex-wrap:wrap;align-items:center;min-height:14px;margin-top:14px;}
+
+.hist-lbl{font-size:8px;color:#2a2010;letter-spacing:1px;flex-shrink:0;margin-right:2px;}
+
+.hist-dot{width:12px;height:12px;border-radius:50%;}
+
+.bet-ctrl{background:rgba(0,0,0,0.4);border:1px solid rgba(255,215,0,0.06);border-radius:14px;padding:14px;}
+
+.bl{font-size:8px;color:#2a2010;letter-spacing:2px;margin-bottom:10px;}
+
+.btn-start{width:100%;padding:15px;border:none;border-radius:10px;font-family:var(--font);font-size:13px;font-weight:900;letter-spacing:3px;cursor:pointer;transition:all .2s;background:linear-gradient(135deg,#664400,var(--cs));color:#06040a;box-shadow:0 4px 20px rgba(255,215,0,0.3);}
+
+.btn-start:not(:disabled):hover{transform:translateY(-2px);}
+
+.btn-start:disabled{opacity:.4;cursor:not-allowed;}
+
+.result-card{text-align:center;padding:10px 0;}
+
+.r-icon{font-size:52px;margin-bottom:12px;}
+
+.r-vals{margin-bottom:8px;font-size:13px;line-height:2;}
+
+.r-diff{color:#666;font-size:12px;margin-bottom:4px;}
+
+.r-prox-lbl{display:flex;justify-content:space-between;font-size:10px;color:#555;letter-spacing:1px;margin-bottom:4px;}
+
+.r-prox-bar{height:7px;background:rgba(255,255,255,0.05);border-radius:4px;overflow:hidden;margin-bottom:14px;}
+
+#floatAccBar{height:100%;width:0%;border-radius:4px;transition:width .8s ease .15s;}
+
+.r-tkt{font-size:18px;font-weight:700;margin-bottom:6px;}
+
+.r-tiers{color:#333;font-size:10px;letter-spacing:1px;margin-bottom:20px;}
+
+.btn-row{display:flex;gap:10px;justify-content:center;}
+
+.btn-again{padding:12px 22px;border:none;border-radius:10px;font-family:var(--font);font-size:10px;font-weight:700;letter-spacing:2px;cursor:pointer;background:linear-gradient(135deg,#664400,var(--cs));color:#06040a;}
+
+.btn-back{padding:12px 18px;border:1px solid rgba(255,215,0,0.15);border-radius:10px;font-family:var(--font);font-size:10px;font-weight:700;letter-spacing:1px;cursor:pointer;background:transparent;color:#2a2010;}
+
+.btn-back:hover{color:var(--cs);}
+
+@keyframes confettiDrop{to{transform:translateY(110vh) rotate(720deg);opacity:0;}}
+
+</style>
+
+    <script src="/static/sound.js"></script>
+
+
+    <script src="/static/page-transitions.js"></script>
+
+
+    <script src="/static/autoplay.js"></script>
+
+    <script src="/static/arcade-celebrate.js"></script>
+
+<link rel="stylesheet" href="/static/games-shared.css"><script src="/static/js/csrf.js"></script>
+
+
+</head>
+
+<body>
+
+<header class="hdr">
+
+  <a class="back" href="/"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>BACK</a>
+
+  <span class="title">🔬  FLOAT GUESSER</span>
+
+  <span class="tkts">🎟️ <span id="tktBal">—</span></span>
+
+</header>
+
+<div class="page">
+
+  <div class="arena" id="arenaWrap">
+
+    <div id="skinImg" class="skin-img"></div>
+
+
+    <div id="skinSkeleton" class="skin-img"><div class="skeleton skeleton-card" style="height:110px;width:80%;margin:0 auto;"></div></div>
+
+
+    <div id="skinName" class="skin-name"><span class="skeleton skeleton-text" style="width:120px;margin:0 auto;display:block;"></span></div>
+
+    <div class="tier-strip">
+
+      <span>Min: <span id="fMin">—</span></span>
+
+      <span>Max: <span id="fMax">—</span></span>
+
+    </div>
+
+    <div class="float-range">
+
+      <span id="rangeMin">0.0000</span>
+
+      <span id="rangeMax">1.0000</span>
+
+    </div>
+
+    <input type="range" id="floatSlider" min="0" max="1" step="0.0001" value="0.5"
+
+      oninput="document.getElementById('guessDisp').textContent=parseFloat(this.value).toFixed(4)">
+
+    <div class="guess-display" id="guessDisp">0.5000</div>
+
+    <button class="lock-btn" id="lockBtn" onclick="lockIn()" disabled>🔒 LOCK IN GUESS</button>
+
+    <div class="hist-row" id="histRow"><span class="hist-lbl">SESSION:</span></div>
+
+  </div>
+
+
+
+  <div id="startCtrl" class="bet-ctrl">
+
+    <div class="bl">TICKET ARCADE · FLOAT GUESSER</div>
+
+    <button class="btn-start" id="startBtn" onclick="startGame()">🔬 PLAY (1 🎟️)</button>
+
+    <div style="text-align:center;font-size:9px;color:#2a2010;letter-spacing:1px;margin-top:8px;">±0.01=8🎟️ · ±0.03=5🎟️ · ±0.05=3🎟️ · ±0.10=1🎟️</div>
+
+  </div>
+
+
+
+  <div id="resultWrap" style="display:none;padding:16px 0;"></div>
+
+  <div id="arcadeLbBox" style="margin-top:14px;"></div>
+
+</div>
+
+<script>
+
+let _fToken=null,_history=[];
+
+async function api(url,opts={}){const r=await fetch(url,{credentials:'include',headers:{'Content-Type':'application/json'},...opts});if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.detail||'Error');}return r.json();}
+
+async function loadBal(){try{const d=await api('/api/tickets/balance');document.getElementById('tktBal').textContent=d.balance??d.tickets??'?';}catch(e){}}
+
+function refreshLb(){
+  const box=document.getElementById('arcadeLbBox');
+  if(box&&window.renderArcadeLeaderboard) renderArcadeLeaderboard(box,'float',s=>Number(s).toFixed(4));
+}
+
+loadBal();
+refreshLb();
+
+
+
+async function startGame(){
+
+
+  Sound.click();
+
+
+  if(_fToken)return;
+
+
+  document.getElementById('startBtn').disabled=true;
+
+  document.getElementById('lockBtn').disabled=true;
+
+  document.getElementById('resultWrap').style.display='none';
+
+  try{
+
+    const data=await api('/api/ticket-games/float/start',{method:'POST'});
+
+    loadBal();
+
+    _fToken=data.token;
+
+    const fmin=parseFloat(data.float_min),fmax=parseFloat(data.float_max);
+
+    const mid=((fmin+fmax)/2).toFixed(4);
+
+    // Skin
+
+    if(data.skin_image){
+
+
+      document.getElementById('skinImg').innerHTML=`<img src="${data.skin_image}" onerror="this.style.display='none'">`;
+
+
+    }else{
+
+
+      document.getElementById('skinImg').innerHTML='';
+
+
+    }
+
+
+    document.getElementById('skinSkeleton').style.display='none';
+
+
+    document.getElementById('skinName').textContent=data.skin_name||'Unknown Skin';
+
+    document.getElementById('fMin').textContent=fmin.toFixed(4);
+
+    document.getElementById('fMax').textContent=fmax.toFixed(4);
+
+    document.getElementById('rangeMin').textContent=fmin.toFixed(4);
+
+    document.getElementById('rangeMax').textContent=fmax.toFixed(4);
+
+    const sl=document.getElementById('floatSlider');
+
+    sl.min=fmin;sl.max=fmax;sl.step=0.0001;sl.value=mid;
+
+    document.getElementById('guessDisp').textContent=mid;
+
+    document.getElementById('lockBtn').disabled=false;
+
+  }catch(e){
+
+    document.getElementById('startBtn').disabled=false;
+
+    const rw = document.getElementById('resultWrap');
+
+
+    rw.innerHTML = '';
+
+
+    const errEl = document.createElement('div');
+
+
+    errEl.style.cssText = 'color:#ef4444;font-size:12px;text-align:center;padding:10px;';
+
+
+    errEl.textContent = e.message||'Not enough tickets';
+
+
+    rw.appendChild(errEl);
+
+    document.getElementById('resultWrap').style.display='';
+
+  }
+
+}
+
+
+
+async function lockIn(){
+
+
+  Sound.click();
+
+
+  if(!_fToken)return;
+
+
+  document.getElementById('lockBtn').disabled=true;
+
+  const guess=parseFloat(document.getElementById('floatSlider').value||0);
+
+  const token=_fToken;_fToken=null;
+
+  try{
+
+    const res=await api('/api/ticket-games/float/submit',{method:'POST',body:JSON.stringify({token,guess})});
+
+    const won=res.tickets_won;
+
+    const diff=res.diff.toFixed(4);
+
+    const proximityPct=Math.max(0,Math.round(100-res.diff*900));
+
+    const barColor=proximityPct>70?'#22c55e':proximityPct>40?'#f59e0b':'#ef4444';
+
+    pushHist(won>0);loadBal();
+
+    if(res.is_new_best&&window.celebrateHighScore) celebrateHighScore(won);
+    refreshLb();
+
+    showResult(`
+
+      <div class="result-card">
+
+        <div class="r-icon">${won>=5?'🏆':won>=1?'⭐':'💀'}</div>
+
+        <div class="r-vals">
+
+          Actual: <strong style="color:var(--cs);">${res.actual.toFixed(4)}</strong><br>
+
+          Your guess: <strong>${res.guess.toFixed(4)}</strong>
+
+        </div>
+
+        <div class="r-prox-lbl"><span>PROXIMITY</span><span>${proximityPct}%</span></div>
+
+        <div class="r-prox-bar"><div id="floatAccBar" style="background:${barColor};"></div></div>
+
+        <div class="r-diff">Difference: <strong>${diff}</strong></div>
+
+        ${won>0?`<div class="r-tkt" style="color:var(--green);">+${won} tickets won!</div>`:`<div class="r-tkt" style="color:#555;">So close! Try again.</div>`}
+
+        <div class="r-tiers">±0.01=8🎟️ · ±0.03=5🎟️ · ±0.05=3🎟️ · ±0.10=1🎟️</div>
+
+        <div class="btn-row">
+
+          <button class="btn-again" onclick="startGame()">🔄 PLAY AGAIN</button>
+
+          <button class="btn-back" onclick="location.href='/'">BACK</button>
+
+        </div>
+
+      </div>
+
+    `);
+
+    Sound.whoosh();
+
+
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{
+
+
+      const bar=document.getElementById('floatAccBar');
+
+
+      if(bar)bar.style.width=proximityPct+'%';
+
+
+    }));
+
+
+    if(won>0){spawnConfetti();Sound.win();}else{Sound.loss();}
+
+  }catch(e){
+
+    document.getElementById('lockBtn').disabled=false;
+
+    showResult(`<div style="color:#ef4444;font-size:12px;text-align:center;">${e.message}</div>`);
+
+  }
+
+  document.getElementById('startBtn').disabled=false;
+
+}
+
+
+
+function showResult(html){
+
+  document.getElementById('resultWrap').innerHTML=html;
+
+  document.getElementById('resultWrap').style.display='';
+
+}
+
+
+
+function pushHist(win){
+
+  _history.push(win);if(_history.length>20)_history.shift();
+
+  const el=document.getElementById('histRow');if(!el)return;
+
+  el.innerHTML='<span class="hist-lbl">SESSION:</span>';
+
+  _history.forEach(w=>{const d=document.createElement('div');d.className='hist-dot';d.style.background=w?'#22c55e':'#ef4444';el.appendChild(d);});
+
+}
+
+
+
+function spawnConfetti(){
+
+  const cols=['#ffd700','#22c55e','#3b82f6','#a855f7','#ec4899'];
+
+  for(let i=0;i<35;i++){
+
+    const el=document.createElement('div');
+
+    el.style.cssText=`position:fixed;width:7px;height:7px;border-radius:2px;background:${cols[i%cols.length]};left:${Math.random()*100}%;top:-10px;z-index:999;pointer-events:none;animation:confettiDrop ${0.9+Math.random()*1.2}s ease ${Math.random()*0.5}s forwards;`;
+
+    document.body.appendChild(el);setTimeout(()=>el.remove(),2500);
+
+  }
+
+}
+
+</script>
+
+<script>if("serviceWorker"in navigator){navigator.serviceWorker.register("/static/sw.js").catch(function(){})}</script>
+
+
+<script src="/static/chat.js"></script>
+
+
+</body>
+
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

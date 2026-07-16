@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>🎱  Live Keno Draw — CS2CaseBot</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+:root{--bg:#06070a;--accent:#ffd700;--green:#22c55e;--red:#ef4444;--muted:#556;--font:'Orbitron',monospace;}
+html,body{min-height:100vh;background:var(--bg);font-family:var(--font);overflow-x:hidden;color:#c8d0e8;}
+.hdr{display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(6,7,10,0.98);border-bottom:1px solid rgba(255,215,0,0.12);position:sticky;top:0;z-index:50;}
+.back{display:flex;align-items:center;gap:5px;color:#2a2a3a;font-size:10px;letter-spacing:1px;text-decoration:none;}
+.back svg{width:14px;height:14px;}
+.title{flex:1;font-size:14px;font-weight:900;letter-spacing:3px;color:var(--accent);}
+.bal{font-size:13px;font-weight:700;color:var(--accent);font-family:monospace;}
+.page{max-width:460px;margin:0 auto;padding:16px 14px 80px;}
+
+.round-hdr{text-align:center;margin-bottom:14px;}
+.round-status-banner{font-size:11px;font-weight:700;letter-spacing:2px;color:var(--accent);}
+.round-status-banner.drawing{color:#ff8800;animation:pulse-cd .5s infinite;}
+.round-status-banner.settled{color:var(--green);}
+@keyframes pulse-cd{0%,100%{opacity:1;}50%{opacity:.5;}}
+.round-timer{font-size:clamp(28px,8vw,38px);font-weight:900;color:var(--accent);font-family:monospace;line-height:1;margin-top:4px;}
+
+.section-label{font-size:9px;letter-spacing:2px;color:var(--muted);margin:14px 0 8px;text-transform:uppercase;}
+.keno-grid{display:grid;grid-template-columns:repeat(10,1fr);gap:4px;margin-bottom:12px;}
+.keno-cell{aspect-ratio:1;background:rgba(0,0,0,0.4);border:1px solid rgba(255,255,255,0.08);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:9px;color:#889;cursor:pointer;user-select:none;}
+.keno-cell.picked{background:rgba(255,215,0,0.15);border-color:var(--accent);color:var(--accent);font-weight:700;}
+.keno-cell.hit{background:rgba(34,197,94,0.25);border-color:var(--green);color:var(--green);font-weight:900;}
+.keno-cell.drawn{border-color:rgba(255,255,255,0.3);}
+.keno-cell.locked{cursor:default;opacity:.7;}
+
+.bet-panel{background:rgba(0,0,0,0.4);border:1px solid rgba(255,215,0,0.1);border-radius:14px;padding:16px;}
+.bet-row{display:flex;gap:8px;margin-bottom:10px;}
+.bet-row input{flex:1;background:rgba(0,0,0,0.5);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:10px;color:#fff;font-family:monospace;font-size:14px;}
+.btn-lockin{width:100%;padding:15px;border:none;border-radius:12px;font-family:var(--font);font-size:12px;font-weight:900;letter-spacing:2px;cursor:pointer;background:linear-gradient(135deg,#7a5c00,var(--accent));color:#06070a;box-shadow:0 4px 20px rgba(255,215,0,0.3);}
+.btn-lockin:disabled{opacity:.4;cursor:not-allowed;}
+.picks-count{text-align:center;font-size:10px;color:var(--muted);margin-bottom:10px;}
+
+.players-list{display:flex;flex-direction:column;gap:6px;margin-top:12px;}
+.player-row{display:flex;justify-content:space-between;background:rgba(0,0,0,0.3);border-radius:8px;padding:8px 10px;font-size:10px;color:#aaa;}
+.disclaimer-inline{font-size:10px;color:var(--muted);margin-top:18px;text-align:center;line-height:1.5;}
+</style>
+    <script src="/static/sound.js"></script>
+    <script src="/static/big-win.js"></script>
+    <script src="/static/balance-animation.js"></script>
+    <script src="/static/page-transitions.js"></script>
+<link rel="stylesheet" href="/static/games-shared.css"><script src="/static/js/csrf.js"></script>
+</head>
+<body>
+
+<header class="hdr">
+  <a class="back" href="/games"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>GAMES</a>
+  <span class="title">🎱  LIVE KENO DRAW</span>
+  <span class="bal" id="balDisplay">$—</span>
+</header>
+
+<div class="page">
+
+  <div class="round-hdr">
+    <div class="round-status-banner" id="roundStatusBanner">PICKING OPEN</div>
+    <div class="round-timer" id="roundTimer">20</div>
+  </div>
+
+  <div class="section-label">Pick 1–10 Numbers</div>
+  <div class="keno-grid" id="kenoGrid"></div>
+  <div class="picks-count" id="picksCount">0 / 10 picked</div>
+
+  <div class="bet-panel">
+    <div class="bet-row"><input type="number" id="betAmountInput" value="100" min="50" max="750000" placeholder="Amount"></div>
+    <button class="btn-lockin" id="lockInBtn" onclick="submitPicks()">🎱  LOCK IN PICKS</button>
+  </div>
+
+  <div class="section-label">Players At The Draw</div>
+  <div class="players-list" id="playersList"></div>
+
+  <div class="disclaimer-inline">⚠️ Everyone's picks are private, but one shared draw decides every player's hits. This is a simulation; balances have no real-world value.</div>
+</div>
+
+<script>
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+let balance = 0, myUserId = null;
+let balDisplayInited = false;
+let currentRoundId = null;
+let ws = null;
+let myPicks = [];
+let picksLocked = false;
+
+async function init(){
+  try{ const d = await api('/api/user/me'); balance = d.balance; myUserId = String(d.user_id); updateBal(); }catch(e){}
+  buildGrid();
+  const params = new URLSearchParams(location.search);
+  const roundParam = params.get('round');
+  await joinOpenRound(roundParam ? Number(roundParam) : null);
+}
+
+function buildGrid(){
+  const grid = document.getElementById('kenoGrid');
+  let html = '';
+  for (let n = 1; n <= 80; n++){
+    html += `<div class="keno-cell" id="cell-${n}" onclick="toggleNum(${n})">${n}</div>`;
+  }
+  grid.innerHTML = html;
+}
+
+function toggleNum(n){
+  if (picksLocked) return;
+  const idx = myPicks.indexOf(n);
+  if (idx >= 0){ myPicks.splice(idx, 1); }
+  else { if (myPicks.length >= 10) { showToast('Max 10 picks'); return; } myPicks.push(n); }
+  document.getElementById('cell-' + n).classList.toggle('picked', myPicks.includes(n));
+  document.getElementById('picksCount').textContent = `${myPicks.length} / 10 picked`;
+}
+
+async function joinOpenRound(roundId){
+  try{
+    const data = await api('/api/games/live-keno/rounds');
+    if (roundId){ enterRound(roundId, null); return; }
+    if (data.rounds && data.rounds.length){ enterRound(data.rounds[0].round_id, null); }
+    else { currentRoundId = null; document.getElementById('roundStatusBanner').textContent = 'PICK NUMBERS TO START A ROUND'; }
+  }catch(e){}
+}
+
+function updateBal(){
+  const e = document.getElementById('balDisplay');
+  const n = '$'+balance.toLocaleString(undefined,{maximumFractionDigits:0});
+  if (balDisplayInited && window.animateBalance) { animateBalance(e, e.textContent, n, true); }
+  else { e.textContent = n; }
+  balDisplayInited = true;
+}
+async function refreshBal(){ try{ const d = await api('/api/user/me'); return d.balance; }catch(e){ return balance; } }
+
+async function submitPicks(){
+  if (!myPicks.length){ showToast('Pick at least 1 number'); return; }
+  const amount = parseFloat(document.getElementById('betAmountInput').value) || 100;
+  document.getElementById('lockInBtn').disabled = true;
+  try{
+    const body = { picks: myPicks, amount };
+    if (currentRoundId) body.round_id = currentRoundId;
+    const data = await api('/api/games/live-keno/pick', { method: 'POST', body: JSON.stringify(body) });
+    balance = await refreshBal(); updateBal();
+    picksLocked = true;
+    document.querySelectorAll('.keno-cell').forEach(c => c.classList.add('locked'));
+    enterRound(data.round_id, data.round);
+  }catch(e){
+    showToast(e.message || 'Could not lock in picks');
+    document.getElementById('lockInBtn').disabled = false;
+  }
+}
+
+function enterRound(roundId, round){
+  if (currentRoundId === roundId && ws) return;
+  currentRoundId = roundId;
+  if (round) renderRound(round);
+  connectWS(roundId);
+}
+
+function renderRound(round){
+  const banner = document.getElementById('roundStatusBanner');
+  banner.className = 'round-status-banner ' + round.status;
+  banner.textContent = round.status === 'picking' ? 'PICKING OPEN'
+                      : round.status === 'drawing' ? 'DRAWING…'
+                      : round.status === 'settled' ? 'DRAW COMPLETE' : round.status.toUpperCase();
+
+  const list = document.getElementById('playersList');
+  list.innerHTML = (round.players || []).map(p => `
+    <div class="player-row">
+      <span>${esc(p.username || 'Player')}</span>
+      <span>${p.pick_count} picks — $${Number(p.amount).toFixed(2)}</span>
+    </div>
+  `).join('') || '<div style="color:var(--muted);font-size:10px;">No players yet.</div>';
+}
+
+function connectWS(roundId){
+  closeWS();
+  const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  ws = new WebSocket(proto + '//' + location.host + '/api/games/live-keno/ws/' + roundId);
+  ws.onmessage = (ev) => handleWSMsg(JSON.parse(ev.data));
+  ws.onclose = () => { if (currentRoundId === roundId) setTimeout(() => { if (currentRoundId === roundId) connectWS(roundId); }, 2000); };
+}
+
+function closeWS(){
+  if (ws) { try{ ws.close(); }catch(e){} ws = null; }
+}
+
+function handleWSMsg(msg){
+  if (msg.type === 'room_state'){
+    renderRound(msg);
+  } else if (msg.type === 'player_picked'){
+    renderRound(msg.round);
+  } else if (msg.type === 'picking_tick'){
+    document.getElementById('roundTimer').textContent = msg.seconds;
+  } else if (msg.type === 'drawing'){
+    document.getElementById('roundStatusBanner').className = 'round-status-banner drawing';
+    document.getElementById('roundStatusBanner').textContent = 'DRAWING…';
+    document.getElementById('roundTimer').textContent = '';
+    Sound && Sound.click && Sound.click();
+  } else if (msg.type === 'result'){
+    onResult(msg);
+  }
+}
+
+async function onResult(msg){
+  document.getElementById('roundStatusBanner').className = 'round-status-banner settled';
+  document.getElementById('roundStatusBanner').textContent = 'DRAW COMPLETE';
+
+  (msg.draw || []).forEach(n => {
+    const cell = document.getElementById('cell-' + n);
+    if (cell) cell.classList.add('drawn');
+  });
+
+  const mine = (msg.players || []).find(p => String(p.user_id) === myUserId);
+  if (mine){
+    (mine.hits || []).forEach(n => {
+      const cell = document.getElementById('cell-' + n);
+      if (cell) cell.classList.add('hit');
+    });
+  }
+
+  const list = document.getElementById('playersList');
+  list.innerHTML = (msg.players || []).map(p => `
+    <div class="player-row">
+      <span>${esc(p.username || 'Player')} — ${p.n_hits}/${p.picks.length} hits</span>
+      <span style="${p.win > 0 ? 'color:var(--green);font-weight:700;' : ''}">${p.win > 0 ? '+$' + Number(p.win).toFixed(2) : 'No win'}</span>
+    </div>
+  `).join('');
+
+  balance = await refreshBal(); updateBal();
+  if (mine && mine.win > 0){
+    Sound && Sound.win && Sound.win();
+    spawnConfettiSafe();
+    if (window.maybeBigWin && mine.amount > 0) maybeBigWin(mine.amount, mine.win / mine.amount);
+  } else if (mine){
+    Sound && Sound.loss && Sound.loss();
+  }
+
+  setTimeout(() => {
+    myPicks = [];
+    picksLocked = false;
+    buildGrid();
+    document.getElementById('picksCount').textContent = '0 / 10 picked';
+    document.getElementById('lockInBtn').disabled = false;
+    currentRoundId = null;
+    joinOpenRound(null);
+  }, 2500);
+}
+
+function spawnConfettiSafe(){
+  try{ if (window.spawnConfettiExplosion) spawnConfettiExplosion(); else if (window.spawnConfetti) spawnConfetti('Gold', 60); }catch(e){}
+}
+
+function showToast(msg){
+  let t = document.getElementById('lkToast');
+  if (!t){
+    t = document.createElement('div');
+    t.id = 'lkToast';
+    t.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:rgba(20,20,30,0.95);border:1px solid rgba(255,215,0,0.3);color:#fff;padding:10px 18px;border-radius:10px;font-size:11px;z-index:500;max-width:90vw;text-align:center;';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.style.opacity = '1';
+  clearTimeout(t._hideTimer);
+  t._hideTimer = setTimeout(() => { t.style.opacity = '0'; }, 3000);
+}
+
+async function api(url, opts = {}){
+  const r = await fetch(url, { credentials: 'include', headers: { 'Content-Type': 'application/json' }, ...opts });
+  if (!r.ok){ const e = await r.json().catch(() => ({})); throw new Error(e.detail || 'Error'); }
+  return r.json();
+}
+
+init();
+</script>
+<script>if("serviceWorker"in navigator){navigator.serviceWorker.register("/static/sw.js").catch(function(){})}</script>
+<script src="/static/chat.js"></script>
+
+</body>
+</html>

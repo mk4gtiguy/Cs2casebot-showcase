@@ -1,0 +1,635 @@
+﻿<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+
+<title>💣  Bomb Slots — CS2CaseBot</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+
+<style>
+
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+
+:root{--bg:#06080a;--ct:#2196f3;--t:#f44336;--orange:#ff9800;--green:#22c55e;--font:'Orbitron',monospace;}
+
+html,body{min-height:100vh;background:var(--bg);font-family:var(--font);overflow-x:hidden;color:#c0ccd8;}
+
+body{background-image:linear-gradient(135deg,rgba(33,150,243,0.03) 0%,transparent 50%),linear-gradient(225deg,rgba(244,67,54,0.03) 0%,transparent 50%);}
+
+
+
+.hdr{display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(6,8,10,0.98);border-bottom:1px solid rgba(255,255,255,0.06);position:sticky;top:0;z-index:50;}
+
+.back{display:flex;align-items:center;gap:5px;color:#2a3a4a;font-size:10px;letter-spacing:1px;text-decoration:none;transition:color .2s;}
+
+.back:hover{color:var(--ct);}
+
+.back svg{width:14px;height:14px;}
+
+.title{flex:1;font-size:13px;font-weight:900;letter-spacing:2px;color:#c0ccd8;}
+
+.bal{font-size:13px;font-weight:700;color:var(--orange);font-family:monospace;}
+
+
+
+.page{max-width:420px;margin:0 auto;padding:16px 14px 80px;}
+
+
+
+/* CT vs T header */
+
+.faction-bar{display:grid;grid-template-columns:1fr auto 1fr;gap:0;margin-bottom:16px;border-radius:14px;overflow:hidden;border:1px solid rgba(255,255,255,0.06);}
+
+.faction-ct{background:rgba(33,150,243,0.1);padding:10px 14px;text-align:left;}
+
+.faction-t{background:rgba(244,67,54,0.1);padding:10px 14px;text-align:right;}
+
+.faction-vs{background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;padding:0 12px;font-size:10px;font-weight:900;letter-spacing:2px;color:#444;}
+
+.faction-name{font-size:10px;font-weight:700;letter-spacing:1px;}
+
+.faction-ct .faction-name{color:var(--ct);}
+
+.faction-t .faction-name{color:var(--t);}
+
+.faction-role{font-size:8px;color:#334;letter-spacing:1px;}
+
+
+
+/* MACHINE */
+
+.machine{background:rgba(4,6,8,0.98);border:1px solid rgba(255,255,255,0.07);border-radius:18px;padding:18px 14px;margin-bottom:16px;position:relative;}
+
+.machine::before{content:'';display:block;height:1px;background:linear-gradient(90deg,var(--ct),transparent,var(--t));margin-bottom:16px;}
+
+
+
+.reels-b{display:flex;gap:8px;margin-bottom:14px;}
+
+.reel-b-win{flex:1;height:110px;overflow:hidden;background:rgba(0,0,0,0.6);border:1px solid rgba(255,255,255,0.05);border-radius:12px;position:relative;}
+
+.reel-b-win::after{content:'';position:absolute;top:50%;left:0;right:0;height:2px;background:rgba(255,255,255,0.08);transform:translateY(-50%);pointer-events:none;z-index:2;}
+
+.reel-b-strip{display:flex;flex-direction:column;align-items:center;will-change:transform;}
+
+.reel-b-cell{height:110px;width:100%;display:flex;align-items:center;justify-content:center;font-size:38px;flex-shrink:0;}
+
+
+
+.reel-b-win.glow-ct{border-color:var(--ct);box-shadow:0 0 18px rgba(33,150,243,0.4);}
+
+.reel-b-win.glow-t{border-color:var(--t);box-shadow:0 0 18px rgba(244,67,54,0.3);}
+
+.reel-b-win.glow-bomb{border-color:#ff9800;box-shadow:0 0 24px rgba(255,152,0,0.5);animation:bomb-warn .3s ease 3;}
+
+@keyframes bomb-warn{0%,100%{box-shadow:0 0 24px rgba(255,152,0,0.5);}50%{box-shadow:0 0 50px rgba(255,152,0,0.9);}}
+
+.reel-b-win.glow-win{border-color:var(--green);box-shadow:0 0 24px rgba(34,197,94,0.5);}
+
+.reel-b-win.glow-defuse{border-color:#fff;box-shadow:0 0 32px rgba(255,255,255,0.6);}
+
+
+
+/* RESULT */
+
+.result-b{min-height:56px;padding:10px;background:rgba(0,0,0,0.3);border-radius:10px;margin-bottom:12px;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px;}
+
+.rb-main{font-size:13px;font-weight:900;letter-spacing:2px;}
+
+.rb-main.idle{color:#2a3a4a;}
+
+.rb-main.win{color:var(--green);}
+
+.rb-main.defuse{color:#fff;text-shadow:0 0 20px #fff;font-size:16px;}
+
+.rb-main.bust{color:var(--t);animation:bust-flash .2s ease 4;}
+
+@keyframes bust-flash{0%,100%{opacity:1;}50%{opacity:.2;}}
+
+.rb-sub{font-size:9px;color:#2a3a4a;letter-spacing:1px;}
+
+.rb-penalty{font-size:10px;color:var(--t);font-weight:700;letter-spacing:1px;}
+
+
+
+/* BUST PENALTY BAR */
+
+.penalty-bar{height:4px;background:rgba(255,255,255,0.04);border-radius:2px;margin-bottom:12px;overflow:hidden;}
+
+.penalty-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,var(--ct),var(--t));width:0;transition:width 1s ease;}
+
+
+
+/* CONTROLS */
+
+.ctrls{background:rgba(0,0,0,0.5);border:1px solid rgba(255,255,255,0.05);border-radius:14px;padding:14px;}
+
+.bl{font-size:8px;color:#2a3a4a;letter-spacing:2px;margin-bottom:6px;}
+
+.bd{font-size:20px;font-weight:900;color:var(--orange);font-family:monospace;text-align:center;margin-bottom:8px;}
+
+.qrow{display:flex;gap:5px;margin-bottom:8px;}
+
+.qb{flex:1;padding:7px 3px;background:rgba(255,152,0,0.05);border:1px solid rgba(255,152,0,0.1);border-radius:6px;color:#3a3020;font-size:8px;letter-spacing:1px;cursor:pointer;text-align:center;transition:all .15s;}
+
+.qb:hover{border-color:var(--orange);color:var(--orange);}
+
+.adj-r{display:flex;gap:6px;margin-bottom:10px;}
+
+.adj{flex:1;padding:8px 4px;background:rgba(255,152,0,0.04);border:1px solid rgba(255,152,0,0.08);border-radius:8px;color:#3a3020;font-family:var(--font);font-size:9px;cursor:pointer;text-align:center;transition:all .15s;}
+
+.adj:hover{color:var(--orange);border-color:rgba(255,152,0,0.2);}
+
+
+
+.btn-pull{width:100%;padding:15px;border:none;border-radius:10px;font-family:var(--font);font-size:13px;font-weight:900;letter-spacing:3px;cursor:pointer;transition:all .2s;background:linear-gradient(135deg,#cc2200,var(--t));color:#fff;box-shadow:0 4px 20px rgba(244,67,54,0.35);}
+
+.btn-pull:not(:disabled):hover{transform:translateY(-2px);box-shadow:0 6px 32px rgba(244,67,54,0.55);}
+
+.btn-pull:disabled{opacity:.4;cursor:not-allowed;transform:none!important;}
+
+
+
+/* PAYTABLE */
+
+.pt{display:grid;grid-template-columns:1fr 1fr;gap:4px;margin-top:14px;}
+
+.pt-row{display:flex;justify-content:space-between;padding:6px 8px;background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.04);border-radius:8px;font-size:8px;align-items:center;}
+
+.pt-combo{font-size:12px;}
+
+.pt-info{flex:1;margin:0 6px;color:#3a4a5a;}
+
+.pt-mult{font-family:monospace;font-weight:700;}
+
+.pt-row.defuse .pt-mult{color:#fff;}
+
+.pt-row.win .pt-mult{color:var(--green);}
+
+.pt-row.bust .pt-mult{color:var(--t);}
+
+.pt-row.ct .pt-mult{color:var(--ct);}
+
+
+
+.hist-row{display:flex;gap:4px;flex-wrap:wrap;align-items:center;min-height:14px;margin-top:10px;}
+
+.hist-lbl{font-size:8px;color:#2a3a4a;letter-spacing:1px;flex-shrink:0;margin-right:2px;}
+
+.hist-dot{width:12px;height:12px;border-radius:50%;}
+
+.mini-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:12px;}
+
+.ms-b{background:rgba(255,152,0,0.05);border:1px solid rgba(255,152,0,0.1);border-radius:8px;padding:8px;text-align:center;}
+
+.ms-b .sv{font-size:14px;font-weight:900;font-family:monospace;color:var(--orange);}
+
+.ms-b .sl{font-size:8px;color:#3a3020;letter-spacing:1px;margin-top:2px;}
+
+/* EXPLOSION OVERLAY */
+
+#explodeOv{position:fixed;inset:0;z-index:200;pointer-events:none;opacity:0;display:flex;align-items:center;justify-content:center;}
+
+#explodeOv.show{animation:explode-anim .6s ease forwards;}
+
+@keyframes explode-anim{0%{opacity:0;}15%{opacity:1;background:rgba(255,100,0,0.3);}80%{opacity:.7;}100%{opacity:0;}}
+
+.explode-text{font-size:clamp(40px,12vw,80px);font-weight:900;color:#ff4400;text-shadow:0 0 40px #ff4400;opacity:0;animation:none;}
+
+#explodeOv.show .explode-text{animation:boom-text .4s ease 0.1s forwards;}
+
+@keyframes boom-text{0%{opacity:0;transform:scale(3);}50%{opacity:1;transform:scale(1);}100%{opacity:0;transform:scale(0.8);}}
+
+
+
+#flash{position:fixed;inset:0;pointer-events:none;opacity:0;z-index:180;}
+
+#flash.g{background:radial-gradient(ellipse at 50% 30%,rgba(34,197,94,0.25),transparent 70%);}
+
+#flash.show{animation:fl .5s ease;}
+
+@keyframes fl{0%,100%{opacity:0;}30%{opacity:1;}}
+
+</style>
+
+    <script src="/static/sound.js"></script>
+
+    <script src="/static/big-win.js"></script>
+
+
+    <script src="/static/balance-animation.js"></script>
+
+
+    <script src="/static/page-transitions.js"></script>
+
+
+    <script src="/static/autoplay.js"></script>
+
+
+<link rel="stylesheet" href="/static/games-shared.css"><script src="/static/js/csrf.js"></script>
+
+
+</head>
+
+<body>
+
+<div id="explodeOv"><div class="explode-text">💥  BOOM!</div></div>
+
+<div id="flash"></div>
+
+
+
+<header class="hdr">
+
+  <a class="back" href="/games"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>GAMES</a>
+
+  <span class="title">💣  BOMB DEFUSE SLOTS</span>
+
+  <span class="bal" id="balDisplay">$—</span>
+
+</header>
+
+
+
+<div class="page">
+
+  <div class="faction-bar">
+
+    <div class="faction-ct"><div class="faction-name">🔵  CT SIDE</div><div class="faction-role">COUNTER-TERRORIST</div></div>
+
+    <div class="faction-vs">VS</div>
+
+    <div class="faction-t"><div class="faction-name" style="text-align:right">T SIDE 🔴</div><div class="faction-role" style="text-align:right">TERRORIST</div></div>
+
+  </div>
+
+
+
+  <div class="machine">
+
+    <div class="reels-b">
+
+      <div class="reel-b-win" id="rbw0"><div class="reel-b-strip" id="rbs0"></div></div>
+
+      <div class="reel-b-win" id="rbw1"><div class="reel-b-strip" id="rbs1"></div></div>
+
+      <div class="reel-b-win" id="rbw2"><div class="reel-b-strip" id="rbs2"></div></div>
+
+    </div>
+
+    <div class="penalty-bar"><div class="penalty-fill" id="penaltyFill"></div></div>
+
+    <div class="result-b">
+
+      <div class="rb-main idle" id="rbMain">PLACE YOUR BET AND PULL</div>
+
+      <div class="rb-sub" id="rbSub">AVOID TRIPLE BOMBS · SEEK THE DEFUSE KIT</div>
+
+      <div class="rb-penalty" id="rbPenalty"></div>
+
+    </div>
+
+  </div>
+
+
+
+  <div class="mini-stats">
+
+    <div class="ms-b"><div class="sv" id="bWins">0</div><div class="sl">WINS</div></div>
+
+    <div class="ms-b"><div class="sv" id="bSpins">0</div><div class="sl">SPINS</div></div>
+
+    <div class="ms-b"><div class="sv" id="bBusts">0</div><div class="sl">BUSTS</div></div>
+
+  </div>
+
+
+
+  <div class="ctrls">
+
+    <div class="bl">BET AMOUNT</div>
+
+    <div class="bd" id="betD">$500</div>
+
+    <div class="qrow">
+
+      <div class="qb" onclick="setBet(100)">$100</div>
+
+      <div class="qb" onclick="setBet(500)">$500</div>
+
+      <div class="qb" onclick="setBet(1000)">$1K</div>
+
+      <div class="qb" onclick="setBet(5000)">$5K</div>
+
+      <div class="qb" onclick="setBet(10000)">$10K</div>
+
+    </div>
+
+    <div class="adj-r">
+
+      <div class="adj" onclick="halveBet()">½</div>
+
+      <div class="adj" onclick="doubleBet()">2×</div>
+
+      <div class="adj" onclick="maxBet()">MAX</div>
+
+    </div>
+
+    <button class="btn-pull" id="pullBtn" onclick="pull()">💣  PULL THE LEVER</button>
+
+    <button class="adj" style="width:100%;margin-top:8px;" onclick="toggleAutoPanel()">⚙️ AUTOPLAY</button>
+
+    <div id="bombAutoPanel"></div>
+
+    <div class="hist-row" id="bHistRow"><span class="hist-lbl">SESSION:</span></div>
+
+  </div>
+
+
+
+  <div class="pt">
+
+    <div class="pt-row defuse"><span class="pt-combo">💎💎💎</span><span class="pt-info">DIAMOND</span><span class="pt-mult">300×</span></div>
+
+    <div class="pt-row defuse"><span class="pt-combo">🛡️🛡️🛡️</span><span class="pt-info">DEFUSE</span><span class="pt-mult">100×</span></div>
+
+    <div class="pt-row win"><span class="pt-combo">🔫🔫🔫</span><span class="pt-info">RIFLES</span><span class="pt-mult">20×</span></div>
+
+    <div class="pt-row ct"><span class="pt-combo">🔵🔵🔵</span><span class="pt-info">CT SWEEP</span><span class="pt-mult">10×</span></div>
+
+    <div class="pt-row ct"><span class="pt-combo">🔵🔵🛡️</span><span class="pt-info">CT+DEFUSE</span><span class="pt-mult">6×</span></div>
+
+    <div class="pt-row win"><span class="pt-combo">🛡️🛡️</span><span class="pt-info">2× DEFUSE</span><span class="pt-mult">5×</span></div>
+
+    <div class="pt-row bust"><span class="pt-combo">💣💣💣</span><span class="pt-info">TRIPLE BOMB</span><span class="pt-mult">BUST+50%</span></div>
+
+    <div class="pt-row bust"><span class="pt-combo">💣💣</span><span class="pt-info">DOUBLE BOMB</span><span class="pt-mult">BUST+25%</span></div>
+
+  </div>
+
+</div>
+
+
+
+<script>
+
+const SYMS=['🔵','🔴','🔫','💣','🛡️','💎'];
+
+let bet=500,balance=0,pulling=false,bWins=0,bSpins=0,bBusts=0,bHistory=[],bAP=null;
+
+
+
+async function init(){
+
+  try{const d=await api('/api/user/me');balance=d.balance;updateBal();}catch(e){}
+
+  buildReels();
+
+}
+
+function updateBal(){var e=document.getElementById('balDisplay'),c=e.textContent||'',n='$'+balance.toLocaleString(undefined,{maximumFractionDigits:0});if(c&&c!=='$—'&&c!==n){var p=parseFloat(c.replace(/[,$]/g,''));if(!isNaN(p)&&p!==balance){animateBalance(e,'$'+p.toLocaleString(undefined,{maximumFractionDigits:0}),n,balance>=p);return}}e.textContent=n}
+
+function buildReels(){
+
+  [0,1,2].forEach(i=>{
+
+    const s=document.getElementById('rbs'+i);s.innerHTML='';
+
+    for(let j=0;j<25;j++){const c=document.createElement('div');c.className='reel-b-cell';c.textContent=SYMS[Math.floor(Math.random()*SYMS.length)];s.appendChild(c);}
+
+    s.style.transform=`translateY(-${12*110}px)`;
+
+  });
+
+}
+
+function setBet(v){Sound.click();bet=v;document.getElementById('betD').textContent='$'+bet.toLocaleString();}
+
+function halveBet(){setBet(Math.max(100,Math.floor(bet/2/100)*100));}
+
+function doubleBet(){setBet(Math.min(balance,bet*2));}
+
+function maxBet(){setBet(Math.min(balance,750000));}
+
+
+
+async function pull(){
+
+  if(pulling||bet>balance){setResult('❌ INSUFFICIENT BALANCE','idle');Sound.error();return {win:false,multiplier:0,winAmount:0};}
+
+  pulling=true;
+  let roundResult={win:false,multiplier:0,winAmount:0};
+
+
+  Sound.spin();
+
+
+  document.getElementById('pullBtn').disabled=true;
+
+
+  setResult('PULLING…','idle');
+
+  document.getElementById('rbSub').textContent='';
+
+  document.getElementById('rbPenalty').textContent='';
+
+  document.getElementById('penaltyFill').style.width='0';
+
+  [0,1,2].forEach(i=>document.getElementById('rbw'+i).className='reel-b-win');
+
+
+
+  [0,1,2].forEach(i=>{
+
+    const s=document.getElementById('rbs'+i);
+
+    const endY=(12+Math.floor(Math.random()*8))*110;
+
+    s.style.transition='none';s.style.transform=`translateY(-${12*110}px)`;
+
+    setTimeout(()=>{s.style.transition=`transform ${1.1+i*0.12}s cubic-bezier(.25,.46,.45,.94)`;s.style.transform=`translateY(-${endY}px)`;},20+i*30);
+
+  });
+
+
+
+  try{
+
+    const d=await api('/api/games/easy/slots/bomb/spin',{method:'POST',body:JSON.stringify({amount:bet})});
+
+    await delay(1400);
+
+
+
+    // Land
+
+    [0,1,2].forEach(i=>{
+
+      const s=document.getElementById('rbs'+i);const sym=d.symbols[i];
+
+      const cells=[];for(let j=0;j<20;j++) cells.push(j===15?sym:SYMS[Math.floor(Math.random()*SYMS.length)]);
+
+      s.innerHTML='';cells.forEach(c=>{const el=document.createElement('div');el.className='reel-b-cell';el.textContent=c;s.appendChild(el);});
+
+      s.style.transition='none';s.style.transform=`translateY(-${14*110}px)`;
+
+      setTimeout(()=>{s.style.transition='transform .2s cubic-bezier(.34,1.56,.64,1)';s.style.transform=`translateY(-${15*110}px)`;},20);
+
+
+
+      const glowClass=sym==='💣'?'glow-bomb':sym==='🛡️'?'glow-defuse':sym==='🔵'?'glow-ct':sym==='🔴'?'glow-t':'glow-win';
+
+      document.getElementById('rbw'+i).className='reel-b-win '+glowClass;
+
+    });
+
+
+
+    await delay(300);
+
+
+    Sound.reelStop();
+
+
+    balance=await refreshBal();updateBal();
+
+    bSpins++;document.getElementById('bSpins').textContent=bSpins;
+
+
+
+    if(d.is_bust){
+
+
+      Sound.loss();
+
+
+      // BOOM!
+
+
+      document.getElementById('explodeOv').className='show';
+
+      setTimeout(()=>document.getElementById('explodeOv').className='',700);
+
+      const pct=d.symbols.filter(s=>s==='💣').length===3?50:25;
+
+      document.getElementById('penaltyFill').style.width=pct+'%';
+
+      setResult(`💣 ${d.label}`,'bust');
+
+      document.getElementById('rbSub').textContent=`LOST $${bet.toLocaleString()} + PENALTY`;
+
+      document.getElementById('rbPenalty').textContent=`EXTRA LOSS: $${d.extra_loss.toLocaleString(undefined,{maximumFractionDigits:0})}`;
+
+      bBusts++;document.getElementById('bBusts').textContent=bBusts;
+
+      pushBHist('bust');
+
+      roundResult={win:false,multiplier:0,winAmount:0};
+
+    }else if(d.win>0){
+
+
+      Sound.win();
+
+
+      setResult(`✅ ${d.label}`,d.mult>=100?'defuse':'win');if(window.maybeBigWin)await maybeBigWin(bet,d.win);
+
+      document.getElementById('rbSub').textContent=`${d.mult}× · +$${d.win.toLocaleString(undefined,{maximumFractionDigits:0})}`;
+
+      flashGreen();
+
+      bWins++;document.getElementById('bWins').textContent=bWins;
+
+      pushBHist('win');
+
+      roundResult={win:true,multiplier:d.mult||0,winAmount:d.win||0};
+
+    }else{
+
+
+      Sound.loss();
+
+
+      setResult('NO MATCH — TRY AGAIN','idle');
+
+      pushBHist('miss');
+
+    }
+
+  }catch(e){setResult('ERROR','idle');}
+
+  finally{pulling=false;document.getElementById('pullBtn').disabled=false;if(bAP)bAP.setBalance(balance);}
+
+  return roundResult;
+
+}
+
+
+
+function setResult(text,cls){const el=document.getElementById('rbMain');el.className='rb-main '+cls;el.textContent=text;}
+
+function flashGreen(){const el=document.getElementById('flash');el.className='g';void el.offsetWidth;el.classList.add('show');}
+
+function pushBHist(type){bHistory.push(type);if(bHistory.length>20)bHistory.shift();const el=document.getElementById('bHistRow');if(!el)return;el.innerHTML='<span class="hist-lbl">SESSION:</span>';bHistory.forEach(t=>{const d=document.createElement('div');d.className='hist-dot';d.style.background=t==='win'?'#22c55e':t==='bust'?'#ef4444':'#2a3a4a';el.appendChild(d);});}
+
+function toggleAutoPanel(){
+  if(!bAP){
+    bAP=new AutoPlay({
+      onRound: async()=>{ return await pull(); },
+      onStop: (reason)=>{},
+      roundDelay: 400,
+    });
+    bAP.setBalance(balance);
+  }
+  const panel=document.getElementById('bombAutoPanel');
+  if(panel.querySelector('.autoplay-panel')){ panel.innerHTML=''; return; }
+  bAP.bindUI(panel,{defaultRounds:10,getBalance:()=>balance});
+}
+
+async function refreshBal(){try{const d=await api('/api/user/me');return d.balance;}catch(e){return balance;}}
+
+async function api(url,opts={}){const r=await fetch(url,{credentials:'include',headers:{'Content-Type':'application/json'},...opts});if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.detail||'Error');}return r.json();}
+
+function delay(ms){return new Promise(r=>setTimeout(r,ms));}
+
+init();
+
+</script>
+
+<script>if("serviceWorker"in navigator){navigator.serviceWorker.register("/static/sw.js").catch(function(){})}</script>
+
+
+<script src="/static/chat.js"></script>
+
+
+</body>
+
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

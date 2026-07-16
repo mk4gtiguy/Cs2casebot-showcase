@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>🪜  King of the Hill Ladder — CS2CaseBot</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+:root{--bg:#06070a;--accent:#ffd700;--green:#22c55e;--red:#ef4444;--muted:#556;--font:'Orbitron',monospace;}
+html,body{min-height:100vh;background:var(--bg);font-family:var(--font);overflow-x:hidden;color:#c8d0e8;}
+.hdr{display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(6,7,10,0.98);border-bottom:1px solid rgba(255,215,0,0.12);position:sticky;top:0;z-index:50;}
+.back{display:flex;align-items:center;gap:5px;color:#2a2a3a;font-size:10px;letter-spacing:1px;text-decoration:none;}
+.back svg{width:14px;height:14px;}
+.title{flex:1;font-size:14px;font-weight:900;letter-spacing:3px;color:var(--accent);}
+.bal{font-size:13px;font-weight:700;color:var(--accent);font-family:monospace;}
+.page{max-width:460px;margin:0 auto;padding:16px 14px 100px;}
+
+.round-hdr{text-align:center;margin-bottom:14px;}
+.round-status-banner{font-size:11px;font-weight:700;letter-spacing:2px;color:var(--accent);}
+.round-status-banner.settled{color:var(--green);}
+.round-timer{font-size:clamp(28px,8vw,38px);font-weight:900;color:var(--accent);font-family:monospace;line-height:1;}
+.bonus-pot{text-align:center;font-size:11px;color:var(--muted);margin-bottom:14px;}
+.bonus-pot b{color:var(--accent);}
+
+.join-panel{background:rgba(0,0,0,0.4);border:1px solid rgba(255,215,0,0.1);border-radius:14px;padding:16px;margin-bottom:14px;}
+.bet-row{display:flex;gap:8px;margin-bottom:10px;}
+.bet-row input{flex:1;background:rgba(0,0,0,0.5);border:1px solid rgba(255,255,255,0.1);border-radius:8px;padding:10px;color:#fff;font-family:monospace;font-size:14px;}
+.btn-join{width:100%;padding:15px;border:none;border-radius:12px;font-family:var(--font);font-size:12px;font-weight:900;letter-spacing:2px;cursor:pointer;background:linear-gradient(135deg,#7a5c00,var(--accent));color:#06070a;}
+
+.my-status{background:rgba(255,215,0,0.06);border:1px solid rgba(255,215,0,0.2);border-radius:12px;padding:14px;margin-bottom:14px;text-align:center;}
+.my-rung{font-size:28px;font-weight:900;color:var(--accent);font-family:monospace;}
+.my-mult{font-size:12px;color:var(--muted);margin-top:2px;}
+.action-row{display:flex;gap:8px;margin-top:10px;}
+.action-row button{flex:1;padding:14px;border:none;border-radius:10px;font-family:var(--font);font-size:11px;font-weight:900;letter-spacing:1px;cursor:pointer;}
+.btn-climb{background:linear-gradient(135deg,#1a6b2f,var(--green));color:#06070a;}
+.btn-cashout{background:rgba(255,255,255,0.08);color:#fff;}
+.action-row button:disabled{opacity:.35;cursor:not-allowed;}
+
+.players-list{display:flex;flex-direction:column;gap:6px;}
+.player-row{display:flex;justify-content:space-between;background:rgba(0,0,0,0.3);border-radius:8px;padding:8px 10px;font-size:10px;color:#aaa;}
+.player-row.busted{opacity:.5;}
+.player-row.top{border:1px solid rgba(255,215,0,0.3);}
+.disclaimer-inline{font-size:10px;color:var(--muted);margin-top:18px;text-align:center;line-height:1.5;}
+</style>
+    <script src="/static/sound.js"></script>
+    <script src="/static/big-win.js"></script>
+    <script src="/static/balance-animation.js"></script>
+    <script src="/static/page-transitions.js"></script>
+<link rel="stylesheet" href="/static/games-shared.css"><script src="/static/js/csrf.js"></script>
+</head>
+<body>
+
+<header class="hdr">
+  <a class="back" href="/games"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>GAMES</a>
+  <span class="title">🪜  KING OF THE HILL</span>
+  <span class="bal" id="balDisplay">$—</span>
+</header>
+
+<div class="page">
+
+  <div class="round-hdr">
+    <div class="round-status-banner" id="roundStatusBanner">CLIMBING OPEN</div>
+    <div class="round-timer" id="roundTimer">25</div>
+  </div>
+  <div class="bonus-pot">BONUS POT: <b id="bonusPotEl">$0.00</b> — goes to the highest surviving rung</div>
+
+  <div class="join-panel" id="joinPanel">
+    <div class="bet-row"><input type="number" id="betInput" value="100" min="50" max="750000"></div>
+    <button class="btn-join" onclick="joinRound()">🪜  JOIN — START CLIMBING</button>
+  </div>
+
+  <div class="my-status" id="myStatus" style="display:none;">
+    <div class="my-rung" id="myRungEl">RUNG 0</div>
+    <div class="my-mult" id="myMultEl">x1.00</div>
+    <div class="action-row">
+      <button class="btn-climb" id="climbBtn" onclick="doClimb()">⬆️ CLIMB NEXT RUNG</button>
+      <button class="btn-cashout" id="cashoutBtn" onclick="doCashout()">💰 CASH OUT</button>
+    </div>
+  </div>
+
+  <div class="players-list" id="playersList"></div>
+
+  <div class="disclaimer-inline">⚠️ Your own stake pays out at your own solo-style multiplier. The bonus pot is extra, on top, for whoever holds the highest rung when the round ends. This is a simulation; balances have no real-world value.</div>
+</div>
+
+<script>
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+let balance = 0, myUserId = null;
+let balDisplayInited = false;
+let currentRoundId = null;
+let ws = null;
+let myBetAmount = 0;
+
+async function init(){
+  try{ const d = await api('/api/user/me'); balance = d.balance; myUserId = String(d.user_id); updateBal(); }catch(e){}
+  const params = new URLSearchParams(location.search);
+  const roundParam = params.get('round');
+  await joinOpenRound(roundParam ? Number(roundParam) : null);
+}
+
+async function joinOpenRound(roundId){
+  try{
+    const data = await api('/api/games/koth-ladder/rounds');
+    if (roundId){ enterRound(roundId, null); return; }
+    if (data.rounds && data.rounds.length){ enterRound(data.rounds[0].round_id, null); }
+  }catch(e){}
+}
+
+function updateBal(){
+  const e = document.getElementById('balDisplay');
+  const n = '$'+balance.toLocaleString(undefined,{maximumFractionDigits:0});
+  if (balDisplayInited && window.animateBalance) { animateBalance(e, e.textContent, n, true); }
+  else { e.textContent = n; }
+  balDisplayInited = true;
+}
+async function refreshBal(){ try{ const d = await api('/api/user/me'); return d.balance; }catch(e){ return balance; } }
+
+async function joinRound(){
+  const amount = parseFloat(document.getElementById('betInput').value) || 100;
+  try{
+    const body = { amount };
+    if (currentRoundId) body.round_id = currentRoundId;
+    const data = await api('/api/games/koth-ladder/join', { method: 'POST', body: JSON.stringify(body) });
+    myBetAmount = amount;
+    balance = await refreshBal(); updateBal();
+    document.getElementById('joinPanel').style.display = 'none';
+    document.getElementById('myStatus').style.display = 'block';
+    enterRound(data.round_id, data.round);
+  }catch(e){
+    showToast(e.message || 'Could not join');
+  }
+}
+
+function enterRound(roundId, round){
+  if (currentRoundId === roundId && ws) return;
+  currentRoundId = roundId;
+  if (round) renderRound(round);
+  connectWS(roundId);
+}
+
+function renderRound(round){
+  const banner = document.getElementById('roundStatusBanner');
+  banner.className = 'round-status-banner ' + round.status;
+  banner.textContent = round.status === 'climbing' ? 'CLIMBING OPEN' : 'ROUND COMPLETE';
+  document.getElementById('bonusPotEl').textContent = '$' + Number(round.bonus_pot || 0).toFixed(2);
+
+  const me = (round.players || []).find(p => String(p.user_id) === myUserId);
+  if (me){
+    document.getElementById('joinPanel').style.display = 'none';
+    document.getElementById('myStatus').style.display = 'block';
+    document.getElementById('myRungEl').textContent = 'RUNG ' + me.rung;
+    document.getElementById('myMultEl').textContent = 'x' + Number(me.mult).toFixed(2);
+    const canAct = round.status === 'climbing' && !me.busted && !me.cashed_out;
+    document.getElementById('climbBtn').disabled = !canAct;
+    document.getElementById('cashoutBtn').disabled = !canAct;
+  }
+
+  const topRung = Math.max(0, ...(round.players || []).filter(p => !p.busted).map(p => p.rung));
+  const list = document.getElementById('playersList');
+  list.innerHTML = (round.players || []).map(p => `
+    <div class="player-row ${p.busted ? 'busted' : ''} ${!p.busted && p.rung === topRung ? 'top' : ''}">
+      <span>${esc(p.username || 'Player')}${p.busted ? ' (busted)' : p.cashed_out ? ' (banked)' : ''}</span>
+      <span>Rung ${p.rung} — x${Number(p.mult).toFixed(2)}</span>
+    </div>
+  `).join('') || '<div style="color:var(--muted);font-size:10px;">No one climbing yet.</div>';
+}
+
+async function doClimb(){
+  if (!currentRoundId) return;
+  try{
+    const data = await api('/api/games/koth-ladder/climb', { method: 'POST', body: JSON.stringify({ round_id: currentRoundId }) });
+    document.getElementById('myRungEl').textContent = 'RUNG ' + data.rung;
+    document.getElementById('myMultEl').textContent = 'x' + Number(data.mult).toFixed(2);
+    if (data.failed){
+      Sound && Sound.loss && Sound.loss();
+      document.getElementById('climbBtn').disabled = true;
+      document.getElementById('cashoutBtn').disabled = true;
+      showToast('You busted!');
+    } else {
+      Sound && Sound.click && Sound.click();
+    }
+  }catch(e){
+    showToast(e.message || 'Could not climb');
+  }
+}
+
+async function doCashout(){
+  if (!currentRoundId) return;
+  try{
+    const data = await api('/api/games/koth-ladder/cashout', { method: 'POST', body: JSON.stringify({ round_id: currentRoundId }) });
+    document.getElementById('climbBtn').disabled = true;
+    document.getElementById('cashoutBtn').disabled = true;
+    balance = await refreshBal(); updateBal();
+    showToast(`Cashed out $${Number(data.win).toFixed(2)}`);
+    Sound && Sound.win && Sound.win();
+    if (window.maybeBigWin) maybeBigWin(myBetAmount, data.win);
+  }catch(e){
+    showToast(e.message || 'Could not cash out');
+  }
+}
+
+function connectWS(roundId){
+  closeWS();
+  const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  ws = new WebSocket(proto + '//' + location.host + '/api/games/koth-ladder/ws/' + roundId);
+  ws.onmessage = (ev) => handleWSMsg(JSON.parse(ev.data));
+  ws.onclose = () => { if (currentRoundId === roundId) setTimeout(() => { if (currentRoundId === roundId) connectWS(roundId); }, 2000); };
+}
+function closeWS(){ if (ws) { try{ ws.close(); }catch(e){} ws = null; } }
+
+function handleWSMsg(msg){
+  if (msg.type === 'room_state' || msg.type === 'player_joined'){
+    renderRound(msg.round || msg);
+  } else if (msg.type === 'climb_tick'){
+    document.getElementById('roundTimer').textContent = msg.seconds;
+  } else if (msg.type === 'player_climbed' || msg.type === 'player_cashed_out'){
+    // Full state comes via the next room_state/result broadcast; refresh directly
+    api('/api/games/koth-ladder/rounds/' + currentRoundId).then(renderRound).catch(()=>{});
+  } else if (msg.type === 'round_ending'){
+    document.getElementById('roundTimer').textContent = '';
+  } else if (msg.type === 'result'){
+    onResult(msg);
+  }
+}
+
+async function onResult(msg){
+  renderRound(msg);
+  balance = await refreshBal(); updateBal();
+  const me = (msg.players || []).find(p => String(p.user_id) === myUserId);
+  if (me && (Number(me.payout || 0) > 0 || Number(me.bonus_won || 0) > 0)){
+    Sound && Sound.win && Sound.win();
+    spawnConfettiSafe();
+  } else if (me){
+    Sound && Sound.loss && Sound.loss();
+  }
+  setTimeout(() => {
+    closeWS();
+    currentRoundId = null;
+    document.getElementById('joinPanel').style.display = 'block';
+    document.getElementById('myStatus').style.display = 'none';
+    joinOpenRound(null);
+  }, 3000);
+}
+
+function spawnConfettiSafe(){
+  try{ if (window.spawnConfettiExplosion) spawnConfettiExplosion(); else if (window.spawnConfetti) spawnConfetti('Gold', 60); }catch(e){}
+}
+
+function showToast(msg){
+  let t = document.getElementById('kothToast');
+  if (!t){
+    t = document.createElement('div');
+    t.id = 'kothToast';
+    t.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:rgba(20,20,30,0.95);border:1px solid rgba(255,215,0,0.3);color:#fff;padding:10px 18px;border-radius:10px;font-size:11px;z-index:500;max-width:90vw;text-align:center;';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.style.opacity = '1';
+  clearTimeout(t._hideTimer);
+  t._hideTimer = setTimeout(() => { t.style.opacity = '0'; }, 3000);
+}
+
+async function api(url, opts = {}){
+  const r = await fetch(url, { credentials: 'include', headers: { 'Content-Type': 'application/json' }, ...opts });
+  if (!r.ok){ const e = await r.json().catch(() => ({})); throw new Error(e.detail || 'Error'); }
+  return r.json();
+}
+
+init();
+</script>
+<script>if("serviceWorker"in navigator){navigator.serviceWorker.register("/static/sw.js").catch(function(){})}</script>
+<script src="/static/chat.js"></script>
+
+</body>
+</html>

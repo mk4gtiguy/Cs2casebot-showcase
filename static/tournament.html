@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+
+
+<html lang="en">
+
+
+<head>
+
+
+<meta charset="UTF-8">
+<link rel="stylesheet" href="/static/css/site-notices.css">
+
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+
+<meta name="theme-color" content="#0a0a12">
+
+
+<link rel="manifest" href="/static/manifest.json">
+
+
+<link rel="icon" href="/favicon.ico" type="image/x-icon">
+
+
+<title>Tournaments - CS2CaseBot</title>
+
+
+<link rel="stylesheet" href="/static/dashboard.css">
+
+
+<style>
+
+
+  :root { --bg: #0a0a12; --surface: #14141e; --surface2: #1c1c2a; --accent: #6c5ce7; --accent2: #a29bfe; --gold: #ffd700; --text: #e0e0e0; --muted: #888; --border: #2a2a3a; --danger: #e74c3c; --success: #2ecc71; }
+
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; min-height: 100vh; padding-bottom: 80px; }
+
+
+  .header { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: var(--surface); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+
+
+  .header h1 { font-size: 18px; font-weight: 700; }
+
+
+  .header h1 span { color: var(--accent); }
+
+
+  .header-actions { display: flex; gap: 8px; align-items: center; }
+
+
+  .btn { padding: 8px 16px; border-radius: 8px; border: none; font-weight: 600; font-size: 13px; cursor: pointer; transition: all .2s; }
+
+
+  .btn-primary { background: var(--accent); color: #fff; }
+
+
+  .btn-primary:hover { background: #7c6df7; }
+
+
+  .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+
+
+  .btn-outline:hover { border-color: var(--accent); }
+
+
+  .btn-danger { background: var(--danger); color: #fff; }
+
+
+  .btn-sm { padding: 4px 10px; font-size: 12px; }
+
+
+  .btn-gold { background: var(--gold); color: #000; }
+
+
+  .container { max-width: 900px; margin: 0 auto; padding: 16px; }
+
+
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+
+
+  .card h2 { font-size: 16px; margin-bottom: 12px; color: var(--accent2); }
+
+
+  .tournament-list { display: flex; flex-direction: column; gap: 10px; }
+
+
+  .tournament-item { display: flex; align-items: center; justify-content: space-between; padding: 12px; background: var(--surface2); border-radius: 8px; }
+
+
+  .tournament-info { flex: 1; }
+
+
+  .tournament-info h3 { font-size: 15px; margin-bottom: 4px; }
+
+
+  .tournament-info .meta { font-size: 12px; color: var(--muted); display: flex; gap: 12px; }
+
+
+  .status-badge { font-size: 11px; padding: 2px 8px; border-radius: 4px; font-weight: 600; text-transform: uppercase; }
+
+
+  .status-open { background: #2ecc7130; color: var(--success); }
+
+
+  .status-active { background: #6c5ce730; color: var(--accent2); }
+
+
+  .status-completed { background: #88888830; color: var(--muted); }
+
+
+  .bracket { display: flex; gap: 24px; overflow-x: auto; padding: 16px 0; }
+
+
+  .round { display: flex; flex-direction: column; gap: 16px; min-width: 180px; }
+
+
+  .round-header { font-size: 12px; color: var(--muted); text-transform: uppercase; text-align: center; padding-bottom: 8px; border-bottom: 1px solid var(--border); margin-bottom: 8px; }
+
+
+  .matchup { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 10px; min-height: 80px; display: flex; flex-direction: column; justify-content: center; }
+
+
+  .matchup .player { display: flex; align-items: center; justify-content: space-between; padding: 4px 0; font-size: 13px; gap: 8px; }
+
+
+  .matchup .player .score { font-weight: 700; font-family: monospace; font-size: 14px; }
+
+
+  .matchup .winner { color: var(--success); }
+
+
+  .matchup .loser { color: var(--danger); opacity: .6; }
+
+
+  .matchup .tbd { color: var(--muted); font-style: italic; }
+
+
+  .matchup .vs { text-align: center; font-size: 10px; color: var(--muted); padding: 2px 0; }
+
+
+  .players-section { display: flex; flex-wrap: wrap; gap: 8px; }
+
+
+  .player-chip { display: flex; align-items: center; gap: 6px; padding: 6px 10px; background: var(--surface2); border-radius: 6px; font-size: 13px; }
+
+
+  .player-chip .seed { font-size: 10px; color: var(--muted); background: var(--bg); padding: 1px 5px; border-radius: 3px; }
+
+
+  .empty-state { text-align: center; padding: 40px 20px; color: var(--muted); }
+
+
+  .empty-state .icon { font-size: 48px; margin-bottom: 12px; }
+
+
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,.6); z-index: 200; align-items: center; justify-content: center; }
+
+
+  .modal-overlay.active { display: flex; }
+
+
+  .modal { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 24px; width: 90%; max-width: 400px; }
+
+
+  .modal h2 { margin-bottom: 16px; font-size: 18px; }
+
+
+  .modal label { display: block; font-size: 13px; margin-bottom: 4px; color: var(--muted); }
+
+
+  .modal input, .modal select { width: 100%; padding: 10px; background: var(--surface2); border: 1px solid var(--border); border-radius: 6px; color: var(--text); font-size: 14px; margin-bottom: 12px; }
+
+
+  .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 16px; }
+
+
+  .tabs { display: flex; gap: 4px; margin-bottom: 16px; background: var(--surface2); border-radius: 8px; padding: 4px; }
+
+
+  .tab { flex: 1; padding: 8px; text-align: center; border: none; background: transparent; color: var(--muted); font-size: 13px; font-weight: 600; cursor: pointer; border-radius: 6px; transition: all .2s; }
+
+
+  .tab.active { background: var(--accent); color: #fff; }
+
+
+  .tab:hover:not(.active) { color: var(--text); }
+
+
+  @media (max-width: 600px) { .bracket { gap: 12px; } .round { min-width: 140px; } .tournament-item { flex-direction: column; align-items: stretch; gap: 8px; } }
+
+
+</style>
+
+
+<script src="/static/js/csrf.js"></script>
+
+
+
+</head>
+
+
+<body>
+
+
+<div class="header">
+
+
+  <h1><span>CS2</span>CaseBot <span style="font-size:14px;color:var(--muted)">Tournaments</span></h1>
+
+
+  <div class="header-actions">
+
+
+    <button class="btn btn-outline btn-sm" onclick="location.href='/'">Dashboard</button>
+
+
+    <button class="btn btn-primary btn-sm" id="createBtn" onclick="showCreateModal()">+ Create</button>
+
+
+  </div>
+
+
+</div>
+
+
+
+
+
+<div class="container">
+
+
+  <div class="tabs">
+
+
+    <button class="tab active" onclick="switchTab('active')">Active</button>
+
+
+    <button class="tab" onclick="switchTab('open')">Open</button>
+
+
+    <button class="tab" onclick="switchTab('completed')">Completed</button>
+
+
+  </div>
+
+
+  <div id="tournamentList"></div>
+
+
+</div>
+
+
+
+
+
+<!-- Create modal -->
+
+
+<div class="modal-overlay" id="createModal">
+
+
+  <div class="modal">
+
+
+    <h2>Create Tournament</h2>
+
+
+    <label>Name</label>
+
+
+    <input id="tName" placeholder="e.g. Weekly Showdown" maxlength="60">
+
+
+    <label>Entry Fee</label>
+
+
+    <input id="tFee" type="number" step="0.01" min="0" value="0" placeholder="0 = free">
+
+
+    <label>Max Players</label>
+
+
+    <select id="tPlayers">
+
+
+      <option value="4">4</option>
+
+
+      <option value="8">8</option>
+
+
+      <option value="16" selected>16</option>
+
+
+      <option value="32">32</option>
+
+
+    </select>
+
+
+    <label>Game Mode</label>
+
+
+    <select id="tMode">
+
+
+      <option value="coinflip" selected>🪙 Coinflip Bracket</option>
+
+
+      <option value="dice_duel">🎲 Dice Duel</option>
+
+
+      <option value="weapon_duel">🔫 Weapon Duel</option>
+
+
+      <option value="reaction_duel">⚡ Reaction Duel</option>
+
+
+      <option value="case_draft_duel">🃏 Case Draft Duel</option>
+
+
+      <option value="case_battles">⚔️ Case Battles</option>
+
+
+    </select>
+
+
+    <div style="padding:8px 2px;color:#888;font-size:11px;">Real-game modes stake a flat $10 per match, every round, on top of the tournament's own entry fee and prize pool.</div>
+
+
+    <div class="modal-actions">
+
+
+      <button class="btn btn-outline" onclick="closeCreateModal()">Cancel</button>
+
+
+      <button class="btn btn-primary" onclick="createTournament()">Create</button>
+
+
+    </div>
+
+
+  </div>
+
+
+</div>
+
+
+
+
+
+<!-- Join confirm modal -->
+
+
+<div class="modal-overlay" id="joinModal">
+
+
+  <div class="modal">
+
+
+    <h2>Join Tournament</h2>
+
+
+    <p id="joinInfo" style="margin-bottom:16px;font-size:14px;color:var(--muted)"></p>
+
+
+    <div class="modal-actions">
+
+
+      <button class="btn btn-outline" onclick="closeJoinModal()">Cancel</button>
+
+
+      <button class="btn btn-gold" id="joinConfirmBtn" onclick="confirmJoin()">Join</button>
+
+
+    </div>
+
+
+  </div>
+
+
+</div>
+
+
+
+
+
+<script>
+
+
+const API = '/api/tournaments';
+
+
+let tournaments = [];
+
+
+let joiningId = null;
+
+
+
+
+
+async function apiFetch(url, opts = {}) {
+
+
+  const res = await fetch(url, { credentials: 'include', headers: { 'Content-Type': 'application/json' }, ...opts });
+
+
+  if (!res.ok) { const e = await res.json().catch(() => ({ detail: res.statusText })); throw new Error(e.detail || 'Request failed'); }
+
+
+  return res.json();
+
+
+}
+
+
+
+
+
+async function loadTournaments() {
+
+
+  try {
+
+
+    tournaments = await apiFetch(API);
+
+
+    renderTournaments();
+
+
+  } catch (e) { showError(e.message); }
+
+
+}
+
+
+
+
+
+function switchTab(tab) {
+
+
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+
+
+  event.target.classList.add('active');
+
+
+  renderTournaments(tab);
+
+
+}
+
+
+
+
+
+function renderTournaments(filter) {
+
+
+  if (!filter) filter = document.querySelector('.tab.active')?.textContent?.toLowerCase() || 'active';
+
+
+  const el = document.getElementById('tournamentList');
+
+
+  const filtered = tournaments.filter(t => t.status === filter);
+
+
+  if (!filtered.length) {
+
+
+    el.innerHTML = `<div class="empty-state"><div class="icon">🏆</div><p>No ${filter} tournaments</p></div>`;
+
+
+    return;
+
+
+  }
+
+
+  el.innerHTML = filtered.map(t => {
+
+
+    const fee = parseFloat(t.entry_fee || 0);
+
+
+    const prize = parseFloat(t.prize_pool || 0);
+
+
+    return `<div class="tournament-item">
+
+
+      <div class="tournament-info">
+
+
+        <h3>${esc(t.name)}</h3>
+
+
+        <div class="meta">
+
+
+          <span>👥 ${t.player_count}/${t.max_players}</span>
+
+
+          <span>💰 ${fee > 0 ? '$' + fee.toFixed(2) : 'Free'}</span>
+
+
+          ${prize > 0 ? `<span>💵 $${prize.toFixed(2)}</span>` : ''}
+
+
+          <span>🎮 ${t.game_mode}</span>
+
+
+          <span class="status-badge status-${t.status}">${t.status}</span>
+
+
+        </div>
+
+
+      </div>
+
+
+      <div style="display:flex;gap:6px;flex-wrap:wrap;">
+
+
+        <button class="btn btn-outline btn-sm" onclick="viewTournament(${t.id})">View</button>
+
+
+        ${t.status === 'open' ? `<button class="btn btn-primary btn-sm" onclick="showJoinModal(${t.id})">Join</button>` : ''}
+
+
+        ${t.status === 'open' && isAdmin ? `<button class="btn btn-danger btn-sm" onclick="startTournament(${t.id})">Start</button>` : ''}
+
+
+      </div>
+
+
+    </div>`;
+
+
+  }).join('');
+
+
+}
+
+
+
+
+
+let isAdmin = false;
+let myUserId = null;
+let currentTournamentId = null;
+let detailPollTimer = null;
+
+
+
+
+
+async function viewTournament(id) {
+  currentTournamentId = id;
+  if (detailPollTimer) clearInterval(detailPollTimer);
+  detailPollTimer = setInterval(() => {
+    if (currentTournamentId === id) viewTournament(id);
+  }, 4000);
+
+  const t = await apiFetch(`${API}/${id}`);
+
+
+  const bracket = await apiFetch(`${API}/${id}/bracket`);
+
+
+  const el = document.getElementById('tournamentList');
+
+
+  const fee = parseFloat(t.entry_fee || 0);
+
+
+  const prize = parseFloat(t.prize_pool || 0);
+
+
+  el.innerHTML = `
+
+
+    <div class="card">
+
+
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
+
+
+        <h2>${esc(t.name)}</h2>
+
+
+        <span class="status-badge status-${t.status}">${t.status}</span>
+
+
+      </div>
+
+
+      <div class="meta" style="font-size:13px;color:var(--muted);display:flex;gap:16px;margin-bottom:12px;">
+
+
+        <span>👥 ${t.players.length}/${t.max_players}</span>
+
+
+        <span>💰 ${fee > 0 ? '$' + fee.toFixed(2) : 'Free'}</span>
+
+
+        ${prize > 0 ? `<span>💵 $${prize.toFixed(2)}</span>` : ''}
+
+
+        <span>🎮 ${t.game_mode}</span>
+
+
+      </div>
+
+
+      <h3 style="font-size:14px;margin-bottom:8px;color:var(--accent2);">Players</h3>
+
+
+      <div class="players-section">
+
+
+        ${t.players.map(p => `<div class="player-chip">${p.seed ? `<span class="seed">#${p.seed}</span>` : ''} ${esc(p.username || 'User#' + p.user_id)} ${p.eliminated ? '💀' : ''}</div>`).join('')}
+
+
+      </div>
+
+
+    </div>
+
+
+    ${bracket.length ? `<div class="card"><h2>Bracket</h2><div class="bracket">${renderBracket(bracket, t.game_mode)}</div></div>` : ''}
+
+
+    <div style="display:flex;gap:8px;margin-top:8px;">
+      <button class="btn btn-outline" onclick="backToList()">⬅️ Back</button>
+      ${t.status === 'open' && t.players.some(p => String(p.user_id) === String(myUserId)) ? `<button class="btn btn-danger" onclick="leaveTournament(${id})">Leave</button>` : ''}
+      ${isAdmin && (t.status === 'open' || t.status === 'active') ? `<button class="btn btn-danger" onclick="cancelTournament(${id})">Cancel (admin)</button>` : ''}
+    </div>
+
+
+  `;
+
+
+}
+
+function backToList() {
+  currentTournamentId = null;
+  if (detailPollTimer) { clearInterval(detailPollTimer); detailPollTimer = null; }
+  loadTournaments();
+}
+
+async function cancelTournament(id) {
+  if (!confirm('Cancel this tournament and refund all entry fees?')) return;
+  try {
+    await apiFetch(`${API}/${id}/cancel`, { method: 'POST' });
+    await viewTournament(id);
+  } catch (e) { alert(e.message); }
+}
+
+
+
+
+
+const TOURNAMENT_GAME_PAGES = {
+  dice_duel: '/games/dice-duel.html',
+  weapon_duel: '/games/weapon-duel.html',
+  reaction_duel: '/games/reaction-duel.html',
+  case_draft_duel: '/games/case-draft-duel.html',
+  case_battles: '/battle',
+};
+
+function matchWatchLink(m, gameMode) {
+  if (m.status !== 'in_progress' || !m.game_room_id || !TOURNAMENT_GAME_PAGES[gameMode]) return '';
+  const page = TOURNAMENT_GAME_PAGES[gameMode];
+  const href = gameMode === 'case_battles'
+    ? `${page}?id=${m.game_room_id}&fee=10&rounds=3&win=total_value&mode=pvp`
+    : `${page}?duel=${m.game_room_id}`;
+  return `<a href="${href}" class="btn-watch-match" style="display:block;text-align:center;margin-top:6px;padding:6px;background:#2a3a5a;color:#8cf;border-radius:6px;text-decoration:none;font-size:12px;">Watch/Join Match</a>`;
+}
+
+function renderBracket(matches, gameMode) {
+
+
+  const rounds = {};
+
+
+  matches.forEach(m => {
+
+
+    if (!rounds[m.round]) rounds[m.round] = [];
+
+
+    rounds[m.round].push(m);
+
+
+  });
+
+
+  return Object.keys(rounds).sort((a,b) => a-b).map(r => {
+
+
+    const ms = rounds[r];
+
+
+    return `<div class="round"><div class="round-header">Round ${r}</div>${ms.map(m => {
+
+
+      const p1 = m.player1_id ? `<div class="player ${m.winner_id === m.player1_id ? 'winner' : m.status === 'completed' ? 'loser' : ''}"><span>${esc(m.player1_name)}</span>${m.player1_score != null ? `<span class="score">${m.player1_score}</span>` : ''}</div>` : '<div class="player tbd"><span>TBD</span></div>';
+
+
+      const p2 = m.player2_id ? `<div class="player ${m.winner_id === m.player2_id ? 'winner' : m.status === 'completed' ? 'loser' : ''}"><span>${esc(m.player2_name)}</span>${m.player2_score != null ? `<span class="score">${m.player2_score}</span>` : ''}</div>` : '<div class="player tbd"><span>TBD</span></div>';
+
+
+      return `<div class="matchup">${p1}<div class="vs">VS</div>${p2}${matchWatchLink(m, gameMode)}</div>`;
+
+
+    }).join('')}</div>`;
+
+
+  }).join('');
+
+
+}
+
+
+
+
+
+function showCreateModal() { document.getElementById('createModal').classList.add('active'); }
+
+
+function closeCreateModal() { document.getElementById('createModal').classList.remove('active'); }
+
+
+async function leaveTournament(id) {
+  try {
+    await apiFetch(`${API}/${id}/leave`, { method: 'POST' });
+    await viewTournament(id);
+  } catch (e) { alert(e.message); }
+}
+
+
+
+
+
+async function createTournament() {
+
+
+  const name = document.getElementById('tName').value.trim();
+
+
+  if (!name) return alert('Enter a name');
+
+
+  try {
+
+
+    await apiFetch(API, { method: 'POST', body: JSON.stringify({
+
+
+      name,
+
+
+      entry_fee: parseFloat(document.getElementById('tFee').value) || 0,
+
+
+      max_players: parseInt(document.getElementById('tPlayers').value),
+
+
+      game_mode: document.getElementById('tMode').value
+
+
+    })});
+
+
+    closeCreateModal();
+
+
+    document.getElementById('tName').value = '';
+
+
+    await loadTournaments();
+
+
+  } catch (e) { alert(e.message); }
+
+
+}
+
+
+
+
+
+function showJoinModal(id) {
+
+
+  joiningId = id;
+
+
+  const t = tournaments.find(x => x.id === id);
+
+
+  const fee = parseFloat(t?.entry_fee || 0);
+
+
+  document.getElementById('joinInfo').textContent = `Join "${t?.name || id}" — ${fee > 0 ? 'Entry fee: $' + fee.toFixed(2) : 'Free entry'}`;
+
+
+  document.getElementById('joinModal').classList.add('active');
+
+
+}
+
+
+function closeJoinModal() { document.getElementById('joinModal').classList.remove('active'); joiningId = null; }
+
+
+
+
+
+async function confirmJoin() {
+
+
+  if (!joiningId) return;
+
+
+  try {
+
+
+    await apiFetch(`${API}/${joiningId}/join`, { method: 'POST' });
+
+
+    closeJoinModal();
+
+
+    await loadTournaments();
+
+
+  } catch (e) { alert(e.message); }
+
+
+}
+
+
+
+
+
+async function startTournament(id) {
+
+
+  if (!confirm('Start this tournament?')) return;
+
+
+  try {
+
+
+    await apiFetch(`${API}/${id}/start`, { method: 'POST' });
+
+
+    await loadTournaments();
+
+
+  } catch (e) { alert(e.message); }
+
+
+}
+
+
+
+
+
+function showError(msg) {
+
+
+  document.getElementById('tournamentList').innerHTML = `<div class="empty-state"><p style="color:var(--danger)">${esc(msg)}</p></div>`;
+
+
+}
+
+
+
+
+
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+
+
+
+
+// Check if admin on load
+
+
+(async function init() {
+
+
+  try {
+
+
+    const me = await fetch('/api/me', { credentials: 'include' }).then(r => r.json());
+
+
+    if (me.admin || me.is_admin) isAdmin = true;
+    myUserId = me.user_id;
+
+
+  } catch (_) {}
+
+
+  // Everyone can create a tournament now -- coinflip is the only mode
+  // that exists, so there's nothing left to restrict per-role.
+  document.getElementById('createBtn').style.display = '';
+
+  await loadTournaments();
+
+  // No polling existed anywhere in this page before -- list and bracket
+  // views were manual-refresh-only. Poll the list every 5s so newly
+  // created tournaments and status changes show up on their own.
+  setInterval(() => {
+    if (!currentTournamentId) loadTournaments();
+  }, 5000);
+
+})();
+
+
+</script>
+
+
+<script src="/static/chat.js"></script>
+<script src="/static/js/site-notices.js"></script>
+
+<script src="/static/js/agent-egg.js"></script>
+
+
+</body>
+
+
+</html>
+
+
+
+
+
+

@@ -1,0 +1,634 @@
+﻿<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+
+<title>🚀  Crash — CS2CaseBot</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+
+<style>
+
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+
+:root{--bg:#040608;--accent:#ff6b00;--green:#22c55e;--red:#ef4444;--font:'Orbitron',monospace;}
+
+html,body{min-height:100vh;background:var(--bg);font-family:var(--font);overflow-x:hidden;color:#c8d0e8;}
+
+.hdr{display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(4,6,8,0.98);border-bottom:1px solid rgba(255,107,0,0.12);position:sticky;top:0;z-index:50;}
+
+.back{display:flex;align-items:center;gap:5px;color:#2a2a3a;font-size:10px;letter-spacing:1px;text-decoration:none;transition:color .2s;}
+
+.back:hover{color:var(--accent);}
+
+.back svg{width:14px;height:14px;}
+
+.title{flex:1;font-size:14px;font-weight:900;letter-spacing:3px;color:var(--accent);}
+
+.bal{font-size:13px;font-weight:700;color:var(--accent);font-family:monospace;}
+
+.page{max-width:440px;margin:0 auto;padding:16px 14px 80px;}
+
+
+
+/* CHART */
+
+.chart-wrap{background:rgba(2,4,6,0.99);border:1px solid rgba(255,107,0,0.1);border-radius:18px;padding:16px;margin-bottom:14px;position:relative;overflow:hidden;}
+
+canvas#crashChart{width:100%;height:220px;display:block;}
+
+
+
+/* BIG MULTIPLIER */
+
+.mult-display{position:absolute;top:16px;left:0;right:0;text-align:center;pointer-events:none;}
+
+.mult-num{font-size:clamp(36px,10vw,56px);font-weight:900;font-family:monospace;line-height:1;transition:color .3s;}
+
+.mult-num.climbing{color:var(--green);text-shadow:0 0 30px rgba(34,197,94,0.4);}
+
+.mult-num.crashed{color:var(--red);text-shadow:0 0 30px rgba(239,68,68,0.5);animation:crash-shake .3s ease;}
+
+@keyframes crash-shake{0%,100%{transform:translateX(0);}25%{transform:translateX(-8px);}75%{transform:translateX(8px);}}
+
+.mult-num.waiting{color:#2a3a4a;}
+
+.mult-label{font-size:9px;letter-spacing:2px;color:#2a3a4a;margin-top:4px;}
+
+
+
+/* PLAYERS ROW */
+
+.players-row{display:flex;gap:6px;overflow-x:auto;padding-bottom:4px;margin-bottom:14px;}
+
+.players-row::-webkit-scrollbar{display:none;}
+
+.player-chip{flex-shrink:0;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.06);border-radius:20px;padding:5px 10px;display:flex;align-items:center;gap:6px;font-size:9px;}
+
+.player-chip.me{border-color:rgba(255,107,0,0.3);background:rgba(255,107,0,0.06);}
+
+.player-chip.cashed{border-color:rgba(34,197,94,0.3);background:rgba(34,197,94,0.06);}
+
+.player-chip.busted{opacity:.4;}
+
+.pc-name{color:#668;}
+
+.pc-bet{color:var(--accent);font-family:monospace;font-weight:700;}
+
+.pc-cashout{color:var(--green);font-family:monospace;}
+
+
+
+/* PHASE BANNER */
+
+.phase-banner{text-align:center;min-height:28px;font-size:11px;font-weight:700;letter-spacing:2px;margin-bottom:12px;display:flex;align-items:center;justify-content:center;}
+
+.phase-banner.betting{color:var(--accent);}
+
+.phase-banner.running{color:var(--green);}
+
+.phase-banner.crashed{color:var(--red);}
+
+.phase-banner.idle{color:#2a3a4a;}
+
+
+
+/* BET CONTROLS */
+
+.bet-ctrl{background:rgba(0,0,0,0.4);border:1px solid rgba(255,107,0,0.08);border-radius:14px;padding:14px;margin-bottom:12px;}
+
+.bl{font-size:8px;color:#2a3a4a;letter-spacing:2px;margin-bottom:8px;}
+
+.bet-row{display:flex;gap:8px;margin-bottom:8px;}
+
+.bet-inp{flex:1;background:rgba(0,0,0,0.5);border:1px solid rgba(255,107,0,0.1);border-radius:8px;padding:10px 12px;color:#c8d0e8;font-family:var(--font);font-size:13px;font-weight:700;outline:none;text-align:center;}
+
+.bet-inp:focus{border-color:rgba(255,107,0,0.3);}
+
+.adj{padding:10px 14px;background:rgba(255,107,0,0.04);border:1px solid rgba(255,107,0,0.08);border-radius:8px;color:#2a3a4a;font-family:var(--font);font-size:11px;cursor:pointer;transition:all .15s;}
+
+.adj:hover{color:var(--accent);}
+
+.qrow{display:flex;gap:5px;}
+
+.qb{flex:1;padding:7px 3px;background:rgba(255,107,0,0.04);border:1px solid rgba(255,107,0,0.08);border-radius:6px;color:#2a3a4a;font-size:8px;letter-spacing:1px;cursor:pointer;text-align:center;transition:all .15s;}
+
+.qb:hover{border-color:var(--accent);color:var(--accent);}
+
+
+
+/* ACTION BUTTONS */
+
+.action-row{display:flex;gap:8px;margin-top:10px;}
+
+.btn-bet{flex:1;padding:15px;border:none;border-radius:10px;font-family:var(--font);font-size:12px;font-weight:900;letter-spacing:2px;cursor:pointer;transition:all .2s;background:linear-gradient(135deg,#aa3300,var(--accent));color:#fff;box-shadow:0 4px 20px rgba(255,107,0,0.35);}
+
+.btn-bet:not(:disabled):hover{transform:translateY(-2px);box-shadow:0 6px 32px rgba(255,107,0,0.55);}
+
+.btn-bet:disabled{opacity:.4;cursor:not-allowed;transform:none!important;}
+
+.btn-co{flex:1;padding:15px;border:1px solid rgba(34,197,94,0.3);border-radius:10px;background:rgba(34,197,94,0.08);color:var(--green);font-family:var(--font);font-size:12px;font-weight:900;letter-spacing:2px;cursor:pointer;transition:all .2s;}
+
+.btn-co:not(:disabled):hover{background:rgba(34,197,94,0.18);border-color:var(--green);}
+
+.btn-co:disabled{opacity:.3;cursor:not-allowed;}
+
+
+
+/* HISTORY */
+
+.crash-history{display:flex;gap:5px;flex-wrap:wrap;margin-top:10px;}
+
+.ch-pill{padding:4px 10px;border-radius:12px;font-size:9px;font-weight:700;font-family:monospace;}
+
+.ch-pill.low{background:rgba(239,68,68,0.12);color:var(--red);}
+
+.ch-pill.mid{background:rgba(255,107,0,0.1);color:var(--accent);}
+
+.ch-pill.high{background:rgba(34,197,94,0.1);color:var(--green);}
+
+</style>
+
+    <script src="/static/sound.js"></script>
+
+    <script src="/static/big-win.js"></script>
+
+
+    <script src="/static/balance-animation.js"></script>
+
+
+    <script src="/static/page-transitions.js"></script>
+
+
+    <script src="/static/autoplay.js"></script>
+
+
+<link rel="stylesheet" href="/static/games-shared.css"><script src="/static/js/csrf.js"></script>
+
+
+</head>
+
+<body>
+
+<header class="hdr">
+
+  <a class="back" href="/games"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>GAMES</a>
+
+  <span class="title">🚀  CRASH</span>
+
+  <span class="bal" id="balDisplay">$—</span>
+
+</header>
+
+<div class="page">
+
+  <div class="chart-wrap">
+
+    <canvas id="crashChart"></canvas>
+
+    <div class="mult-display">
+
+      <div class="mult-num waiting" id="multNum">—</div>
+
+      <div class="mult-label" id="multLabel">WAITING FOR ROUND</div>
+
+    </div>
+
+  </div>
+
+
+
+  <div class="players-row" id="playersRow">
+
+    <div class="player-chip"><span class="pc-name">Waiting for players…</span></div>
+
+  </div>
+
+
+
+  <div class="phase-banner idle" id="phaseBanner">PLACE A BET TO JOIN THE NEXT ROUND</div>
+
+
+
+  <div class="bet-ctrl">
+
+    <div class="bl">BET AMOUNT</div>
+
+    <div class="bet-row">
+
+      <button class="adj" onclick="halveBet()">½</button>
+
+      <input class="bet-inp" id="betInp" type="number" value="500" min="50">
+
+      <button class="adj" onclick="doubleBet()">2×</button>
+
+    </div>
+
+    <div class="qrow">
+
+      <div class="qb" onclick="qb(100)">$100</div><div class="qb" onclick="qb(500)">$500</div>
+
+      <div class="qb" onclick="qb(1000)">$1K</div><div class="qb" onclick="qb(5000)">$5K</div><div class="qb" onclick="qb(10000)">$10K</div>
+
+    </div>
+
+    <div class="action-row">
+
+      <button class="btn-bet" id="betBtn" onclick="placeBet()">🚀  BET &amp; JOIN</button>
+
+      <button class="btn-co" id="coBtn" onclick="cashout()" disabled>💰  CASH OUT</button>
+
+    </div>
+
+    <div style="display:flex;align-items:center;gap:8px;margin-top:10px;">
+
+      <span style="font-size:8px;color:#2a3a4a;letter-spacing:1px;flex-shrink:0;">AUTO CASHOUT AT</span>
+
+      <input id="autoCashInp" type="number" value="" min="1.1" step="0.1" placeholder="2.00×"
+
+        style="flex:1;background:rgba(0,0,0,0.5);border:1px solid rgba(255,107,0,0.1);border-radius:6px;padding:7px 8px;color:#c8d0e8;font-family:var(--font);font-size:11px;font-weight:700;outline:none;text-align:center;">
+
+      <label style="display:flex;align-items:center;gap:4px;font-size:9px;color:#2a3a4a;letter-spacing:1px;flex-shrink:0;cursor:pointer;">
+
+        <input type="checkbox" id="autoCashOn" style="accent-color:var(--green);"> ON
+
+      </label>
+
+    </div>
+
+  </div>
+
+
+
+  <div class="crash-history" id="crashHistory"></div>
+
+</div>
+
+
+
+<script>
+
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+let balance=0,ws=null,roomId=null,inRound=false,hasBet=false,currentMult=1,betting=false,myUserId=null,autoCashoutSent=false;
+
+const canvas=document.getElementById('crashChart');
+
+const ctx=canvas.getContext('2d');
+
+let chartPoints=[];
+
+
+
+function resizeCanvas(){canvas.width=canvas.offsetWidth*window.devicePixelRatio||300;canvas.height=220*window.devicePixelRatio||220;canvas.style.width=canvas.offsetWidth+'px';canvas.style.height='220px';}
+
+window.addEventListener('resize',resizeCanvas);setTimeout(resizeCanvas,100);
+
+
+
+async function init(){
+
+  try{const d=await api('/api/user/me');balance=d.balance;myUserId=d.user_id;updateBal();}catch(e){}
+
+  loadRooms();
+
+}
+
+
+
+function updateBal(){var e=document.getElementById('balDisplay'),c=e.textContent||'',n='$'+balance.toLocaleString(undefined,{maximumFractionDigits:0});if(c&&c!=='$—'&&c!==n){var p=parseFloat(c.replace(/[,$]/g,''));if(!isNaN(p)&&p!==balance){animateBalance(e,'$'+p.toLocaleString(undefined,{maximumFractionDigits:0}),n,balance>=p);return}}e.textContent=n}
+
+
+
+async function loadRooms(){
+
+  try{
+
+    const rooms=await api('/api/games/easy/crash/rooms');
+
+    if(rooms.length>0&&rooms[0].phase==='betting'){
+
+      setPhase('betting','BETTING OPEN — '+rooms[0].player_count+' PLAYERS IN');
+
+    }
+
+  }catch(e){}
+
+}
+
+
+
+async function placeBet(){
+
+
+  Sound.click();if(betting||hasBet) return;
+
+  const bet=parseInt(document.getElementById('betInp').value)||500;
+
+  if(bet>balance){setPhase('idle','❌ INSUFFICIENT BALANCE');Sound.error();return;}
+
+  betting=true;document.getElementById('betBtn').disabled=true;
+
+  try{
+
+    const autoOn=document.getElementById('autoCashOn').checked;const acTarget=parseFloat(document.getElementById('autoCashInp').value);const betBody={amount:bet};if(autoOn&&!isNaN(acTarget)&&acTarget>=1.01)betBody.auto_cashout=acTarget;autoCashoutSent=!!betBody.auto_cashout;
+    const d=await api('/api/games/easy/crash/bet',{method:'POST',body:JSON.stringify(betBody)});
+
+    roomId=d.room_id;hasBet=true;balance=await refreshBal();updateBal();
+
+    connectWS(roomId,bet);
+
+    setPhase('betting','IN QUEUE — ROUND STARTS SOON');
+
+  }catch(e){
+
+    betting=false;document.getElementById('betBtn').disabled=false;
+
+    setPhase('idle','ERROR: '+e.message);
+
+  }
+
+}
+
+
+
+function connectWS(rid,bet){
+
+  const proto=location.protocol==='https:'?'wss:':'ws:';
+
+  ws=new WebSocket(proto+'//'+location.host+'/api/games/easy/crash/ws/'+rid);
+
+  ws.onmessage=(ev)=>handleMsg(JSON.parse(ev.data),bet);
+
+  ws.onclose=()=>{if(hasBet)setTimeout(()=>connectWS(rid,bet),2000);};
+
+}
+
+
+
+async function handleMsg(msg,bet){
+
+  if(msg.type==='room_state'){
+
+    updatePlayers(msg.players,bet,-1);
+
+  }else if(msg.type==='betting_open'){
+
+    chartPoints=[];drawChart();setPhase('betting','BETTING OPEN — '+msg.betting_secs+'s TO JOIN');
+
+    setMult('—','waiting');document.getElementById('coBtn').disabled=true;
+
+  }else if(msg.type==='betting_tick'){
+
+    setPhase('betting','STARTING IN '+msg.seconds+'s');
+
+    if(msg.players) updatePlayers(msg.players,bet,-1);
+
+  }else if(msg.type==='round_start'){
+
+    inRound=true;chartPoints=[[0,1]];
+
+    setPhase('running','🚀  ROUND STARTED');
+
+    setMult('1.00','climbing');
+
+    if(hasBet) document.getElementById('coBtn').disabled=false;
+
+  }else if(msg.type==='tick'){
+
+
+    currentMult=msg.mult;Sound.climbTick();
+
+
+    chartPoints.push([chartPoints.length,msg.mult]);
+
+    if(chartPoints.length>150) chartPoints.shift();
+
+    drawChart();setMult(msg.mult.toFixed(2),'climbing');
+
+    // Auto-cashout is now handled server-side (target sent with the bet) so it fires at the exact requested multiplier instead of drifting late.
+
+  }else if(msg.type==='cashout'){
+
+    updatePlayerCashout(msg.user_id,msg.at_mult,msg.win);
+
+    if(myUserId&&msg.user_id===myUserId){document.getElementById('coBtn').disabled=true;if(hasBet){hasBet=false;Sound.cashout();Sound.win();balance=await refreshBal();updateBal();if(window.showBigWin&&msg.at_mult>=10)showBigWin(msg.win,msg.at_mult);}}
+
+  }else if(msg.type==='crashed'){
+
+
+    inRound=false;betting=false;roomId=null;
+
+
+    setMult(msg.crash_at.toFixed(2)+'×','crashed');
+
+
+    setPhase('crashed','💥 CRASHED AT '+msg.crash_at.toFixed(2)+'×');
+
+
+    document.getElementById('coBtn').disabled=true;
+
+
+    document.getElementById('betBtn').disabled=false;
+
+
+    addHistory(msg.crash_at);
+
+
+    if(hasBet){Sound.loss();hasBet=false;}Sound.crash();
+
+
+    refreshBalSoon();
+
+
+  }
+
+}
+
+
+
+function setMult(v,state){
+
+  const el=document.getElementById('multNum');
+
+  el.className='mult-num '+state;
+
+  el.textContent=state==='waiting'?'—':v+'×';
+
+  document.getElementById('multLabel').textContent=state==='climbing'?'MULTIPLIER · CASH OUT ANYTIME':state==='crashed'?'CRASHED':state==='waiting'?'WAITING FOR NEXT ROUND':'';
+
+}
+
+function setPhase(state,text){const el=document.getElementById('phaseBanner');el.className='phase-banner '+state;el.textContent=text;}
+
+
+
+function updatePlayers(players,myBet,myId){
+
+  const row=document.getElementById('playersRow');row.innerHTML='';
+
+  players.forEach(p=>{
+
+    const chip=document.createElement('div');
+
+    chip.className='player-chip'+(p.is_bot?'':' me');
+
+    chip.innerHTML='<span class="pc-name">'+(p.is_bot?'🤖':esc(p.username||'You'))+'</span><span class="pc-bet">$'+p.bet.toLocaleString()+'</span>';
+
+    if(p.cashed_out)chip.className+=' cashed';
+
+    row.appendChild(chip);
+
+  });
+
+}
+
+function updatePlayerCashout(uid,mult,win){
+
+  const chips=document.querySelectorAll('.player-chip');
+
+  chips.forEach(c=>{if(!c.classList.contains('cashed')){c.classList.add('cashed');c.innerHTML+=`<span class="pc-cashout"> @${mult.toFixed(2)}×</span>`;return;}});
+
+}
+
+
+
+function drawChart(){
+
+  resizeCanvas();
+
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+
+  if(chartPoints.length<2) return;
+
+  const W=canvas.width,H=canvas.height;
+
+  const maxX=chartPoints.length-1;
+
+  const maxY=Math.max(2,currentMult*1.1);
+
+  ctx.strokeStyle='rgba(255,107,0,0.15)';ctx.lineWidth=1;
+
+  for(let y=1;y<=maxY;y++){const yp=H-(y/maxY)*H*0.85-H*0.05;ctx.beginPath();ctx.moveTo(0,yp);ctx.lineTo(W,yp);ctx.stroke();}
+
+  const grad=ctx.createLinearGradient(0,0,0,H);
+
+  grad.addColorStop(0,'rgba(255,107,0,0.3)');grad.addColorStop(1,'rgba(255,107,0,0)');
+
+  ctx.beginPath();
+
+  chartPoints.forEach(([x,y],i)=>{
+
+    const px=(x/maxX)*W*0.95+W*0.02;const py=H-(y/maxY)*H*0.85-H*0.05;
+
+    i===0?ctx.moveTo(px,py):ctx.lineTo(px,py);
+
+  });
+
+  ctx.lineTo(W*0.97,H*0.95);ctx.lineTo(W*0.02,H*0.95);ctx.closePath();ctx.fillStyle=grad;ctx.fill();
+
+  ctx.beginPath();
+
+  chartPoints.forEach(([x,y],i)=>{
+
+    const px=(x/maxX)*W*0.95+W*0.02;const py=H-(y/maxY)*H*0.85-H*0.05;
+
+    i===0?ctx.moveTo(px,py):ctx.lineTo(px,py);
+
+  });
+
+  ctx.strokeStyle='rgba(255,107,0,0.9)';ctx.lineWidth=2.5;ctx.stroke();
+
+}
+
+
+
+function addHistory(mult){
+
+  const h=document.getElementById('crashHistory');
+
+  const p=document.createElement('div');
+
+  const cls=mult<2?'low':mult<5?'mid':'high';
+
+  p.className='ch-pill '+cls;p.textContent=mult.toFixed(2)+'×';
+
+  h.insertBefore(p,h.firstChild);if(h.children.length>15)h.lastChild.remove();
+
+}
+
+
+
+async function cashout(){
+
+
+  if(!roomId||!inRound) return;
+
+
+  document.getElementById('coBtn').disabled=true;
+
+
+  try{await api('/api/games/easy/crash/cashout',{method:'POST',body:JSON.stringify({room_id:roomId})});Sound.cashout();Sound.win();}catch(e){}
+
+
+  hasBet=false;balance=await refreshBal();updateBal();
+
+
+}
+
+
+
+function halveBet(){Sound.click();document.getElementById('betInp').value=Math.max(50,Math.floor(parseInt(document.getElementById('betInp').value||500)/2));}
+
+
+function doubleBet(){Sound.click();document.getElementById('betInp').value=Math.min(balance,parseInt(document.getElementById('betInp').value||500)*2);}
+
+
+function qb(v){Sound.click();document.getElementById('betInp').value=v;}
+
+async function refreshBal(){try{const d=await api('/api/user/me');return d.balance;}catch(e){return balance;}}
+
+function refreshBalSoon(){setTimeout(async()=>{balance=await refreshBal();updateBal();},1500);return balance;}
+
+async function api(url,opts={}){const r=await fetch(url,{credentials:'include',headers:{'Content-Type':'application/json'},...opts});if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.detail||'Error');}return r.json();}
+
+init();
+
+</script>
+
+<script>if("serviceWorker"in navigator){navigator.serviceWorker.register("/static/sw.js").catch(function(){})}</script>
+
+
+<script src="/static/chat.js"></script>
+
+
+</body>
+
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

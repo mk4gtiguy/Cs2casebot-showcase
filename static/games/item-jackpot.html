@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>🎁  Item Jackpot — CS2CaseBot</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+:root{--bg:#06070a;--accent:#ffd700;--green:#22c55e;--red:#ef4444;--muted:#556;--font:'Orbitron',monospace;--mono:'Share Tech Mono',monospace;}
+html,body{min-height:100vh;background:var(--bg);font-family:var(--font);overflow-x:hidden;color:#c8d0e8;}
+.hdr{display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(6,7,10,0.98);border-bottom:1px solid rgba(255,215,0,0.12);position:sticky;top:0;z-index:50;}
+.back{display:flex;align-items:center;gap:5px;color:#2a2a3a;font-size:10px;letter-spacing:1px;text-decoration:none;transition:color .2s;}
+.back:hover{color:var(--accent);}
+.back svg{width:14px;height:14px;}
+.title{flex:1;font-size:14px;font-weight:900;letter-spacing:3px;color:var(--accent);}
+.bal{font-size:13px;font-weight:700;color:var(--accent);font-family:monospace;}
+.page{max-width:460px;margin:0 auto;padding:16px 14px 80px;}
+
+/* LOBBY */
+.section-label{font-size:9px;letter-spacing:2px;color:var(--muted);margin:14px 0 8px;text-transform:uppercase;}
+.pot-list{display:flex;flex-direction:column;gap:8px;}
+.pot-card{background:rgba(0,0,0,0.4);border:1px solid rgba(255,215,0,0.1);border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:all .15s;}
+.pot-card:hover{border-color:rgba(255,215,0,0.35);background:rgba(255,215,0,0.03);}
+.pot-card .pc-icon{font-size:22px;}
+.pot-card .pc-info{flex:1;}
+.pot-card .pc-value{font-size:15px;font-weight:900;color:var(--accent);font-family:monospace;}
+.pot-card .pc-meta{font-size:9px;color:var(--muted);margin-top:2px;letter-spacing:.5px;}
+.pot-card .pc-status{font-size:9px;font-weight:700;padding:3px 8px;border-radius:10px;letter-spacing:1px;}
+.pot-card .pc-status.waiting{background:rgba(255,255,255,0.06);color:var(--muted);}
+.pot-card .pc-status.countdown{background:rgba(255,215,0,0.12);color:var(--accent);animation:pulse-cd 1s infinite;}
+@keyframes pulse-cd{0%,100%{opacity:1;}50%{opacity:.5;}}
+.empty-lobby{text-align:center;padding:30px 10px;color:var(--muted);font-size:11px;}
+.btn-new-pot{width:100%;padding:15px;border:none;border-radius:12px;font-family:var(--font);font-size:12px;font-weight:900;letter-spacing:2px;cursor:pointer;transition:all .2s;background:linear-gradient(135deg,#7a5c00,var(--accent));color:#06070a;box-shadow:0 4px 20px rgba(255,215,0,0.3);margin-top:14px;}
+.btn-new-pot:hover{transform:translateY(-2px);box-shadow:0 6px 32px rgba(255,215,0,0.5);}
+
+/* MODAL (item picker) */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:200;display:none;align-items:flex-end;justify-content:center;}
+.modal-overlay.show{display:flex;}
+.modal-sheet{background:#0d0e14;border:1px solid rgba(255,215,0,0.15);border-radius:20px 20px 0 0;width:100%;max-width:460px;max-height:82vh;display:flex;flex-direction:column;padding:16px;}
+.modal-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.modal-hdr h3{font-size:13px;letter-spacing:1px;color:var(--accent);}
+.modal-close{background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;line-height:1;}
+.picker-hint{font-size:10px;color:var(--muted);margin-bottom:10px;}
+.picker-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px;overflow-y:auto;padding-bottom:6px;flex:1;}
+.pick-item{border:2px solid rgba(255,255,255,0.06);border-radius:10px;padding:6px;text-align:center;cursor:pointer;background:rgba(255,255,255,0.02);transition:all .15s;}
+.pick-item.selected{border-color:var(--accent);background:rgba(255,215,0,0.08);}
+.pick-item img{width:100%;aspect-ratio:1;object-fit:contain;background:rgba(0,0,0,0.3);border-radius:6px;margin-bottom:4px;}
+.pick-item .pi-name{font-size:9px;color:#aaa;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pick-item .pi-price{font-size:10px;color:var(--accent);font-weight:700;margin-top:2px;}
+.btn-stake{width:100%;padding:14px;margin-top:12px;border:none;border-radius:10px;font-family:var(--font);font-size:12px;font-weight:900;letter-spacing:2px;cursor:pointer;background:linear-gradient(135deg,#7a5c00,var(--accent));color:#06070a;}
+.btn-stake:disabled{opacity:.35;cursor:not-allowed;}
+
+/* POT VIEW */
+.pot-hdr{text-align:center;margin-bottom:14px;}
+.pot-total{font-size:clamp(30px,9vw,44px);font-weight:900;color:var(--accent);font-family:monospace;line-height:1;}
+.pot-total-label{font-size:9px;letter-spacing:2px;color:var(--muted);margin-top:4px;}
+.pot-status-banner{text-align:center;min-height:24px;font-size:11px;font-weight:700;letter-spacing:2px;margin-bottom:12px;}
+.pot-status-banner.waiting{color:var(--muted);}
+.pot-status-banner.countdown{color:var(--accent);}
+.pot-status-banner.rolling{color:#ff8800;animation:pulse-cd .5s infinite;}
+.pot-status-banner.completed{color:var(--green);}
+
+.weighted-bar{position:relative;display:flex;height:26px;border-radius:8px;overflow:hidden;margin-bottom:12px;background:rgba(255,255,255,0.03);}
+.wb-seg{height:100%;position:relative;transition:width .3s ease;}
+.wb-marker{position:absolute;top:-8px;width:3px;height:42px;background:#fff;box-shadow:0 0 12px #fff,0 0 4px var(--accent);border-radius:2px;opacity:0;transition:left 2.2s cubic-bezier(.15,.9,.25,1),opacity .2s;z-index:5;}
+.wb-marker.active{opacity:1;}
+
+.entries-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:8px;margin-bottom:14px;}
+.entry-card{border:2px solid rgba(255,255,255,0.06);border-radius:10px;padding:6px;text-align:center;position:relative;transition:all .2s;background:rgba(255,255,255,0.02);}
+.entry-card.me{border-color:rgba(255,215,0,0.35);}
+.entry-card.winner{border-color:var(--green);background:rgba(34,197,94,0.08);box-shadow:0 0 16px rgba(34,197,94,0.3);}
+.entry-card img{width:100%;aspect-ratio:1;object-fit:contain;background:rgba(0,0,0,0.3);border-radius:6px;margin-bottom:4px;}
+.entry-card .ec-user{font-size:8px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.entry-card .ec-name{font-size:8px;color:#ccc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px;}
+.entry-card .ec-cond{margin-top:2px;}
+.entry-card .ec-price{font-size:10px;color:var(--accent);font-weight:700;margin-top:2px;}
+.entry-card .ec-odds{font-size:7px;color:var(--muted);margin-top:1px;}
+.cond-badge{font-size:7px;font-weight:700;padding:1px 4px;border-radius:3px;text-transform:uppercase;letter-spacing:.4px;display:inline-block;}
+.cond-fn{background:rgba(74,222,128,.15);color:#4ade80;border:1px solid rgba(74,222,128,.3);}
+.cond-mw{background:rgba(134,239,172,.12);color:#86efac;border:1px solid rgba(134,239,172,.25);}
+.cond-ft{background:rgba(251,191,36,.12);color:#fbbf24;border:1px solid rgba(251,191,36,.25);}
+.cond-ww{background:rgba(249,115,22,.12);color:#f97316;border:1px solid rgba(249,115,22,.25);}
+.cond-bs{background:rgba(239,68,68,.12);color:#ef4444;border:1px solid rgba(239,68,68,.25);}
+
+.pot-actions{display:flex;gap:8px;margin-top:6px;}
+.btn-join-pot,.btn-backout,.btn-lobby{flex:1;padding:14px;border-radius:10px;font-family:var(--font);font-size:11px;font-weight:900;letter-spacing:2px;cursor:pointer;transition:all .2s;}
+.btn-join-pot{border:none;background:linear-gradient(135deg,#7a5c00,var(--accent));color:#06070a;}
+.btn-backout{border:1px solid rgba(239,68,68,0.4);background:rgba(239,68,68,0.08);color:var(--red);}
+.btn-lobby{border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.03);color:#ccc;}
+.btn-join-pot:disabled,.btn-backout:disabled{opacity:.35;cursor:not-allowed;}
+
+.winner-banner{text-align:center;padding:20px 10px;margin-bottom:6px;}
+.winner-banner .wb-trophy{font-size:44px;margin-bottom:8px;}
+.winner-banner .wb-name{font-size:18px;font-weight:900;color:var(--accent);}
+.winner-banner .wb-sub{font-size:11px;color:var(--muted);margin-top:4px;}
+
+.disclaimer-inline{font-size:10px;color:var(--muted);margin-top:18px;text-align:center;line-height:1.5;}
+</style>
+    <script src="/static/sound.js"></script>
+
+    <script src="/static/big-win.js"></script>
+
+
+    <script src="/static/balance-animation.js"></script>
+
+
+    <script src="/static/page-transitions.js"></script>
+
+
+<link rel="stylesheet" href="/static/games-shared.css"><script src="/static/js/csrf.js"></script>
+
+
+</head>
+<body>
+
+<header class="hdr">
+  <a class="back" href="/games"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>GAMES</a>
+  <span class="title">🎁  ITEM JACKPOT</span>
+  <span class="bal" id="balDisplay">$—</span>
+</header>
+
+<div class="page">
+
+  <!-- LOBBY -->
+  <div id="lobbyView">
+    <div class="section-label">Open Pots</div>
+    <div class="pot-list" id="potList"></div>
+    <button class="btn-new-pot" onclick="openPicker(null)">🎁  STAKE AN ITEM — START A POT</button>
+    <div class="disclaimer-inline">⚠️ Stake a real inventory item. Winner takes every item in the pot — no house cut. This is a simulation; items have no real-world value.</div>
+  </div>
+
+  <!-- POT VIEW -->
+  <div id="potView" style="display:none;">
+    <div class="pot-hdr">
+      <div class="pot-total" id="potTotal">$0.00</div>
+      <div class="pot-total-label" id="potTotalLabel">TOTAL POT VALUE</div>
+    </div>
+    <div class="pot-status-banner waiting" id="potStatusBanner">WAITING FOR PLAYERS</div>
+    <div class="weighted-bar" id="weightedBar"><div class="wb-marker" id="wbMarker"></div></div>
+    <div class="entries-grid" id="entriesGrid"></div>
+    <div class="pot-actions" id="potActions"></div>
+    <div style="text-align:center;margin-top:10px;">
+      <button class="btn-lobby" style="max-width:200px;margin:0 auto;display:block;" onclick="showLobby()">← BACK TO LOBBY</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- ITEM PICKER MODAL -->
+<div class="modal-overlay" id="pickerModal">
+  <div class="modal-sheet">
+    <div class="modal-hdr">
+      <h3>SELECT AN ITEM TO STAKE</h3>
+      <button class="modal-close" onclick="closePicker()">✕</button>
+    </div>
+    <div class="picker-hint">Only kept, unequipped items worth $0.50+ can be staked.</div>
+    <div class="picker-grid" id="pickerGrid"><div style="grid-column:1/-1;text-align:center;color:var(--muted);font-size:11px;padding:20px;">Loading inventory…</div></div>
+    <button class="btn-stake" id="stakeBtn" disabled onclick="confirmStake()">STAKE SELECTED ITEM</button>
+  </div>
+</div>
+
+<script>
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const CONDITION_SHORT = { 'Factory New':'FN', 'Minimal Wear':'MW', 'Field-Tested':'FT', 'Well-Worn':'WW', 'Battle-Scarred':'BS' };
+function condBadgeHtml(condition) {
+  const short = CONDITION_SHORT[condition];
+  if (!short) return '';
+  return `<span class="cond-badge cond-${short.toLowerCase()}">${short}</span>`;
+}
+const SEG_COLORS = ['#ffd700','#4488ff','#aa00ff','#ff69b4','#ff4444','#22c55e','#f97316','#4ade80'];
+
+let balance = 0, myUserId = null;
+let balDisplayInited = false;
+let currentJackpotId = null;
+let ws = null;
+let pickerJackpotId = null;   // if set, "stake" joins THIS pot instead of auto-matching
+let pickerSelectedId = null;
+let pickerItems = [];
+let lobbyTimer = null;
+let countdownRAF = null;
+let lastPot = null;
+
+async function init(){
+  try{ const d = await api('/api/user/me'); balance = d.balance; myUserId = String(d.user_id); updateBal(); }catch(e){}
+  showLobby();
+  const params = new URLSearchParams(location.search);
+  const potParam = params.get('pot');
+  if (potParam) openPicker(Number(potParam));
+}
+
+function updateBal(){
+  const e = document.getElementById('balDisplay');
+  const n = '$'+balance.toLocaleString(undefined,{maximumFractionDigits:0});
+  if (balDisplayInited && window.animateBalance) { animateBalance(e, e.textContent, n, true); }
+  else { e.textContent = n; }
+  balDisplayInited = true;
+}
+
+async function refreshBal(){ try{ const d = await api('/api/user/me'); return d.balance; }catch(e){ return balance; } }
+
+// ============================================================
+// LOBBY
+// ============================================================
+
+function showLobby(){
+  closeWS();
+  currentJackpotId = null;
+  document.getElementById('potView').style.display = 'none';
+  document.getElementById('lobbyView').style.display = 'block';
+  loadLobby();
+  if (lobbyTimer) clearInterval(lobbyTimer);
+  lobbyTimer = setInterval(loadLobby, 4000);
+}
+
+async function loadLobby(){
+  try{
+    const data = await api('/api/games/jackpot/pots');
+    const list = document.getElementById('potList');
+    if (!data.pots.length){
+      list.innerHTML = '<div class="empty-lobby">No open pots right now — start one!</div>';
+      return;
+    }
+    list.innerHTML = data.pots.map(p => `
+      <div class="pot-card" onclick="joinExistingPot(${p.jackpot_id})">
+        <div class="pc-icon">🎁</div>
+        <div class="pc-info">
+          <div class="pc-value">$${p.total_value.toFixed(2)}</div>
+          <div class="pc-meta">${p.player_count}/8 PLAYERS</div>
+        </div>
+        <div class="pc-status ${p.status}">${p.status === 'countdown' ? 'ROLLING SOON' : 'WAITING'}</div>
+      </div>
+    `).join('');
+  }catch(e){}
+}
+
+function joinExistingPot(jackpotId){
+  openPicker(jackpotId);
+}
+
+// ============================================================
+// ITEM PICKER
+// ============================================================
+
+async function openPicker(jackpotId){
+  pickerJackpotId = jackpotId;
+  pickerSelectedId = null;
+  document.getElementById('stakeBtn').disabled = true;
+  document.getElementById('pickerModal').classList.add('show');
+  const grid = document.getElementById('pickerGrid');
+  grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--muted);font-size:11px;padding:20px;">Loading inventory…</div>';
+  try{
+    const data = await api('/api/user/me/inventory?limit=200');
+    pickerItems = (data.items || []).filter(it => Number(it.price) >= 0.50 && !it.in_loadout && !it.protected);
+    if (!pickerItems.length){
+      grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--muted);font-size:11px;padding:20px;">No eligible items (need a kept, unequipped, unprotected item worth $0.50+).</div>';
+      return;
+    }
+    grid.innerHTML = pickerItems.map(it => `
+      <div class="pick-item" id="pick-${it.id}" onclick="selectPickerItem(${it.id})">
+        <img src="${it.image_url || ''}" alt="" onerror="this.style.display='none'">
+        <div class="pi-name">${esc(it.display_name || it.item_name)}</div>
+        <div class="pi-price">$${Number(it.price).toFixed(2)}</div>
+      </div>
+    `).join('');
+  }catch(e){
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--red);font-size:11px;padding:20px;">Error loading inventory.</div>';
+  }
+}
+
+function closePicker(){
+  document.getElementById('pickerModal').classList.remove('show');
+}
+
+function selectPickerItem(id){
+  Sound && Sound.click && Sound.click();
+  document.querySelectorAll('.pick-item').forEach(el => el.classList.remove('selected'));
+  document.getElementById('pick-'+id).classList.add('selected');
+  pickerSelectedId = id;
+  document.getElementById('stakeBtn').disabled = false;
+}
+
+async function confirmStake(){
+  if (!pickerSelectedId) return;
+  document.getElementById('stakeBtn').disabled = true;
+  try{
+    const body = { inventory_id: pickerSelectedId };
+    if (pickerJackpotId) body.jackpot_id = pickerJackpotId;
+    const data = await api('/api/games/jackpot/join', { method: 'POST', body: JSON.stringify(body) });
+    closePicker();
+    balance = await refreshBal(); updateBal();
+    enterPot(data.jackpot_id, data.pot);
+  }catch(e){
+    document.getElementById('stakeBtn').disabled = false;
+    showToast(e.message || 'Could not join pot');
+  }
+}
+
+// ============================================================
+// POT VIEW
+// ============================================================
+
+function enterPot(jackpotId, pot){
+  if (lobbyTimer) { clearInterval(lobbyTimer); lobbyTimer = null; }
+  currentJackpotId = jackpotId;
+  document.getElementById('lobbyView').style.display = 'none';
+  document.getElementById('potView').style.display = 'block';
+  renderPot(pot);
+  connectWS(jackpotId);
+}
+
+function connectWS(jackpotId){
+  closeWS();
+  const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  ws = new WebSocket(proto + '//' + location.host + '/api/games/jackpot/ws/' + jackpotId);
+  ws.onmessage = (ev) => handleWSMsg(JSON.parse(ev.data));
+  ws.onclose = () => { if (currentJackpotId === jackpotId) setTimeout(() => { if (currentJackpotId === jackpotId) connectWS(jackpotId); }, 2000); };
+}
+
+function closeWS(){
+  if (ws) { try{ ws.close(); }catch(e){} ws = null; }
+}
+
+function handleWSMsg(msg){
+  if (msg.type === 'room_state'){
+    renderPot(msg);
+  } else if (msg.type === 'player_joined' || msg.type === 'player_left'){
+    renderPot(msg.pot);
+  } else if (msg.type === 'countdown_start' || msg.type === 'countdown_reset'){
+    lastPot.status = 'countdown';
+    lastPot.countdown_deadline = msg.deadline;
+    renderPot(lastPot);
+  } else if (msg.type === 'rolling'){
+    lastPot.status = 'rolling';
+    renderPot(lastPot);
+    Sound && Sound.click && Sound.click();
+  } else if (msg.type === 'roll_result'){
+    handleRollResult(msg);
+  } else if (msg.type === 'cancelled'){
+    showToast('Pot cancelled — not enough players. Your item was returned.');
+    showLobby();
+  } else if (msg.type === 'no_room'){
+    showToast('This pot no longer exists.');
+    showLobby();
+  }
+}
+
+function renderPot(pot){
+  lastPot = pot;
+  document.getElementById('potTotal').textContent = '$' + Number(pot.total_value).toFixed(2);
+
+  const banner = document.getElementById('potStatusBanner');
+  banner.className = 'pot-status-banner ' + pot.status;
+  const iAmIn = pot.entries.some(e => e.user_id === myUserId);
+
+  if (pot.status === 'waiting') banner.textContent = `WAITING FOR PLAYERS (${pot.entries.length}/2 MIN)`;
+  else if (pot.status === 'countdown') banner.textContent = 'ROLLING SOON';
+  else if (pot.status === 'rolling') banner.textContent = '🎲 ROLLING…';
+  else if (pot.status === 'completed') banner.textContent = 'POT COMPLETE';
+  else banner.textContent = pot.status.toUpperCase();
+
+  renderCountdown(pot);
+  renderWeightedBar(pot, null);
+  renderEntries(pot, null);
+  renderActions(pot, iAmIn);
+}
+
+function renderCountdown(pot){
+  if (countdownRAF) { cancelAnimationFrame(countdownRAF); countdownRAF = null; }
+  const label = document.getElementById('potTotalLabel');
+  if (pot.status !== 'countdown' || !pot.countdown_deadline) { label.textContent = 'TOTAL POT VALUE'; return; }
+  function tick(){
+    const remaining = Math.max(0, pot.countdown_deadline - Date.now()/1000);
+    label.textContent = remaining > 0 ? `ROLLING IN ${Math.ceil(remaining)}s` : 'ROLLING…';
+    if (remaining > 0 && lastPot && lastPot.status === 'countdown') countdownRAF = requestAnimationFrame(tick);
+    else label.textContent = 'TOTAL POT VALUE';
+  }
+  tick();
+}
+
+function renderWeightedBar(pot, winnerUserId){
+  const bar = document.getElementById('weightedBar');
+  const marker = document.getElementById('wbMarker');
+  const total = pot.entries.reduce((s,e) => s + Number(e.value), 0) || 1;
+  let cumulative = 0;
+  const segHtml = pot.entries.map((e,i) => {
+    const pct = (Number(e.value) / total) * 100;
+    cumulative += pct;
+    return `<div class="wb-seg" data-user="${e.user_id}" style="width:${pct}%;background:${SEG_COLORS[i % SEG_COLORS.length]};"></div>`;
+  }).join('');
+  bar.innerHTML = segHtml + marker.outerHTML;
+  // re-grab marker ref since innerHTML replaced it
+  window._wbMarkerEl = document.getElementById('wbMarker');
+}
+
+function renderEntries(pot, winnerUserId){
+  const grid = document.getElementById('entriesGrid');
+  const total = pot.entries.reduce((s,e) => s + Number(e.value), 0) || 1;
+  grid.innerHTML = pot.entries.map(e => {
+    const odds = ((Number(e.value) / total) * 100).toFixed(1);
+    const isMe = e.user_id === myUserId;
+    const isWinner = winnerUserId && e.user_id === winnerUserId;
+    return `
+      <div class="entry-card ${isMe ? 'me' : ''} ${isWinner ? 'winner' : ''}">
+        <img src="${e.image_url || ''}" alt="" onerror="this.style.display='none'">
+        <div class="ec-user">${esc(e.username || 'Player')}</div>
+        <div class="ec-name">${esc(e.item_name || '')}</div>
+        ${e.condition ? `<div class="ec-cond">${condBadgeHtml(e.condition)}</div>` : ''}
+        <div class="ec-price">$${Number(e.value).toFixed(2)}</div>
+        <div class="ec-odds">${odds}% chance</div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderActions(pot, iAmIn){
+  const actions = document.getElementById('potActions');
+  if (pot.status === 'waiting' && iAmIn){
+    actions.innerHTML = `<button class="btn-backout" onclick="backOut()">↩️  BACK OUT</button>
+      <button class="btn-join-pot" onclick="openPicker(${pot.jackpot_id})">🎁  STAKE ANOTHER ITEM (NEW POT)</button>
+      <button class="btn-join-pot" onclick="inviteToPot()">🔗  INVITE FRIENDS</button>`;
+  } else if ((pot.status === 'waiting' || pot.status === 'countdown') && !iAmIn){
+    actions.innerHTML = `<button class="btn-join-pot" onclick="openPicker(${pot.jackpot_id})">🎁  JOIN THIS POT</button>`;
+  } else {
+    actions.innerHTML = '';
+  }
+}
+
+function inviteToPot(){
+  if (!currentJackpotId) return;
+  const url = `${location.origin}/games/item-jackpot.html?pot=${currentJackpotId}`;
+  if (navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(url).then(
+      () => showToast('Invite link copied!'),
+      () => showToast(url)
+    );
+  } else {
+    showToast(url);
+  }
+}
+
+async function backOut(){
+  if (!currentJackpotId) return;
+  try{
+    await api('/api/games/jackpot/leave', { method: 'POST', body: JSON.stringify({ jackpot_id: currentJackpotId }) });
+    showToast('Item returned to your inventory.');
+    balance = await refreshBal(); updateBal();
+    showLobby();
+  }catch(e){
+    showToast(e.message || 'Could not back out');
+  }
+}
+
+// ============================================================
+// ROLL RESULT / WINNER REVEAL
+// ============================================================
+
+async function handleRollResult(msg){
+  Sound && Sound.click && Sound.click();
+  const pot = { ...lastPot, status: 'completed', entries: msg.entries, total_value: msg.total_value };
+  renderPot(pot);
+
+  // Animate marker sweeping to the winner's segment.
+  const total = msg.entries.reduce((s,e) => s + Number(e.value), 0) || 1;
+  let cumulative = 0, centerPct = 50;
+  for (const e of msg.entries){
+    const pct = (Number(e.value) / total) * 100;
+    if (e.user_id === msg.winner_id){ centerPct = cumulative + pct/2; break; }
+    cumulative += pct;
+  }
+  const marker = window._wbMarkerEl || document.getElementById('wbMarker');
+  if (marker){
+    marker.style.left = '0%';
+    marker.classList.add('active');
+    requestAnimationFrame(() => { marker.style.left = centerPct + '%'; });
+  }
+
+  await new Promise(r => setTimeout(r, 2400));
+
+  renderEntries(pot, msg.winner_id);
+  const iWon = msg.winner_id === myUserId;
+  const banner = document.getElementById('potStatusBanner');
+  banner.textContent = iWon ? '🏆 YOU WON THE POT!' : `${esc(msg.winner_username || 'A player')} WON THE POT`;
+
+  document.getElementById('potActions').innerHTML =
+    '<button class="btn-lobby" onclick="showLobby()">🎁  PLAY AGAIN</button>';
+
+  if (iWon){
+    Sound && Sound.win && Sound.win();
+    spawnConfettiSafe();
+    balance = await refreshBal(); updateBal();
+    const myEntry = msg.entries.find(e => e.user_id === myUserId);
+    const myStake = myEntry ? Number(myEntry.value) : 0;
+    if (window.maybeBigWin && myStake > 0) maybeBigWin(myStake, msg.total_value / myStake);
+  } else {
+    Sound && Sound.loss && Sound.loss();
+  }
+}
+
+function spawnConfettiSafe(){
+  try{ if (window.spawnConfettiExplosion) spawnConfettiExplosion(); else if (window.spawnConfetti) spawnConfetti('Gold', 60); }catch(e){}
+}
+
+// ============================================================
+// TOAST / UTIL
+// ============================================================
+
+function showToast(msg){
+  let t = document.getElementById('jpToast');
+  if (!t){
+    t = document.createElement('div');
+    t.id = 'jpToast';
+    t.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:rgba(20,20,30,0.95);border:1px solid rgba(255,215,0,0.3);color:#fff;padding:10px 18px;border-radius:10px;font-size:11px;z-index:500;max-width:90vw;text-align:center;';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.style.opacity = '1';
+  clearTimeout(t._hideTimer);
+  t._hideTimer = setTimeout(() => { t.style.opacity = '0'; }, 3000);
+}
+
+async function api(url, opts = {}){
+  const r = await fetch(url, { credentials: 'include', headers: { 'Content-Type': 'application/json' }, ...opts });
+  if (!r.ok){ const e = await r.json().catch(() => ({})); throw new Error(e.detail || 'Error'); }
+  return r.json();
+}
+
+init();
+</script>
+<script>if("serviceWorker"in navigator){navigator.serviceWorker.register("/static/sw.js").catch(function(){})}</script>
+
+<script src="/static/chat.js"></script>
+
+</body>
+</html>

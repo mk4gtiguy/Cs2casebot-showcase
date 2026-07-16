@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<link rel="stylesheet" href="/static/css/site-notices.css">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#0a0a12">
+<link rel="manifest" href="/static/manifest.json">
+<link rel="icon" href="/favicon.ico" type="image/x-icon">
+<title>Leaderboard - CS2CaseBot</title>
+<link rel="stylesheet" href="/static/dashboard.css">
+<style>
+  :root { --bg: #0a0a12; --surface: #14141e; --surface2: #1c1c2a; --accent: #6c5ce7; --accent2: #a29bfe; --gold: #ffd700; --text: #e0e0e0; --muted: #888; --border: #2a2a3a; --danger: #e74c3c; --success: #2ecc71; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; min-height: 100vh; padding-bottom: 80px; }
+  .header { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; background: var(--surface); border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
+  .header h1 { font-size: 18px; font-weight: 700; }
+  .header h1 span { color: var(--accent); }
+  .header-actions { display: flex; gap: 8px; align-items: center; }
+  .btn { padding: 8px 16px; border-radius: 8px; border: none; font-weight: 600; font-size: 13px; cursor: pointer; transition: all .2s; }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: #7c6df7; }
+  .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text); }
+  .btn-outline:hover { border-color: var(--accent); }
+  .btn-sm { padding: 4px 10px; font-size: 12px; }
+  .container { max-width: 700px; margin: 0 auto; padding: 16px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 16px; margin-bottom: 12px; }
+  .card h2 { font-size: 16px; margin-bottom: 12px; color: var(--accent2); }
+  .tabs { display: flex; gap: 4px; margin-bottom: 16px; background: var(--surface2); border-radius: 8px; padding: 4px; flex-wrap: wrap; }
+  .tab { flex: 1 1 auto; min-width: 70px; padding: 8px; text-align: center; border: none; background: transparent; color: var(--muted); font-size: 12px; font-weight: 600; cursor: pointer; border-radius: 6px; transition: all .2s; }
+  .tab.active { background: var(--accent); color: #fff; }
+  .tab:hover:not(.active) { color: var(--text); }
+  .lb-row { display: flex; align-items: center; gap: 12px; padding: 10px 12px; background: var(--surface2); border-radius: 8px; margin-bottom: 6px; }
+  .lb-rank { width: 28px; text-align: center; font-weight: 700; color: var(--muted); flex-shrink: 0; }
+  .lb-rank.top1 { color: var(--gold); }
+  .lb-rank.top2 { color: #c0c0c0; }
+  .lb-rank.top3 { color: #cd7f32; }
+  .lb-name { flex: 1; font-size: 14px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .lb-value { font-size: 14px; font-weight: 700; color: var(--accent2); flex-shrink: 0; }
+  .lb-empty { text-align: center; color: var(--muted); font-size: 13px; padding: 24px; }
+  .game-select { width: 100%; padding: 8px; margin-bottom: 12px; background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; color: var(--text); font-size: 13px; display: none; }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1><span>CS2</span>CaseBot <span style="font-size:14px;color:var(--muted)">Leaderboard</span></h1>
+  <div class="header-actions">
+    <button class="btn btn-outline btn-sm" onclick="location.href='/'">Dashboard</button>
+  </div>
+</div>
+
+<div class="container">
+  <div class="tabs" id="lbTabs">
+    <button class="tab active" onclick="switchBoard('money')">💰 Money</button>
+    <button class="tab" onclick="switchBoard('opens')">📦 Opens</button>
+    <button class="tab" onclick="switchBoard('golds')">⭐ Golds</button>
+    <button class="tab" onclick="switchBoard('trades')">🔄 Trades</button>
+    <button class="tab" onclick="switchBoard('games')">🎮 Games</button>
+    <button class="tab" onclick="switchBoard('tickets')">🎟️ Tickets</button>
+    <button class="tab" onclick="switchBoard('streak')">🔥 Streak</button>
+    <button class="tab" onclick="switchBoard('profit')">📈 Profit</button>
+    <button class="tab" onclick="switchBoard('ticket_wins')">🎉 Ticket Wins</button>
+    <button class="tab" onclick="switchBoard('game-wins')">🏅 Game Wins</button>
+  </div>
+
+  <select class="game-select" id="gameSelect" onchange="loadLeaderboard()">
+    <option value="dice_duel">Dice Duel</option>
+    <option value="weapon_duel">Weapon Duel</option>
+    <option value="reaction_duel">Reaction Duel</option>
+    <option value="case_draft_duel">Case Draft Duel</option>
+    <option value="item_wager_duel">Item Wager Duel</option>
+    <option value="item_trade_up_duel">Item Trade-Up Duel</option>
+    <option value="case_battles">Case Battles</option>
+    <option value="ladder_race">Ladder Race</option>
+    <option value="mines_race">Mines Race</option>
+    <option value="speed_case_race">Speed Case Race</option>
+    <option value="koth_ladder">King of the Hill Ladder</option>
+    <option value="battle_royale_mines">Battle Royale Minefield</option>
+    <option value="sync_slots">Sync-Spin Slots</option>
+    <option value="live_blackjack">Live Blackjack</option>
+    <option value="live_roulette">Live Roulette</option>
+    <option value="live_keno">Live Keno Draw</option>
+    <option value="skin_bingo">Skin Bingo</option>
+    <option value="live_case_auction">Live Case Auction</option>
+    <option value="crash">Crash</option>
+    <option value="mines">Mines</option>
+    <option value="blackjack">Blackjack</option>
+    <option value="roulette">Roulette</option>
+    <option value="coinflip">Coinflip</option>
+  </select>
+
+  <div class="card">
+    <div id="lbList"><div class="lb-empty">Loading…</div></div>
+  </div>
+</div>
+
+<script>
+
+let currentBoard = 'money';
+
+async function api(url) {
+  const r = await fetch(url, { credentials: 'include' });
+  if (!r.ok) throw new Error('API error');
+  return r.json();
+}
+
+function switchBoard(board) {
+  currentBoard = board;
+  document.querySelectorAll('#lbTabs .tab').forEach(t => t.classList.remove('active'));
+  event.target.classList.add('active');
+  document.getElementById('gameSelect').style.display = board === 'game-wins' ? 'block' : 'none';
+  loadLeaderboard();
+}
+
+function medalRank(i) {
+  if (i === 0) return 'top1';
+  if (i === 1) return 'top2';
+  if (i === 2) return 'top3';
+  return '';
+}
+
+function formatValue(board, value) {
+  const n = Number(value) || 0;
+  if (board === 'money' || board === 'profit') return '$' + n.toLocaleString(undefined, {maximumFractionDigits: 2});
+  return n.toLocaleString();
+}
+
+async function loadLeaderboard() {
+  const listEl = document.getElementById('lbList');
+  listEl.innerHTML = '<div class="lb-empty">Loading…</div>';
+  try {
+    let data;
+    if (currentBoard === 'game-wins') {
+      const game = document.getElementById('gameSelect').value;
+      data = await api(`/api/leaderboard/game-wins?game=${encodeURIComponent(game)}&limit=25`);
+      renderList(data.users || [], 'wins', 'game-wins');
+    } else {
+      data = await api(`/api/leaderboard/${currentBoard}?limit=25`);
+      renderList(data.users || [], 'value', currentBoard);
+    }
+  } catch (e) {
+    listEl.innerHTML = '<div class="lb-empty">Could not load this leaderboard.</div>';
+  }
+}
+
+function renderList(users, valueKey, board) {
+  const listEl = document.getElementById('lbList');
+  if (!users.length) {
+    listEl.innerHTML = '<div class="lb-empty">No data yet — be the first!</div>';
+    return;
+  }
+  listEl.innerHTML = users.map((u, i) => `
+    <div class="lb-row">
+      <div class="lb-rank ${medalRank(i)}">${i + 1}</div>
+      <div class="lb-name">${esc(u.username || 'Unknown')}</div>
+      <div class="lb-value">${formatValue(board, u[valueKey])}</div>
+    </div>
+  `).join('');
+}
+
+function esc(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+loadLeaderboard();
+
+</script>
+</body>
+</html>

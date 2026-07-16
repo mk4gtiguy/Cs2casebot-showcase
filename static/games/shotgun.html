@@ -1,0 +1,699 @@
+﻿<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+
+<title>🔫  Shotgun — CS2CaseBot</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+
+<style>
+
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+
+:root{--bg:#070506;--steel:#8899aa;--danger:#ff2222;--gold:#ffd700;--font:'Orbitron',monospace;}
+
+html,body{min-height:100vh;background:var(--bg);font-family:var(--font);overflow-x:hidden;color:#c0c8d0;}
+
+body{background-image:radial-gradient(ellipse 80% 40% at 50% 0%,rgba(255,34,34,0.04) 0%,transparent 70%);}
+
+.hdr{display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(7,5,6,0.98);border-bottom:1px solid rgba(136,153,170,0.12);position:sticky;top:0;z-index:50;}
+
+.back{display:flex;align-items:center;gap:5px;color:#2a2a2a;font-size:10px;letter-spacing:1px;text-decoration:none;transition:color .2s;}
+
+.back:hover{color:var(--steel);}
+
+.back svg{width:14px;height:14px;}
+
+.title{flex:1;font-size:14px;font-weight:900;letter-spacing:3px;color:var(--steel);}
+
+.bal{font-size:13px;font-weight:700;color:var(--gold);font-family:monospace;}
+
+.page{max-width:420px;margin:0 auto;padding:16px 14px 80px;}
+
+
+
+/* CYLINDER — signature element */
+
+.cylinder-wrap{background:rgba(4,4,6,0.99);border:1px solid rgba(136,153,170,0.1);border-radius:20px;padding:28px 16px 20px;margin-bottom:16px;position:relative;overflow:hidden;text-align:center;}
+
+.cylinder-wrap::before{content:'';position:absolute;top:0;left:20%;right:20%;height:1px;background:linear-gradient(90deg,transparent,rgba(136,153,170,0.3),transparent);}
+
+
+
+/* Cylinder graphic */
+
+.cylinder{
+
+  display:inline-flex;align-items:center;justify-content:center;gap:0;
+
+  position:relative;margin-bottom:20px;
+
+}
+
+.cylinder-ring{
+
+  width:160px;height:160px;border-radius:50%;
+
+  border:3px solid rgba(136,153,170,0.2);
+
+  background:radial-gradient(circle at 40% 35%,rgba(80,80,90,0.4),rgba(20,20,25,0.9));
+
+  display:flex;align-items:center;justify-content:center;
+
+  box-shadow:0 0 40px rgba(0,0,0,0.7),inset 0 2px 8px rgba(255,255,255,0.05);
+
+  position:relative;
+
+  transition:transform 0.5s cubic-bezier(.34,1.56,.64,1);
+
+}
+
+.cylinder-ring.spin{animation:cyl-spin 0.6s cubic-bezier(.4,0,.2,1);}
+
+@keyframes cyl-spin{0%{transform:rotate(0deg);}100%{transform:rotate(360deg);}}
+
+.cylinder-ring.fire{animation:cyl-fire 0.3s ease;}
+
+@keyframes cyl-fire{0%{transform:translateX(0);}15%{transform:translateX(-12px);}40%{transform:translateX(8px);}100%{transform:translateX(0);}}
+
+
+
+/* Chambers around the cylinder */
+
+.chamber{
+
+  position:absolute;width:28px;height:28px;border-radius:50%;
+
+  background:rgba(10,10,15,0.9);border:2px solid rgba(136,153,170,0.2);
+
+  display:flex;align-items:center;justify-content:center;font-size:10px;
+
+  transition:all 0.3s;
+
+}
+
+.chamber.empty-ch{background:rgba(5,5,8,0.9);}
+
+.chamber.safe-ch{background:rgba(34,197,94,0.2);border-color:rgba(34,197,94,0.4);}
+
+.chamber.loaded-ch{background:rgba(255,34,34,0.35);border-color:var(--danger);box-shadow:0 0 12px rgba(255,34,34,0.4);}
+
+.chamber.current-ch{border-color:var(--gold);box-shadow:0 0 10px rgba(255,215,0,0.4);}
+
+
+
+/* Survived / pulls display */
+
+.pull-counter{font-size:clamp(40px,12vw,60px);font-weight:900;font-family:monospace;color:var(--steel);line-height:1;margin-bottom:6px;}
+
+.pull-label{font-size:8px;letter-spacing:3px;color:#2a2a3a;}
+
+.mult-display{font-size:20px;font-weight:900;font-family:monospace;color:var(--gold);margin-top:4px;}
+
+
+
+/* Tension meter */
+
+.tension-bar{height:3px;background:rgba(255,255,255,0.04);border-radius:2px;margin:14px 0;overflow:hidden;}
+
+.tension-fill{height:100%;border-radius:2px;background:linear-gradient(90deg,#22c55e,#ff9500,var(--danger));transition:width .6s ease;width:0;}
+
+
+
+/* Result */
+
+.result{min-height:28px;text-align:center;font-size:11px;font-weight:700;letter-spacing:2px;margin-bottom:14px;display:flex;align-items:center;justify-content:center;}
+
+.result.win{color:#22c55e;}
+
+.result.boom{color:var(--danger);animation:res-flash .15s ease 4;}
+
+@keyframes res-flash{0%,100%{opacity:1;}50%{opacity:.2;}}
+
+.result.idle{color:#2a2a3a;}
+
+
+
+/* Cashout strip */
+
+.co-strip{display:flex;gap:10px;align-items:center;margin-bottom:14px;}
+
+.pot-disp{text-align:center;}
+
+.pot-val{font-size:18px;font-weight:900;color:var(--gold);font-family:monospace;}
+
+.pot-label{font-size:8px;color:#2a2a3a;letter-spacing:1px;}
+
+.btn-co{flex:1;padding:13px;border:1px solid rgba(255,215,0,0.3);border-radius:10px;background:rgba(255,215,0,0.06);color:var(--gold);font-family:var(--font);font-size:10px;font-weight:700;letter-spacing:1px;cursor:pointer;transition:all .2s;}
+
+.btn-co:not(:disabled):hover{background:rgba(255,215,0,0.14);}
+
+.btn-co:disabled{opacity:.3;cursor:not-allowed;}
+
+
+
+/* Chamber selector */
+
+.ch-select{display:flex;gap:6px;align-items:center;margin-bottom:12px;flex-wrap:wrap;}
+
+.chs-label{font-size:8px;color:#2a2a3a;letter-spacing:1px;margin-right:4px;}
+
+.chs-btn{padding:6px 10px;background:rgba(136,153,170,0.04);border:1px solid rgba(136,153,170,0.1);border-radius:6px;font-size:9px;color:#3a3a4a;cursor:pointer;transition:all .15s;}
+
+.chs-btn:hover,.chs-btn.active{border-color:var(--steel);color:var(--steel);background:rgba(136,153,170,0.1);}
+
+
+
+/* BET */
+
+.bet-ctrl{background:rgba(0,0,0,0.4);border:1px solid rgba(136,153,170,0.06);border-radius:14px;padding:14px;}
+
+.bl{font-size:8px;color:#2a2a3a;letter-spacing:2px;margin-bottom:8px;}
+
+.bet-row{display:flex;gap:8px;margin-bottom:8px;}
+
+.bet-inp{flex:1;background:rgba(0,0,0,0.5);border:1px solid rgba(136,153,170,0.1);border-radius:8px;padding:10px 12px;color:#c0c8d0;font-family:var(--font);font-size:13px;font-weight:700;outline:none;text-align:center;}
+
+.bet-inp:focus{border-color:rgba(136,153,170,0.3);}
+
+.adj{padding:10px 14px;background:rgba(136,153,170,0.04);border:1px solid rgba(136,153,170,0.08);border-radius:8px;color:#2a2a3a;font-family:var(--font);font-size:11px;cursor:pointer;transition:all .15s;}
+
+.adj:hover{color:var(--steel);}
+
+.qrow{display:flex;gap:5px;margin-bottom:10px;}
+
+.qb{flex:1;padding:7px 3px;background:rgba(136,153,170,0.04);border:1px solid rgba(136,153,170,0.08);border-radius:6px;color:#2a2a3a;font-size:8px;letter-spacing:1px;cursor:pointer;text-align:center;transition:all .15s;}
+
+.qb:hover{border-color:var(--steel);color:var(--steel);}
+
+.action-row{display:flex;gap:8px;}
+
+.btn-start{flex:2;padding:15px;border:none;border-radius:10px;font-family:var(--font);font-size:11px;font-weight:900;letter-spacing:2px;cursor:pointer;transition:all .2s;background:linear-gradient(135deg,#2a3a44,var(--steel));color:#07060a;box-shadow:0 4px 20px rgba(136,153,170,0.25);}
+
+.btn-start:not(:disabled):hover{transform:translateY(-2px);}
+
+.btn-start:disabled{opacity:.4;cursor:not-allowed;transform:none!important;}
+
+.btn-pull{flex:3;padding:15px;border:none;border-radius:10px;font-family:var(--font);font-size:12px;font-weight:900;letter-spacing:2px;cursor:pointer;transition:all .2s;background:linear-gradient(135deg,#660000,var(--danger));color:#fff;box-shadow:0 4px 20px rgba(255,34,34,0.35);}
+
+.btn-pull:not(:disabled):hover{transform:translateY(-2px);box-shadow:0 6px 32px rgba(255,34,34,0.55);}
+
+.btn-pull:disabled{opacity:.4;cursor:not-allowed;transform:none!important;}
+
+
+
+#gunshot{position:fixed;inset:0;pointer-events:none;opacity:0;z-index:200;background:radial-gradient(ellipse at 50% 30%,rgba(255,34,34,0.45),transparent 70%);}
+
+#gunshot.show{animation:gs .35s ease;}
+
+@keyframes gs{0%{opacity:0;}15%{opacity:1;}100%{opacity:0;}}
+
+</style>
+
+    <script src="/static/sound.js"></script>
+
+    <script src="/static/big-win.js"></script>
+
+
+    <script src="/static/balance-animation.js"></script>
+
+
+    <script src="/static/page-transitions.js"></script>
+
+
+    <script src="/static/autoplay.js"></script>
+
+
+<link rel="stylesheet" href="/static/games-shared.css"><script src="/static/js/csrf.js"></script>
+
+
+</head>
+
+<body>
+
+<div id="gunshot"></div>
+
+<header class="hdr">
+
+  <a class="back" href="/games"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>GAMES</a>
+
+  <span class="title">🔫  SHOTGUN</span>
+
+  <span class="bal" id="balDisplay">$—</span>
+
+</header>
+
+<div class="page">
+
+  <div class="cylinder-wrap">
+
+    <div class="cylinder">
+
+      <div class="cylinder-ring" id="cylRing">
+
+        <!-- Chambers positioned by JS -->
+
+      </div>
+
+    </div>
+
+    <div class="pull-counter" id="pullCount">0</div>
+
+    <div class="pull-label">CHAMBERS SURVIVED</div>
+
+    <div class="mult-display" id="multDisp">1.00×</div>
+
+    <div class="tension-bar"><div class="tension-fill" id="tensionFill"></div></div>
+
+    <div class="result idle" id="resultLine">SET CHAMBERS AND PULL THE TRIGGER</div>
+
+    <div class="co-strip">
+
+      <div class="pot-disp"><div class="pot-val" id="potVal">$0</div><div class="pot-label">POTENTIAL WIN</div></div>
+
+      <button class="btn-co" id="coBtn" onclick="cashout()" disabled>💰  CASH OUT</button>
+
+    </div>
+
+    <div style="display:flex;align-items:center;justify-content:center;gap:8px;margin-top:6px;">
+
+      <label style="display:flex;align-items:center;gap:5px;font-size:8px;color:#2a2a3a;cursor:pointer;letter-spacing:1px;">
+
+        <input type="checkbox" id="autoPullOn" style="accent-color:var(--danger);cursor:pointer;"> AUTO PULL
+
+      </label>
+
+    </div>
+
+    <div id="shotHist" style="display:flex;gap:3px;flex-wrap:wrap;justify-content:center;padding:6px 0 0;min-height:20px;"></div>
+
+  </div>
+
+
+
+  <div class="ch-select">
+
+    <span class="chs-label">CHAMBERS:</span>
+
+    <div class="chs-btn active" id="chs3" onclick="setChambers(3)">3</div>
+
+    <div class="chs-btn" id="chs4" onclick="setChambers(4)">4</div>
+
+    <div class="chs-btn" id="chs5" onclick="setChambers(5)">5</div>
+
+    <div class="chs-btn" id="chs6" onclick="setChambers(6)">6</div>
+
+    <div class="chs-btn" id="chs8" onclick="setChambers(8)">8</div>
+
+    <div class="chs-btn" id="chs12" onclick="setChambers(12)">12</div>
+
+  </div>
+
+
+
+  <div class="bet-ctrl">
+
+    <div class="bl">BET AMOUNT</div>
+
+    <div class="bet-row">
+
+      <button class="adj" onclick="halveBet()">½</button>
+
+      <input class="bet-inp" id="betInp" type="number" value="500" min="50">
+
+      <button class="adj" onclick="doubleBet()">2×</button>
+
+    </div>
+
+    <div class="qrow">
+
+      <div class="qb" onclick="qb(100)">$100</div><div class="qb" onclick="qb(500)">$500</div>
+
+      <div class="qb" onclick="qb(1000)">$1K</div><div class="qb" onclick="qb(5000)">$5K</div><div class="qb" onclick="qb(10000)">$10K</div>
+
+    </div>
+
+    <div class="action-row">
+
+      <button class="btn-start" id="startBtn" onclick="startGame()">⚙️  LOAD</button>
+
+      <button class="btn-pull" id="pullBtn" onclick="pull()" disabled>🔫  PULL TRIGGER</button>
+
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+
+let balance=0,chambers=3,gameActive=false,acting=false,pulled=0,currentMult=1,shotHistory=[];
+
+async function init(){try{const d=await api('/api/user/me');balance=d.balance;updateBal();}catch(e){}drawCylinder(chambers,0,[],false);}
+
+function updateBal(){var e=document.getElementById('balDisplay'),c=e.textContent||'',n='$'+balance.toLocaleString(undefined,{maximumFractionDigits:0});if(c&&c!=='$—'&&c!==n){var p=parseFloat(c.replace(/[,$]/g,''));if(!isNaN(p)&&p!==balance){animateBalance(e,'$'+p.toLocaleString(undefined,{maximumFractionDigits:0}),n,balance>=p);return}}e.textContent=n}
+
+function setChambers(n){chambers=n;document.querySelectorAll('.chs-btn').forEach(b=>b.classList.remove('active'));document.getElementById('chs'+n).classList.add('active');if(!gameActive)drawCylinder(n,0,[],false);}
+
+function qb(v){document.getElementById('betInp').value=v;}
+
+function halveBet(){document.getElementById('betInp').value=Math.max(50,Math.floor(parseInt(document.getElementById('betInp').value||500)/2));}
+
+function doubleBet(){document.getElementById('betInp').value=Math.min(balance,parseInt(document.getElementById('betInp').value||500)*2);}
+
+
+
+function drawCylinder(total,survived,safeChambers,hasFired,firedAt=-1){
+
+  const ring=document.getElementById('cylRing');
+
+  ring.innerHTML='';
+
+  const R=54;
+
+  for(let i=0;i<total;i++){
+
+    const angle=(i/total)*Math.PI*2-(Math.PI/2);
+
+    const x=R*Math.cos(angle);const y=R*Math.sin(angle);
+
+    const ch=document.createElement('div');ch.className='chamber';
+
+    ch.style.left=(80+x-14)+'px';ch.style.top=(80+y-14)+'px';
+
+    if(hasFired&&i===firedAt){ch.classList.add('loaded-ch');ch.textContent='💥';}
+
+    else if(safeChambers.includes(i)){ch.classList.add('safe-ch');ch.textContent='?';}
+
+    else if(i===survived&&!hasFired&&gameActive){ch.classList.add('current-ch');ch.textContent='?';}
+
+    else{ch.classList.add('empty-ch');ch.textContent='';}
+
+    ring.appendChild(ch);
+
+  }
+
+}
+
+
+
+async function startGame(){
+
+  if(gameActive||acting) return;
+
+  const bet=parseInt(document.getElementById('betInp').value)||500;
+
+  if(bet>balance){setResult('❌ INSUFFICIENT BALANCE','idle');Sound.error();return;}
+
+  Sound.click();acting=true;document.getElementById('startBtn').disabled=true;
+
+
+  pulled=0;currentMult=1;
+
+  document.getElementById('pullCount').textContent='0';
+
+  document.getElementById('multDisp').textContent='1.00×';
+
+  document.getElementById('tensionFill').style.width='0';
+
+  setResult('TRIGGGER LOADED — PULL WHEN READY','idle');
+
+  document.getElementById('coBtn').disabled=true;
+
+  try{
+
+    await api('/api/games/medium/shotgun/start',{method:'POST',body:JSON.stringify({amount:bet,chambers})});
+
+    gameActive=true;balance=await refreshBal();updateBal();
+
+    // Spin cylinder animation
+
+    const ring=document.getElementById('cylRing');
+
+    ring.classList.add('spin');setTimeout(()=>ring.classList.remove('spin'),700);
+
+    drawCylinder(chambers,0,[],false);
+
+    document.getElementById('pullBtn').disabled=false;
+
+  }catch(e){setResult('ERROR: '+e.message,'idle');}
+
+  finally{acting=false;document.getElementById('startBtn').disabled=false;}
+
+}
+
+
+
+async function pull(){
+
+  if(!gameActive||acting) return;
+
+  Sound.click();acting=true;
+
+
+  document.getElementById('pullBtn').disabled=true;
+
+  document.getElementById('coBtn').disabled=true;
+
+  try{
+
+    const d=await api('/api/games/medium/shotgun/pull',{method:'POST'});
+
+    if(d.fired){
+
+
+      Sound.shoot();Sound.loss();
+
+
+      const ring=document.getElementById('cylRing');
+
+
+      ring.classList.add('fire');
+
+
+      setTimeout(()=>ring.classList.remove('fire'),400);
+
+
+      const flashEl=document.getElementById('gunshot');
+
+
+      flashEl.classList.remove('show');void flashEl.offsetWidth;flashEl.classList.add('show');
+
+
+      drawCylinder(chambers,pulled,[...Array(pulled).keys()],true,d.chamber);
+
+
+      gameActive=false;
+
+      setResult('💥 BANG! CHAMBER '+d.chamber+' WAS LOADED — SURVIVED '+d.survived,'boom');
+
+      document.getElementById('tensionFill').style.width='100%';
+
+      document.getElementById('tensionFill').style.background='var(--danger)';
+
+      pushShotHist(d.survived,false);
+
+      balance=await refreshBal();updateBal();
+
+      // Don't re-enable pull after firing
+
+    }else{
+
+      pulled=d.survived;currentMult=d.multiplier;
+
+      const bet=parseInt(document.getElementById('betInp').value)||500;
+
+      drawCylinder(chambers,pulled,[...Array(pulled).keys()],false);
+
+      document.getElementById('pullCount').textContent=pulled;
+
+      document.getElementById('multDisp').textContent=currentMult.toFixed(2)+'×';
+
+      document.getElementById('tensionFill').style.width=(pulled/(chambers-1)*100)+'%';
+
+      document.getElementById('potVal').textContent='$'+Math.round(bet*currentMult).toLocaleString();
+
+      if(d.cleared){
+
+
+        gameActive=false;
+
+
+        Sound.win();
+
+
+        setResult('🏆 ALL SAFE CHAMBERS CLEARED! +$'+d.auto_win.toLocaleString(undefined,{maximumFractionDigits:0}),'win');
+        if(window.maybeBigWin){const shb=parseInt(document.getElementById('betInp').value)||500;maybeBigWin(shb,d.auto_win);}
+
+        pushShotHist(pulled,true);
+
+        balance=await refreshBal();updateBal();
+
+        // Don't re-enable on clear
+
+      }else{
+
+        Sound.win();
+
+
+        setResult('✅ SURVIVED '+pulled+' PULL'+(pulled>1?'S':'')+' · '+currentMult.toFixed(2)+'×','win');
+
+
+        document.getElementById('coBtn').disabled=false;
+
+        document.getElementById('pullBtn').disabled=false;
+
+        if(document.getElementById('autoPullOn').checked&&gameActive) setTimeout(()=>pull(),800);
+
+      }
+
+    }
+
+  }catch(e){
+
+    setResult('ERROR: '+e.message,'idle');
+
+    // Only re-enable if game is still active
+
+    if(gameActive){
+
+      document.getElementById('pullBtn').disabled=false;
+
+      if(pulled>0) document.getElementById('coBtn').disabled=false;
+
+    }
+
+  }finally{
+
+    acting=false;
+
+  }
+
+}
+
+
+
+async function cashout(){
+
+
+  if(!gameActive||acting) return;
+
+
+  Sound.click();
+
+
+  acting=true;
+
+
+  gameActive=false;
+
+  document.getElementById('coBtn').disabled=true;
+
+  document.getElementById('pullBtn').disabled=true;
+
+  try{
+
+    const d=await api('/api/games/medium/shotgun/cashout',{method:'POST'});
+
+    balance=await refreshBal();updateBal();
+
+    pushShotHist(pulled,false);
+
+    Sound.win();
+
+
+    setResult('💰 CASHED OUT · '+d.multiplier.toFixed(2)+'× · +$'+d.win.toLocaleString(undefined,{maximumFractionDigits:0}),'win');
+    if(window.maybeBigWin){const shb=parseInt(document.getElementById('betInp').value)||500;maybeBigWin(shb,d.win);}
+
+
+  }catch(e){
+
+    // If cashout fails, restore game state so player can try again
+
+    gameActive=true;
+
+    document.getElementById('coBtn').disabled=false;
+
+    document.getElementById('pullBtn').disabled=false;
+
+    setResult('ERROR: '+e.message,'idle');
+
+  }finally{
+
+    acting=false;
+
+  }
+
+}
+
+function pushShotHist(survived,cleared){
+
+  shotHistory.push({survived,cleared});
+
+  if(shotHistory.length>20) shotHistory.shift();
+
+  const el=document.getElementById('shotHist');el.innerHTML='';
+
+  shotHistory.forEach(s=>{
+
+    const d=document.createElement('div');
+
+    const color=s.cleared?'rgba(34,197,94,0.5)':s.survived>0?'rgba(255,215,0,0.4)':'rgba(255,34,34,0.4)';
+
+    d.style.cssText='width:14px;height:14px;border-radius:50%;background:'+color+';display:flex;align-items:center;justify-content:center;font-size:6px;color:#fff;font-weight:700;flex-shrink:0;';
+
+    d.textContent=s.survived;
+
+    el.appendChild(d);
+
+  });
+
+}
+
+function setResult(t,c){const el=document.getElementById('resultLine');el.className='result '+c;el.textContent=t;}
+
+async function refreshBal(){try{const d=await api('/api/user/me');return d.balance;}catch(e){return balance;}}
+
+async function api(url,opts={}){const r=await fetch(url,{credentials:'include',headers:{'Content-Type':'application/json'},...opts});if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.detail||'Error');}return r.json();}
+
+init();
+
+</script>
+
+<script>if("serviceWorker"in navigator){navigator.serviceWorker.register("/static/sw.js").catch(function(){})}</script>
+
+
+<script src="/static/chat.js"></script>
+
+
+</body>
+
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

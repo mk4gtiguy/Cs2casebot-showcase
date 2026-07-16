@@ -1,0 +1,623 @@
+﻿<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+
+<title>📦  Mystery Box — CS2CaseBot</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+
+<style>
+
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+
+:root{--bg:#060408;--cs:#ffd700;--bomb:#ff3333;--green:#22c55e;--font:'Orbitron',monospace;}
+
+html,body{min-height:100vh;background:var(--bg);font-family:var(--font);overflow-x:hidden;color:#e8d8c0;}
+
+body{background-image:radial-gradient(ellipse 80% 40% at 50% 0%,rgba(255,215,0,0.04) 0%,transparent 70%);}
+
+.hdr{display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(6,4,8,0.98);border-bottom:1px solid rgba(255,215,0,0.1);position:sticky;top:0;z-index:50;}
+
+.back{display:flex;align-items:center;gap:5px;color:#2a2010;font-size:10px;letter-spacing:1px;text-decoration:none;transition:color .2s;}
+
+.back:hover{color:var(--cs);}
+
+.back svg{width:14px;height:14px;}
+
+.title{flex:1;font-size:14px;font-weight:900;letter-spacing:3px;background:linear-gradient(90deg,var(--cs),#ff9500);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+
+.bal{font-size:13px;font-weight:700;color:var(--cs);font-family:monospace;}
+
+.page{max-width:420px;margin:0 auto;padding:16px 14px 80px;}
+
+
+
+/* ARENA */
+
+.arena{background:rgba(4,2,6,0.99);border:1px solid rgba(255,215,0,0.08);border-radius:20px;padding:18px 14px;margin-bottom:14px;position:relative;overflow:hidden;}
+
+.arena::before{content:'';position:absolute;top:0;left:15%;right:15%;height:1px;background:linear-gradient(90deg,transparent,rgba(255,215,0,0.3),transparent);}
+
+
+
+/* Stats */
+
+.box-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:14px;}
+
+.bst{background:rgba(255,215,0,0.04);border:1px solid rgba(255,215,0,0.08);border-radius:10px;padding:8px;text-align:center;}
+
+.bst .bv{font-size:14px;font-weight:900;font-family:monospace;color:var(--cs);}
+
+.bst .bl2{font-size:8px;color:#2a2010;letter-spacing:1px;margin-top:2px;}
+
+
+
+/* BOX GRID */
+
+.box-grid{display:grid;gap:8px;margin-bottom:14px;}
+
+.box-grid.sz9{grid-template-columns:repeat(3,1fr);}
+
+.box-grid.sz12{grid-template-columns:repeat(4,1fr);}
+
+.box-grid.sz16{grid-template-columns:repeat(4,1fr);}
+
+
+
+.mbox{
+
+  aspect-ratio:1;border-radius:12px;
+
+  background:rgba(255,215,0,0.06);
+
+  border:1px solid rgba(255,215,0,0.12);
+
+  display:flex;align-items:center;justify-content:center;
+
+  font-size:clamp(20px,6vw,30px);
+
+  cursor:pointer;transition:all .2s;
+
+  -webkit-tap-highlight-color:transparent;
+
+  position:relative;overflow:hidden;
+
+}
+
+.mbox:hover:not(.opened){background:rgba(255,215,0,0.14);border-color:rgba(255,215,0,0.35);transform:scale(0.97);}
+
+.mbox.closed{animation:box-wait 3s ease-in-out infinite;}
+
+@keyframes box-wait{0%,100%{box-shadow:none;}50%{box-shadow:0 0 10px rgba(255,215,0,0.1);}}
+
+.mbox.safe-open{background:rgba(34,197,94,0.15);border-color:var(--green);animation:open-pop .45s cubic-bezier(.34,1.56,.64,1) forwards,safe-glow 2s ease 0.45s infinite;}
+
+@keyframes open-pop{0%{transform:scale(0.5) rotate(-8deg);opacity:0;}65%{transform:scale(1.12) rotate(3deg);}100%{transform:scale(1) rotate(0deg);opacity:1;}}
+
+@keyframes safe-glow{0%,100%{box-shadow:0 0 6px rgba(34,197,94,0.2);}50%{box-shadow:0 0 18px rgba(34,197,94,0.55),inset 0 0 8px rgba(34,197,94,0.08);}}
+
+.mbox.bomb-open{background:rgba(255,51,51,0.25);border-color:var(--bomb);animation:bomb-shake .5s ease,bomb-glow 1s ease 0.5s infinite;}
+
+@keyframes bomb-shake{0%,100%{transform:translate(0);}15%{transform:translate(-5px,-2px);}30%{transform:translate(5px,2px);}45%{transform:translate(-4px,0);}60%{transform:translate(4px,-3px);}75%{transform:translate(-3px,4px);}90%{transform:translate(3px,-2px);}}
+
+@keyframes bomb-glow{0%,100%{box-shadow:0 0 8px rgba(255,51,51,0.3);}50%{box-shadow:0 0 22px rgba(255,51,51,0.65),inset 0 0 10px rgba(255,51,51,0.1);}}
+
+.mbox.revealed-safe{background:rgba(34,197,94,0.08);border-color:rgba(34,197,94,0.2);cursor:default;opacity:.7;}
+
+.mbox.revealed-bomb{background:rgba(255,51,51,0.06);border-color:rgba(255,51,51,0.15);cursor:default;opacity:.6;}
+
+.mbox.disabled{cursor:default;}
+
+.mbox .box-val{position:absolute;bottom:4px;right:5px;font-size:7px;font-family:monospace;color:var(--cs);opacity:.8;}
+
+
+
+/* Danger meter */
+
+.dm-wrap{margin-bottom:12px;}
+
+.dm-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;}
+
+.dm-lbl{font-size:8px;letter-spacing:1px;color:#2a2010;}
+
+.dm-pct-val{font-size:10px;font-family:monospace;font-weight:700;transition:color .4s;}
+
+.dm-bar{height:5px;background:rgba(255,255,255,0.04);border-radius:3px;overflow:hidden;}
+
+.dm-fill{height:100%;border-radius:3px;transition:width .5s ease,background .5s ease;width:0%;}
+
+/* Session history */
+
+.mb-hist{display:flex;gap:4px;flex-wrap:wrap;min-height:14px;margin-bottom:12px;align-items:center;}
+
+.mbh-lbl{font-size:8px;color:#2a2010;letter-spacing:1px;flex-shrink:0;margin-right:2px;}
+
+.mbh-dot{width:12px;height:12px;border-radius:50%;}
+
+
+
+/* RESULT */
+
+.result-mb{text-align:center;min-height:28px;font-size:11px;font-weight:700;letter-spacing:2px;margin-bottom:12px;display:flex;align-items:center;justify-content:center;}
+
+.result-mb.win{color:var(--green);}
+
+.result-mb.big{color:var(--cs);font-size:14px;text-shadow:0 0 16px rgba(255,215,0,0.4);}
+
+.result-mb.boom{color:var(--bomb);}
+
+.result-mb.idle{color:#2a2010;}
+
+
+
+/* Cashout */
+
+.co-strip{display:flex;gap:10px;align-items:center;margin-bottom:10px;}
+
+.pot-d{text-align:center;}
+
+.pot-v{font-size:18px;font-weight:900;color:var(--cs);font-family:monospace;}
+
+.pot-l{font-size:8px;color:#2a2010;letter-spacing:1px;}
+
+.btn-co{flex:1;padding:12px;border:1px solid rgba(255,215,0,0.25);border-radius:10px;background:rgba(255,215,0,0.06);color:var(--cs);font-family:var(--font);font-size:10px;font-weight:700;letter-spacing:1px;cursor:pointer;transition:all .2s;}
+
+.btn-co:not(:disabled):hover{background:rgba(255,215,0,0.14);}
+
+.btn-co:disabled{opacity:.3;cursor:not-allowed;}
+
+
+
+/* Diff + bet */
+
+.diff-row{display:flex;gap:6px;margin-bottom:12px;}
+
+.df{flex:1;padding:8px 4px;border-radius:8px;border:1px solid rgba(255,215,0,0.1);background:rgba(255,215,0,0.03);text-align:center;cursor:pointer;transition:all .15s;font-size:8px;letter-spacing:1px;color:#2a2010;}
+
+.df:hover,.df.active{border-color:var(--cs);color:var(--cs);background:rgba(255,215,0,0.08);}
+
+.bet-ctrl{background:rgba(0,0,0,0.4);border:1px solid rgba(255,215,0,0.06);border-radius:14px;padding:14px;}
+
+.bl{font-size:8px;color:#2a2010;letter-spacing:2px;margin-bottom:8px;}
+
+.bet-row{display:flex;gap:8px;margin-bottom:8px;}
+
+.bet-inp{flex:1;background:rgba(0,0,0,0.5);border:1px solid rgba(255,215,0,0.1);border-radius:8px;padding:10px 12px;color:#e8d8c0;font-family:var(--font);font-size:13px;font-weight:700;outline:none;text-align:center;}
+
+.bet-inp:focus{border-color:rgba(255,215,0,0.3);}
+
+.adj{padding:10px 14px;background:rgba(255,215,0,0.04);border:1px solid rgba(255,215,0,0.08);border-radius:8px;color:#2a2010;font-family:var(--font);font-size:11px;cursor:pointer;transition:all .15s;}
+
+.adj:hover{color:var(--cs);}
+
+.qrow{display:flex;gap:5px;margin-bottom:10px;}
+
+.qb{flex:1;padding:7px 3px;background:rgba(255,215,0,0.04);border:1px solid rgba(255,215,0,0.08);border-radius:6px;color:#2a2010;font-size:8px;letter-spacing:1px;cursor:pointer;text-align:center;transition:all .15s;}
+
+.qb:hover{border-color:var(--cs);color:var(--cs);}
+
+.btn-start-mb{width:100%;padding:15px;border:none;border-radius:10px;font-family:var(--font);font-size:13px;font-weight:900;letter-spacing:3px;cursor:pointer;transition:all .2s;background:linear-gradient(135deg,#664400,var(--cs));color:#06040a;box-shadow:0 4px 20px rgba(255,215,0,0.3);}
+
+.btn-start-mb:not(:disabled):hover{transform:translateY(-2px);}
+
+.btn-start-mb:disabled{opacity:.4;cursor:not-allowed;transform:none!important;}
+
+
+
+#expl{position:fixed;inset:0;pointer-events:none;opacity:0;z-index:200;background:radial-gradient(ellipse at 50% 40%,rgba(255,51,51,0.35),transparent 70%);}
+
+#expl.show{animation:ea .4s ease;}
+
+@keyframes ea{0%{opacity:0;}20%{opacity:1;}100%{opacity:0;}}
+
+#flashG{position:fixed;inset:0;pointer-events:none;opacity:0;z-index:200;background:radial-gradient(ellipse at 50% 30%,rgba(255,215,0,0.25),transparent 70%);}
+
+#flashG.show{animation:fa .5s ease;}
+
+@keyframes fa{0%,100%{opacity:0;}30%{opacity:1;}}
+
+</style>
+
+    <script src="/static/sound.js"></script>
+
+    <script src="/static/big-win.js"></script>
+
+
+    <script src="/static/balance-animation.js"></script>
+
+
+    <script src="/static/page-transitions.js"></script>
+
+
+    <script src="/static/autoplay.js"></script>
+
+
+<link rel="stylesheet" href="/static/games-shared.css"><script src="/static/js/csrf.js"></script>
+
+
+</head>
+
+<body>
+
+<div id="expl"></div><div id="flashG"></div>
+
+<header class="hdr">
+
+  <a class="back" href="/games"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>GAMES</a>
+
+  <span class="title">📦  MYSTERY BOX</span>
+
+  <span class="bal" id="balDisplay">$—</span>
+
+</header>
+
+<div class="page">
+
+  <div class="arena">
+
+    <div class="box-stats">
+
+      <div class="bst"><div class="bv" id="openedDisp">0</div><div class="bl2">OPENED</div></div>
+
+      <div class="bst"><div class="bv" id="multAcc">0.0×</div><div class="bl2">ACCUMULATED</div></div>
+
+      <div class="bst"><div class="bv" id="potMb">$0</div><div class="bl2">POT WIN</div></div>
+
+    </div>
+
+    <div class="dm-wrap">
+
+      <div class="dm-top"><span class="dm-lbl">💣 BOMB DANGER</span><span class="dm-pct-val" id="dangerPct">—</span></div>
+
+      <div class="dm-bar"><div class="dm-fill" id="dangerFill"></div></div>
+
+    </div>
+
+    <div class="box-grid sz9" id="boxGrid"></div>
+
+    <div class="result-mb idle" id="resultMb">OPEN BOXES TO COLLECT MULTIPLIERS</div>
+
+    <div class="co-strip">
+
+      <div class="pot-d"><div class="pot-v" id="potVal">$0</div><div class="pot-l">CASH OUT NOW</div></div>
+
+      <button class="btn-co" id="coBtn" onclick="cashout()" disabled>💰  CASH OUT</button>
+
+    </div>
+
+  </div>
+
+
+
+  <div class="mb-hist" id="mbHist"><span class="mbh-lbl">SESSION:</span></div>
+
+  <div class="diff-row">
+
+    <div class="df active" id="dfEasy" onclick="setDiff('easy')">🟢  EASY<br><span style="font-size:7px">9 BOX · 1 BOMB</span></div>
+
+    <div class="df" id="dfMedium" onclick="setDiff('medium')">🟡  MEDIUM<br><span style="font-size:7px">9 BOX · 2 BOMBS</span></div>
+
+    <div class="df" id="dfHard" onclick="setDiff('hard')">🔴  HARD<br><span style="font-size:7px">12 BOX · 3 BOMBS</span></div>
+
+    <div class="df" id="dfExpert" onclick="setDiff('expert')">💀  EXPERT<br><span style="font-size:7px">16 BOX · 5 BOMBS</span></div>
+
+  </div>
+
+
+
+  <div class="bet-ctrl">
+
+    <div class="bl">BET AMOUNT</div>
+
+    <div class="bet-row">
+
+      <button class="adj" onclick="halveBet()">½</button>
+
+      <input class="bet-inp" id="betInp" type="number" value="500" min="50">
+
+      <button class="adj" onclick="doubleBet()">2×</button>
+
+    </div>
+
+    <div class="qrow">
+
+      <div class="qb" onclick="qb(100)">$100</div><div class="qb" onclick="qb(500)">$500</div>
+
+      <div class="qb" onclick="qb(1000)">$1K</div><div class="qb" onclick="qb(5000)">$5K</div><div class="qb" onclick="qb(10000)">$10K</div>
+
+    </div>
+
+    <button class="btn-start-mb" id="startBtn" onclick="startMystery()">📦  OPEN BOXES</button>
+
+  </div>
+
+</div>
+
+<script>
+
+const DIFF={easy:{size:9,cols:'sz9',bombs:1},medium:{size:9,cols:'sz9',bombs:2},hard:{size:12,cols:'sz12',bombs:3},expert:{size:16,cols:'sz16',bombs:5}};
+
+let diff='easy',balance=0,gameActive=false,acting=false,totalMult=0,opened=0,bet=500;
+
+let mbHistory=[];
+
+function updateDanger(openedCount){
+
+  const cfg=DIFF[diff];
+
+  const pEl=document.getElementById('dangerPct');
+
+  const fEl=document.getElementById('dangerFill');
+
+  if(!gameActive||openedCount===null||openedCount===undefined){
+
+    if(pEl){pEl.textContent='—';pEl.style.color='';}
+
+    if(fEl){fEl.style.width='0%';fEl.style.background='#22c55e';}return;
+
+  }
+
+  const rem=cfg.size-openedCount;
+
+  if(rem<=0){if(pEl)pEl.textContent='0%';if(fEl)fEl.style.width='0%';return;}
+
+  const pct=Math.round(cfg.bombs/rem*100);
+
+  const col=pct<20?'#22c55e':pct<40?'#84cc16':pct<60?'#f59e0b':pct<80?'#f97316':'#ff3333';
+
+  if(fEl){fEl.style.width=Math.min(pct,100)+'%';fEl.style.background=col;}
+
+  if(pEl){pEl.textContent=pct+'%';pEl.style.color=col;}
+
+}
+
+function pushMbHist(won){
+
+  mbHistory.push(won);if(mbHistory.length>20)mbHistory.shift();
+
+  const el=document.getElementById('mbHist');if(!el)return;
+
+  el.innerHTML='<span class="mbh-lbl">SESSION:</span>';
+
+  mbHistory.forEach(w=>{const d=document.createElement('div');d.className='mbh-dot';d.style.background=w?'#22c55e':'#ff3333';d.title=w?'Cash Out ✅':'Bomb 💣';el.appendChild(d);});
+
+}
+
+async function init(){try{const d=await api('/api/user/me');balance=d.balance;updateBal();}catch(e){}buildGrid();}
+
+function updateBal(){var e=document.getElementById('balDisplay'),c=e.textContent||'',n='$'+balance.toLocaleString(undefined,{maximumFractionDigits:0});if(c&&c!=='$—'&&c!==n){var p=parseFloat(c.replace(/[,$]/g,''));if(!isNaN(p)&&p!==balance){animateBalance(e,'$'+p.toLocaleString(undefined,{maximumFractionDigits:0}),n,balance>=p);return}}e.textContent=n}
+
+function setDiff(d){Sound.click();diff=d;Object.keys(DIFF).forEach(k=>{document.getElementById('df'+k.charAt(0).toUpperCase()+k.slice(1)).classList.toggle('active',k===d);});if(!gameActive)buildGrid();}
+
+function qb(v){Sound.click();document.getElementById('betInp').value=v;}
+
+
+function halveBet(){Sound.click();document.getElementById('betInp').value=Math.max(50,Math.floor(parseInt(document.getElementById('betInp').value||500)/2));}
+
+
+function doubleBet(){Sound.click();document.getElementById('betInp').value=Math.min(balance,parseInt(document.getElementById('betInp').value||500)*2);}
+
+function buildGrid(){
+
+  const cfg=DIFF[diff];const grid=document.getElementById('boxGrid');
+
+  grid.className='box-grid '+cfg.cols;grid.innerHTML='';
+
+  for(let i=0;i<cfg.size;i++){
+
+    const b=document.createElement('div');b.className='mbox closed';b.id='mb'+i;b.textContent='❓';
+
+    b.onclick=()=>openBox(i);grid.appendChild(b);
+
+  }
+
+}
+
+async function startMystery(){
+
+
+  Sound.click();
+
+
+  if(gameActive||acting) return;
+
+  bet=parseInt(document.getElementById('betInp').value)||500;
+
+  if(bet>balance){setResult('❌ INSUFFICIENT BALANCE','idle');Sound.error();return;}
+
+  acting=true;document.getElementById('startBtn').disabled=true;
+
+  totalMult=0;opened=0;updateStats(0,0,bet);
+
+  setResult('OPEN BOXES — AVOID THE BOMBS!','idle');
+
+  try{
+
+    await api('/api/games/hard/mystery/start',{method:'POST',body:JSON.stringify({amount:bet,difficulty:diff})});
+
+    gameActive=true;updateDanger(0);balance=await refreshBal();updateBal();
+
+    buildGrid();document.getElementById('coBtn').disabled=true;
+
+  }catch(e){setResult('ERROR: '+e.message,'idle');}
+
+  finally{acting=false;document.getElementById('startBtn').disabled=false;}
+
+}
+
+async function openBox(idx){
+
+  if(!gameActive||acting) return;
+
+  const cell=document.getElementById('mb'+idx);
+
+  if(!cell||cell.classList.contains('safe-open')||cell.classList.contains('bomb-open')) return;
+
+  acting=true;
+
+
+  Sound.reveal();
+
+
+  try{
+
+
+    const d=await api('/api/games/hard/mystery/open',{method:'POST',body:JSON.stringify({box:idx})});
+
+
+    if(d.type==='bomb'){
+
+      cell.className='mbox bomb-open';cell.textContent=d.skin||'❓';
+
+      if(d.all_grid){d.all_grid.forEach((b,i)=>{const el=document.getElementById('mb'+i);if(el&&!el.classList.contains('bomb-open')&&!el.classList.contains('safe-open')){el.className='mbox revealed-'+(b.type==='bomb'?'bomb':'safe');el.textContent=b.type==='bomb'?'💣':b.skin||'❓';}});}
+
+
+      Sound.loss();
+
+
+      gameActive=false;document.getElementById('coBtn').disabled=true;updateDanger(null);pushMbHist(false);
+
+
+      setResult('💣 BOMB! LOST EVERYTHING · HAD '+totalMult.toFixed(1)+'×','boom');
+
+
+      doExplode();balance=await refreshBal();updateBal();
+
+    }else{
+
+      cell.className='mbox safe-open';cell.textContent=d.skin||'❓';
+
+      const val=parseFloat(d.value)||0;const valEl=document.createElement('div');valEl.className='box-val';valEl.textContent='+'+val+'×';cell.appendChild(valEl);
+
+      totalMult=d.total_mult;opened++;
+
+      updateStats(opened,totalMult,bet*Math.max(totalMult,0));
+
+      if(d.cleared){
+
+
+        Sound.win();
+
+
+        gameActive=false;updateDanger(null);pushMbHist(true);
+
+
+        setResult('🏆 ALL SAFE BOXES CLEARED! +$'+d.auto_win.toLocaleString(undefined,{maximumFractionDigits:0}),'big');
+
+
+        flashGold();balance=await refreshBal();updateBal();if(window.maybeBigWin)maybeBigWin(bet,d.auto_win);
+
+      }else{
+
+        updateDanger(opened);
+
+        setResult('✅ +'+val+'× · TOTAL '+totalMult.toFixed(1)+'×','win');
+
+        document.getElementById('coBtn').disabled=(totalMult<=0);
+
+        if(totalMult>0) flashGold();
+
+      }
+
+    }
+
+  }catch(e){setResult('ERROR','idle');}
+
+  finally{acting=false;}
+
+}
+
+async function cashout(){
+
+  if(!gameActive||acting) return;
+
+  acting=true;gameActive=false;document.getElementById('coBtn').disabled=true;
+
+
+  try{
+
+
+    Sound.win();
+
+
+    const d=await api('/api/games/hard/mystery/cashout',{method:'POST'});
+
+
+    balance=await refreshBal();updateBal();
+
+
+    setResult('💰 CASHED OUT '+totalMult.toFixed(1)+'× · +$'+d.win.toLocaleString(undefined,{maximumFractionDigits:0}),'win');
+    if(window.maybeBigWin)maybeBigWin(bet,d.win);
+
+
+    updateDanger(null);pushMbHist(true);
+
+  }catch(e){setResult('ERROR','idle');}
+
+  finally{acting=false;}
+
+}
+
+function updateStats(op,mult,pot){
+
+  document.getElementById('openedDisp').textContent=op;
+
+  document.getElementById('multAcc').textContent=parseFloat(mult||0).toFixed(1)+'×';
+
+  document.getElementById('potMb').textContent='$'+parseFloat(pot||0).toLocaleString(undefined,{maximumFractionDigits:0});
+
+  document.getElementById('potVal').textContent='$'+parseFloat(pot||0).toLocaleString(undefined,{maximumFractionDigits:0});
+
+}
+
+function setResult(t,c){const el=document.getElementById('resultMb');el.className='result-mb '+c;el.textContent=t;}
+
+function doExplode(){const el=document.getElementById('expl');el.classList.remove('show');void el.offsetWidth;el.classList.add('show');}
+
+function flashGold(){const el=document.getElementById('flashG');el.classList.remove('show');void el.offsetWidth;el.classList.add('show');}
+
+async function refreshBal(){try{const d=await api('/api/user/me');return d.balance;}catch(e){return balance;}}
+
+async function api(url,opts={}){const r=await fetch(url,{credentials:'include',headers:{'Content-Type':'application/json'},...opts});if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.detail||'Error');}return r.json();}
+
+init();
+
+</script>
+
+<script>if("serviceWorker"in navigator){navigator.serviceWorker.register("/static/sw.js").catch(function(){})}</script>
+
+
+<script src="/static/chat.js"></script>
+
+
+</body>
+
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

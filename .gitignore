@@ -1,0 +1,28 @@
+# Secrets
+.env
+env.txt
+config.yml.yaml
+*.pem
+*.key
+
+# Python
+venv/
+__pycache__/
+*.pyc
+
+# Backups / data dumps
+backups/
+
+# Large binaries / bundles not part of the app source
+cs2-simulator-v0.14-web.zip
+cloudflared.exe
+
+# Game asset images (large binary set, tracked outside git for now)
+static/images/
+
+# Editor / OS cruft
+.DS_Store
+Thumbs.db
+
+# Local Claude Code config (dev-machine specific, not part of the app)
+.claude/

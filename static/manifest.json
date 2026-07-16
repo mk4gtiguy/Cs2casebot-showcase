@@ -1,0 +1,9 @@
+{
+    "name": "CS2CaseBot",
+    "short_name": "CS2CaseBot",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#0f0f14",
+    "theme_color": "#d4af37",
+    "icons": []
+}

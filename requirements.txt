@@ -1,0 +1,11 @@
+fastapi
+uvicorn[standard]
+asyncpg
+httpx
+py-dotenv
+pydantic
+discord.py
+aiohttp
+stripe
+websockets
+fastapi-csrf-protect

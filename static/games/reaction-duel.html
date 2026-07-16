@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>⚡  Reaction Duel — CS2CaseBot</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+:root{--bg:#06070a;--accent:#ffd700;--green:#22c55e;--red:#ef4444;--muted:#556;--font:'Orbitron',monospace;}
+html,body{min-height:100vh;background:var(--bg);font-family:var(--font);overflow-x:hidden;color:#c8d0e8;}
+.hdr{display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(6,7,10,0.98);border-bottom:1px solid rgba(255,215,0,0.12);position:sticky;top:0;z-index:50;}
+.back{display:flex;align-items:center;gap:5px;color:#2a2a3a;font-size:10px;letter-spacing:1px;text-decoration:none;transition:color .2s;}
+.back:hover{color:var(--accent);}
+.back svg{width:14px;height:14px;}
+.title{flex:1;font-size:13px;font-weight:900;letter-spacing:2px;color:var(--accent);}
+.bal{font-size:13px;font-weight:700;color:var(--accent);font-family:monospace;}
+.page{max-width:460px;margin:0 auto;padding:16px 14px 80px;}
+
+.section-label{font-size:9px;letter-spacing:2px;color:var(--muted);margin:14px 0 8px;text-transform:uppercase;}
+.duel-list{display:flex;flex-direction:column;gap:8px;}
+.duel-card{background:rgba(0,0,0,0.4);border:1px solid rgba(255,215,0,0.1);border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:all .15s;}
+.duel-card:hover{border-color:rgba(255,215,0,0.35);background:rgba(255,215,0,0.03);}
+.duel-card .dc-icon{font-size:22px;}
+.duel-card .dc-info{flex:1;}
+.duel-card .dc-value{font-size:15px;font-weight:900;color:var(--accent);font-family:monospace;}
+.duel-card .dc-meta{font-size:9px;color:var(--muted);margin-top:2px;letter-spacing:.5px;}
+.empty-lobby{text-align:center;padding:30px 10px;color:var(--muted);font-size:11px;}
+
+.stake-panel{background:rgba(0,0,0,0.4);border:1px solid rgba(255,215,0,0.1);border-radius:14px;padding:16px;margin-top:14px;}
+.stake-input{width:100%;padding:14px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.03);color:var(--accent);font-family:monospace;font-size:20px;font-weight:900;text-align:center;margin-bottom:10px;}
+.stake-quick{display:flex;gap:6px;margin-bottom:14px;}
+.stake-quick button{flex:1;padding:8px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.03);color:#ccc;font-family:var(--font);font-size:10px;cursor:pointer;}
+.stake-quick button:hover{border-color:var(--accent);color:var(--accent);}
+.btn-new-duel{width:100%;padding:15px;border:none;border-radius:12px;font-family:var(--font);font-size:12px;font-weight:900;letter-spacing:2px;cursor:pointer;transition:all .2s;background:linear-gradient(135deg,#7a5c00,var(--accent));color:#06070a;box-shadow:0 4px 20px rgba(255,215,0,0.3);}
+.btn-new-duel:hover{transform:translateY(-2px);box-shadow:0 6px 32px rgba(255,215,0,0.5);}
+
+.duel-hdr{text-align:center;margin-bottom:14px;}
+.duel-total{font-size:clamp(30px,9vw,44px);font-weight:900;color:var(--accent);font-family:monospace;line-height:1;}
+.duel-total-label{font-size:9px;letter-spacing:2px;color:var(--muted);margin-top:4px;}
+.duel-status-banner{text-align:center;min-height:24px;font-size:11px;font-weight:700;letter-spacing:2px;margin-bottom:12px;}
+.duel-status-banner.waiting{color:var(--muted);}
+.duel-status-banner.armed{color:var(--accent);}
+.duel-status-banner.resolving{color:#ff8800;animation:pulse-cd .5s infinite;}
+@keyframes pulse-cd{0%,100%{opacity:1;}50%{opacity:.5;}}
+.duel-status-banner.completed{color:var(--green);}
+
+.react-panel{border-radius:16px;padding:60px 20px;text-align:center;margin-bottom:14px;transition:background .1s;background:#3a1010;min-height:220px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:default;user-select:none;}
+.react-panel.go{background:#0f3a1a;cursor:pointer;}
+.react-panel .rp-text{font-size:16px;font-weight:900;letter-spacing:2px;color:#ccc;}
+.react-panel.go .rp-text{color:var(--green);font-size:24px;}
+
+.result-row{display:flex;gap:10px;margin-bottom:14px;}
+.result-slot{flex:1;border:2px solid rgba(255,255,255,0.06);border-radius:14px;padding:14px 10px;text-align:center;background:rgba(255,255,255,0.02);}
+.result-slot.me{border-color:rgba(255,215,0,0.4);}
+.result-slot.winner{border-color:var(--green);background:rgba(34,197,94,0.08);}
+.result-slot .rs-user{font-size:9px;color:var(--muted);}
+.result-slot .rs-ms{font-size:20px;font-weight:900;color:var(--accent);font-family:monospace;margin-top:4px;}
+.result-slot .rs-fs{font-size:9px;color:var(--red);margin-top:2px;}
+
+.duel-actions{display:flex;gap:8px;margin-top:6px;}
+.btn-join-duel,.btn-backout,.btn-lobby{flex:1;padding:14px;border-radius:10px;font-family:var(--font);font-size:11px;font-weight:900;letter-spacing:2px;cursor:pointer;transition:all .2s;}
+.btn-join-duel{border:none;background:linear-gradient(135deg,#7a5c00,var(--accent));color:#06070a;}
+.btn-backout{border:1px solid rgba(239,68,68,0.4);background:rgba(239,68,68,0.08);color:var(--red);}
+.btn-lobby{border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.03);color:#ccc;}
+
+.disclaimer-inline{font-size:10px;color:var(--muted);margin-top:18px;text-align:center;line-height:1.5;}
+</style>
+    <script src="/static/sound.js"></script>
+    <script src="/static/big-win.js"></script>
+    <script src="/static/balance-animation.js"></script>
+    <script src="/static/page-transitions.js"></script>
+<link rel="stylesheet" href="/static/games-shared.css"><script src="/static/js/csrf.js"></script>
+</head>
+<body>
+
+<header class="hdr">
+  <a class="back" href="/games"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>GAMES</a>
+  <span class="title">⚡  REACTION DUEL</span>
+  <span class="bal" id="balDisplay">$—</span>
+</header>
+
+<div class="page">
+
+  <div id="lobbyView">
+    <div class="section-label">Open Duels</div>
+    <div class="duel-list" id="duelList"></div>
+
+    <div class="stake-panel">
+      <input type="number" class="stake-input" id="stakeInput" value="50" min="10" max="750000" step="1">
+      <div class="stake-quick">
+        <button onclick="setStake(10)">$10</button>
+        <button onclick="setStake(50)">$50</button>
+        <button onclick="setStake(100)">$100</button>
+        <button onclick="setStake(500)">$500</button>
+      </div>
+      <button class="btn-new-duel" onclick="startDuel(null)">⚡  STAKE — START A DUEL</button>
+    </div>
+    <div class="disclaimer-inline">⚠️ Stake cash against an opponent. When the panel turns green, click as fast as you can — clicking early is an automatic loss. Fastest reaction wins both stakes, no house cut.</div>
+  </div>
+
+  <div id="duelView" style="display:none;">
+    <div class="duel-hdr">
+      <div class="duel-total" id="duelTotal">$0.00</div>
+      <div class="duel-total-label" id="duelTotalLabel">TOTAL AT STAKE</div>
+    </div>
+    <div class="duel-status-banner waiting" id="duelStatusBanner">WAITING FOR AN OPPONENT</div>
+    <div class="react-panel" id="reactPanel" onclick="onPanelClick()"><div class="rp-text" id="reactPanelText">WAITING…</div></div>
+    <div class="result-row" id="resultRow" style="display:none;"></div>
+    <div class="duel-actions" id="duelActions"></div>
+    <div style="text-align:center;margin-top:10px;">
+      <button class="btn-lobby" style="max-width:200px;margin:0 auto;display:block;" onclick="showLobby()">← BACK TO LOBBY</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+let balance = 0, myUserId = null;
+let balDisplayInited = false;
+let currentDuelId = null;
+let ws = null;
+let lobbyTimer = null;
+let lastDuel = null;
+let goClientTime = null;
+let hasReacted = false;
+
+async function init(){
+  try{ const d = await api('/api/user/me'); balance = d.balance; myUserId = String(d.user_id); updateBal(); }catch(e){}
+  const params = new URLSearchParams(location.search);
+  const duelParam = params.get('duel');
+  if (duelParam){
+    try{
+      const data = await api('/api/games/reaction-duel/duels/' + duelParam);
+      enterDuel(Number(duelParam), data);
+      return;
+    }catch(e){ showToast('Could not load that duel'); }
+  }
+  showLobby();
+}
+
+function updateBal(){
+  const e = document.getElementById('balDisplay');
+  const n = '$'+balance.toLocaleString(undefined,{maximumFractionDigits:0});
+  if (balDisplayInited && window.animateBalance) { animateBalance(e, e.textContent, n, true); }
+  else { e.textContent = n; }
+  balDisplayInited = true;
+}
+async function refreshBal(){ try{ const d = await api('/api/user/me'); return d.balance; }catch(e){ return balance; } }
+
+function setStake(v){ document.getElementById('stakeInput').value = v; }
+
+function showLobby(){
+  closeWS();
+  currentDuelId = null;
+  document.getElementById('duelView').style.display = 'none';
+  document.getElementById('lobbyView').style.display = 'block';
+  document.getElementById('resultRow').style.display = 'none';
+  loadLobby();
+  if (lobbyTimer) clearInterval(lobbyTimer);
+  lobbyTimer = setInterval(loadLobby, 4000);
+}
+
+async function loadLobby(){
+  try{
+    const data = await api('/api/games/reaction-duel/duels');
+    const list = document.getElementById('duelList');
+    if (!data.duels.length){
+      list.innerHTML = '<div class="empty-lobby">No open duels right now — start one!</div>';
+      return;
+    }
+    list.innerHTML = data.duels.map(d => `
+      <div class="duel-card" onclick="startDuel(${d.duel_id})">
+        <div class="dc-icon">⚡</div>
+        <div class="dc-info">
+          <div class="dc-value">$${Number(d.stake).toFixed(2)} stake</div>
+          <div class="dc-meta">${d.player_count}/2 PLAYERS — WAITING</div>
+        </div>
+      </div>
+    `).join('');
+  }catch(e){}
+}
+
+async function startDuel(duelId){
+  let stake = duelId ? null : parseFloat(document.getElementById('stakeInput').value);
+  if (!duelId && (!stake || stake < 10)){
+    showToast('Minimum stake is $10');
+    return;
+  }
+  try{
+    const body = duelId ? { duel_id: duelId, stake: 0 } : { stake };
+    if (duelId){
+      const existing = await api('/api/games/reaction-duel/duels/' + duelId);
+      body.stake = Number(existing.stake);
+    }
+    const data = await api('/api/games/reaction-duel/join', { method: 'POST', body: JSON.stringify(body) });
+    balance = await refreshBal(); updateBal();
+    enterDuel(data.duel_id, data.duel);
+  }catch(e){
+    showToast(e.message || 'Could not join duel');
+  }
+}
+
+function enterDuel(duelId, duel){
+  if (lobbyTimer) { clearInterval(lobbyTimer); lobbyTimer = null; }
+  currentDuelId = duelId;
+  hasReacted = false;
+  goClientTime = null;
+  document.getElementById('lobbyView').style.display = 'none';
+  document.getElementById('duelView').style.display = 'block';
+  document.getElementById('resultRow').style.display = 'none';
+  document.getElementById('reactPanel').style.display = 'flex';
+  document.getElementById('reactPanel').classList.remove('go');
+  renderDuel(duel);
+  connectWS(duelId);
+}
+
+function connectWS(duelId){
+  closeWS();
+  const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  ws = new WebSocket(proto + '//' + location.host + '/api/games/reaction-duel/ws/' + duelId);
+  ws.onmessage = (ev) => handleWSMsg(JSON.parse(ev.data));
+  ws.onclose = () => { if (currentDuelId === duelId) setTimeout(() => { if (currentDuelId === duelId) connectWS(duelId); }, 2000); };
+}
+
+function closeWS(){ if (ws) { try{ ws.close(); }catch(e){} ws = null; } }
+
+function handleWSMsg(msg){
+  if (msg.type === 'room_state'){
+    renderDuel(msg);
+  } else if (msg.type === 'player_joined' || msg.type === 'player_left'){
+    renderDuel(msg.duel);
+  } else if (msg.type === 'armed'){
+    lastDuel.status = 'armed';
+    renderDuel(lastDuel);
+  } else if (msg.type === 'go'){
+    goClientTime = performance.now();
+    const panel = document.getElementById('reactPanel');
+    panel.classList.add('go');
+    document.getElementById('reactPanelText').textContent = 'CLICK NOW!';
+    Sound && Sound.click && Sound.click();
+  } else if (msg.type === 'resolving'){
+    document.getElementById('reactPanelText').textContent = 'RESOLVING…';
+  } else if (msg.type === 'rearm'){
+    hasReacted = false;
+    goClientTime = null;
+    const panel = document.getElementById('reactPanel');
+    panel.classList.remove('go');
+    document.getElementById('reactPanelText').textContent = 'FALSE START — RESETTING…';
+    document.getElementById('duelStatusBanner').textContent = 'BOTH FALSE-STARTED — REROLLING';
+  } else if (msg.type === 'duel_result'){
+    handleDuelResult(msg);
+  } else if (msg.type === 'cancelled'){
+    showToast(msg.reason === 'no_response' ? 'Neither player reacted in time — stakes refunded.' : 'Duel cancelled — your stake was returned.');
+    showLobby();
+  } else if (msg.type === 'no_room'){
+    showToast('This duel no longer exists.');
+    showLobby();
+  }
+}
+
+function renderDuel(duel){
+  lastDuel = duel;
+  const total = Number(duel.stake) * (duel.players ? duel.players.length : 0);
+  document.getElementById('duelTotal').textContent = '$' + total.toFixed(2);
+
+  const banner = document.getElementById('duelStatusBanner');
+  banner.className = 'duel-status-banner ' + duel.status;
+  const iAmIn = duel.players.some(p => p.user_id === myUserId);
+
+  const panel = document.getElementById('reactPanel');
+  const panelText = document.getElementById('reactPanelText');
+  if (duel.status === 'waiting'){
+    banner.textContent = `WAITING FOR AN OPPONENT (${duel.players.length}/2)`;
+    panel.classList.remove('go');
+    panelText.textContent = 'WAITING…';
+  } else if (duel.status === 'armed'){
+    banner.textContent = 'GET READY…';
+    panel.classList.remove('go');
+    panelText.textContent = 'WAIT FOR GREEN…';
+  } else if (duel.status === 'resolving'){
+    banner.textContent = '⚡ RESOLVING…';
+  } else if (duel.status === 'completed'){
+    banner.textContent = 'DUEL COMPLETE';
+  } else {
+    banner.textContent = duel.status.toUpperCase();
+  }
+
+  renderActions(duel, iAmIn);
+}
+
+function onPanelClick(){
+  if (!currentDuelId || hasReacted) return;
+  if (!lastDuel || lastDuel.status !== 'armed') return;
+  hasReacted = true;
+  const ms = goClientTime != null ? Math.round(performance.now() - goClientTime) : 0;
+  api('/api/games/reaction-duel/react', { method: 'POST', body: JSON.stringify({ duel_id: currentDuelId, ms }) })
+    .then(() => { document.getElementById('reactPanelText').textContent = `SUBMITTED: ${ms}ms`; })
+    .catch(e => { hasReacted = false; showToast(e.message || 'Could not submit reaction'); });
+}
+
+function renderActions(duel, iAmIn){
+  const actions = document.getElementById('duelActions');
+  if (duel.status === 'waiting' && iAmIn){
+    actions.innerHTML = `<button class="btn-backout" onclick="backOut()">↩️  BACK OUT</button>`;
+  } else if (duel.status === 'waiting' && !iAmIn){
+    actions.innerHTML = `<button class="btn-join-duel" onclick="startDuel(${duel.duel_id})">⚡  ACCEPT THIS DUEL</button>`;
+  } else {
+    actions.innerHTML = '';
+  }
+}
+
+async function backOut(){
+  if (!currentDuelId) return;
+  try{
+    await api('/api/games/reaction-duel/leave', { method: 'POST', body: JSON.stringify({ duel_id: currentDuelId }) });
+    showToast('Stake returned to your balance.');
+    balance = await refreshBal(); updateBal();
+    showLobby();
+  }catch(e){
+    showToast(e.message || 'Could not back out');
+  }
+}
+
+async function handleDuelResult(msg){
+  Sound && Sound.click && Sound.click();
+  document.getElementById('reactPanel').style.display = 'none';
+  const row = document.getElementById('resultRow');
+  row.style.display = 'flex';
+
+  const duel = lastDuel;
+  const p1 = duel.players.find(p => p.user_id === String(msg.player1_id)) || duel.players[0];
+  const p2 = duel.players.find(p => p.user_id === String(msg.player2_id)) || duel.players[1];
+
+  function slot(p, ms, uid){
+    const isMe = p && p.user_id === myUserId;
+    const isWinner = uid === msg.winner_id;
+    const fs = msg.false_start_user_id === uid;
+    return `<div class="result-slot ${isMe ? 'me' : ''} ${isWinner ? 'winner' : ''}">
+      <div class="rs-user">${esc(p ? p.username : 'Player')}</div>
+      <div class="rs-ms">${fs ? 'FALSE START' : (ms != null ? ms + 'ms' : '—')}</div>
+      ${fs ? '<div class="rs-fs">clicked too early</div>' : ''}
+    </div>`;
+  }
+  row.innerHTML = slot(p1, msg.ms1, msg.player1_id) + slot(p2, msg.ms2, msg.player2_id);
+
+  const iWon = msg.winner_id === myUserId;
+  const banner = document.getElementById('duelStatusBanner');
+  banner.textContent = iWon ? '🏆 YOU WON THE DUEL!' : 'YOUR OPPONENT WON THE DUEL';
+
+  document.getElementById('duelActions').innerHTML =
+    '<button class="btn-lobby" onclick="showLobby()">⚡  PLAY AGAIN</button>';
+
+  if (iWon){
+    Sound && Sound.win && Sound.win();
+    spawnConfettiSafe();
+    balance = await refreshBal(); updateBal();
+    if (window.maybeBigWin) maybeBigWin(msg.total_value / 2, 2);
+  } else {
+    Sound && Sound.loss && Sound.loss();
+  }
+}
+
+function spawnConfettiSafe(){
+  try{ if (window.spawnConfettiExplosion) spawnConfettiExplosion(); else if (window.spawnConfetti) spawnConfetti('Gold', 60); }catch(e){}
+}
+
+function showToast(msg){
+  let t = document.getElementById('rdToast');
+  if (!t){
+    t = document.createElement('div');
+    t.id = 'rdToast';
+    t.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:rgba(20,20,30,0.95);border:1px solid rgba(255,215,0,0.3);color:#fff;padding:10px 18px;border-radius:10px;font-size:11px;z-index:500;max-width:90vw;text-align:center;';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.style.opacity = '1';
+  clearTimeout(t._hideTimer);
+  t._hideTimer = setTimeout(() => { t.style.opacity = '0'; }, 3000);
+}
+
+async function api(url, opts = {}){
+  const r = await fetch(url, { credentials: 'include', headers: { 'Content-Type': 'application/json' }, ...opts });
+  if (!r.ok){ const e = await r.json().catch(() => ({})); throw new Error(e.detail || 'Error'); }
+  return r.json();
+}
+
+init();
+</script>
+<script>if("serviceWorker"in navigator){navigator.serviceWorker.register("/static/sw.js").catch(function(){})}</script>
+<script src="/static/chat.js"></script>
+
+</body>
+</html>

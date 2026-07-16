@@ -1,0 +1,2153 @@
+<!DOCTYPE html>
+
+
+<html lang="en">
+
+
+<head>
+
+
+<meta charset="UTF-8">
+
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+
+<title>🎮 Games — CS2CaseBot</title>
+
+
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;900&display=swap" rel="stylesheet">
+
+
+
+<link rel="stylesheet" href="/static/games-shared.css">
+<link rel="stylesheet" href="/static/css/site-notices.css">
+
+
+
+<script src="/static/sound.js"></script>
+
+
+
+<script src="/static/balance-animation.js"></script>
+
+
+
+<script src="/static/page-transitions.js"></script>
+
+
+<style>
+
+
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+
+
+:root{
+
+
+  --bg:#07080f;--surface:rgba(12,12,26,0.94);--gold:#ffd700;--red:#ff3333;
+
+
+  --purple:#9b4dff;--green:#22c55e;--blue:#3b82f6;--orange:#f97316;
+
+
+  --border:rgba(255,215,0,0.1);--text:#e2e2ef;--muted:#52546a;
+
+
+  --font:'Orbitron','Segoe UI',sans-serif;--mono:'Courier New','Consolas',monospace;
+
+
+  --easy:#22c55e;--medium:#f97316;--hard:#ef4444;--heavy:#7c3aed;--featured:#ffd700;
+
+
+}
+
+
+html,body{min-height:100vh;background:var(--bg);color:var(--text);font-family:var(--font);overflow-x:hidden;}
+
+
+body{background-image:radial-gradient(ellipse 100% 35% at 50% 0%,rgba(255,215,0,0.05) 0%,transparent 70%),radial-gradient(ellipse 60% 50% at 90% 100%,rgba(155,77,255,0.04) 0%,transparent 60%);}
+
+
+
+
+
+/* HEADER */
+
+
+.site-header{display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(7,8,15,0.97);backdrop-filter:blur(14px);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:50;}
+
+
+.btn-back{display:flex;align-items:center;gap:5px;color:var(--muted);font-size:10px;letter-spacing:1px;text-decoration:none;transition:color .2s;flex-shrink:0;}
+
+
+.btn-back:hover{color:var(--gold);}
+
+
+.btn-back svg{width:15px;height:15px;}
+
+
+.snd-toggle{background:none;border:1px solid rgba(255,255,255,0.06);border-radius:8px;color:var(--muted);cursor:pointer;font-size:14px;padding:6px 8px;transition:all .2s;line-height:1;flex-shrink:0;}
+
+
+.snd-toggle:hover{border-color:var(--gold);color:var(--gold);}
+
+
+.snd-toggle.muted{opacity:.4;}
+
+
+.header-title{flex:1;font-size:16px;font-weight:900;letter-spacing:3px;background:linear-gradient(90deg,var(--gold),#ff9500,var(--gold));background-size:200%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;animation:shimmer 4s linear infinite;}
+
+
+@keyframes shimmer{0%{background-position:0%}100%{background-position:200%}}
+
+
+.header-balance{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--gold);flex-shrink:0;}
+
+
+
+
+
+/* SEARCH */
+
+
+.search-wrap{padding:14px 16px 0;max-width:680px;margin:0 auto;}
+
+
+.search-inner{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:10px 14px;transition:border-color .2s;}
+
+
+.search-inner:focus-within{border-color:rgba(255,215,0,0.3);}
+
+
+.search-inner svg{width:16px;height:16px;color:var(--muted);flex-shrink:0;}
+
+
+#searchInput{flex:1;background:none;border:none;outline:none;color:var(--text);font-family:var(--font);font-size:12px;letter-spacing:1px;}
+
+
+#searchInput::placeholder{color:var(--muted);}
+
+
+.search-clear{background:none;border:none;color:var(--muted);cursor:pointer;font-size:16px;padding:0;line-height:1;display:none;}
+
+
+.search-clear.show{display:block;}
+
+
+
+
+
+/* STATS BAR */
+
+
+.stats-bar{display:flex;gap:0;padding:12px 16px 0;max-width:680px;margin:0 auto;overflow-x:auto;}
+
+
+.stats-bar::-webkit-scrollbar{display:none;}
+
+
+.stat-pill{display:flex;align-items:center;gap:6px;padding:6px 14px;font-size:10px;color:var(--muted);white-space:nowrap;border-right:1px solid rgba(255,255,255,0.05);}
+
+
+.stat-pill:last-child{border-right:none;}
+
+
+.stat-pill .sp-val{color:var(--text);font-weight:700;font-family:var(--mono);}
+
+
+
+
+
+/* PAGE */
+
+
+.page{max-width:680px;margin:0 auto;padding:16px 16px 60px;}
+
+
+.tier-section{margin-bottom:32px;}
+
+
+.tier-header{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+
+
+.tier-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;background:currentColor;}
+
+
+.tier-name{font-size:11px;font-weight:900;letter-spacing:3px;text-transform:uppercase;}
+
+
+.tier-count{font-size:9px;color:var(--muted);letter-spacing:1px;background:rgba(255,255,255,0.05);padding:2px 8px;border-radius:10px;}
+
+
+.tier-line{flex:1;height:1px;background:linear-gradient(90deg,currentColor,transparent);opacity:.15;}
+
+
+
+
+
+.tier-easy .tier-dot,.tier-easy .tier-name{color:var(--easy);}
+
+
+.tier-easy .tier-line{color:var(--easy);}
+
+
+.tier-medium .tier-dot,.tier-medium .tier-name{color:var(--medium);}
+
+
+.tier-medium .tier-line{color:var(--medium);}
+
+
+.tier-hard .tier-dot,.tier-hard .tier-name{color:var(--hard);}
+
+
+.tier-hard .tier-line{color:var(--hard);}
+
+
+.tier-heavy .tier-dot,.tier-heavy .tier-name{color:var(--heavy);}
+
+
+.tier-heavy .tier-line{color:var(--heavy);}
+
+
+.tier-featured .tier-dot,.tier-featured .tier-name{color:var(--featured);}
+
+
+.tier-featured .tier-line{color:var(--featured);}
+
+
+
+
+
+/* CARDS */
+
+
+.card-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;}
+
+
+.tier-featured .card-grid{grid-template-columns:1fr;}
+
+
+
+
+
+.game-card{position:relative;background:var(--surface);border:1px solid rgba(255,255,255,0.06);border-radius:14px;padding:16px 12px 14px;cursor:pointer;text-decoration:none;color:inherit;display:flex;flex-direction:column;gap:6px;overflow:hidden;transition:transform .2s cubic-bezier(.34,1.56,.64,1),border-color .2s,box-shadow .2s;-webkit-tap-highlight-color:transparent;}
+
+
+.game-card::before{content:'';position:absolute;inset:0;opacity:0;transition:opacity .3s;border-radius:13px;}
+
+
+.game-card:hover,.game-card:focus-visible{transform:translateY(-4px) scale(1.02);outline:none;}
+
+
+.game-card:active{transform:scale(0.97);}
+
+
+
+
+
+.tier-easy .game-card:hover{border-color:rgba(34,197,94,.35);box-shadow:0 8px 32px rgba(34,197,94,.15);}
+
+
+.tier-easy .game-card::before{background:radial-gradient(ellipse at 50% 0%,rgba(34,197,94,.12),transparent 70%);}
+
+
+.tier-medium .game-card:hover{border-color:rgba(249,115,22,.35);box-shadow:0 8px 32px rgba(249,115,22,.15);}
+
+
+.tier-medium .game-card::before{background:radial-gradient(ellipse at 50% 0%,rgba(249,115,22,.12),transparent 70%);}
+
+
+.tier-hard .game-card:hover{border-color:rgba(239,68,68,.35);box-shadow:0 8px 32px rgba(239,68,68,.15);}
+
+
+.tier-hard .game-card::before{background:radial-gradient(ellipse at 50% 0%,rgba(239,68,68,.12),transparent 70%);}
+
+
+.tier-heavy .game-card:hover{border-color:rgba(124,58,237,.4);box-shadow:0 8px 32px rgba(124,58,237,.18);}
+
+
+.tier-heavy .game-card::before{background:radial-gradient(ellipse at 50% 0%,rgba(124,58,237,.14),transparent 70%);}
+
+
+.tier-featured .game-card:hover{border-color:rgba(255,215,0,.4);box-shadow:0 8px 40px rgba(255,215,0,.2);}
+
+
+.tier-featured .game-card::before{background:radial-gradient(ellipse at 50% 0%,rgba(255,215,0,.1),transparent 70%);}
+
+
+.tier-arcade .tier-dot,.tier-arcade .tier-name{color:#00e5ff;}
+
+
+.tier-arcade .tier-line{color:#00e5ff;}
+
+
+.tier-arcade .game-card:hover{border-color:rgba(0,229,255,.4);box-shadow:0 8px 32px rgba(0,229,255,.18);}
+
+
+.tier-arcade .game-card::before{background:radial-gradient(ellipse at 50% 0%,rgba(0,229,255,.12),transparent 70%);}
+
+
+.badge-ticket{position:absolute;top:10px;right:10px;font-size:8px;font-weight:700;letter-spacing:1px;color:#ffd700;background:rgba(255,215,0,.1);border:1px solid rgba(255,215,0,.3);border-radius:8px;padding:2px 6px;}
+
+
+.game-card:hover::before{opacity:1;}
+
+
+
+
+
+.badge-new{position:absolute;top:10px;right:10px;font-size:8px;font-weight:700;letter-spacing:1px;color:var(--green);background:rgba(34,197,94,.12);border:1px solid rgba(34,197,94,.25);border-radius:8px;padding:2px 6px;}
+
+
+.badge-live{position:absolute;top:10px;right:10px;display:flex;align-items:center;gap:4px;font-size:8px;font-weight:700;letter-spacing:1px;color:var(--red);background:rgba(255,51,51,.1);border:1px solid rgba(255,51,51,.25);border-radius:8px;padding:2px 8px;}
+
+
+.live-dot{width:5px;height:5px;border-radius:50%;background:var(--red);animation:blink-dot 1.2s infinite;}
+
+
+@keyframes blink-dot{0%,100%{opacity:1;}50%{opacity:.2;}}
+
+
+.badge-featured{position:absolute;top:10px;right:10px;font-size:8px;font-weight:900;letter-spacing:1px;color:var(--gold);background:rgba(255,215,0,.1);border:1px solid rgba(255,215,0,.3);border-radius:8px;padding:2px 8px;}
+
+
+
+
+
+.card-emoji{font-size:32px;line-height:1;filter:drop-shadow(0 2px 8px rgba(0,0,0,0.5));}
+
+
+.card-name{font-size:11px;font-weight:700;letter-spacing:1px;color:var(--text);}
+
+
+.card-desc{font-size:9px;color:var(--muted);line-height:1.5;flex:1;}
+
+
+.card-hot{display:flex;align-items:center;gap:4px;font-size:8px;color:var(--orange);margin-top:2px;}
+
+
+
+
+
+.tier-featured .game-card{flex-direction:row;align-items:center;gap:16px;padding:20px 18px;}
+
+
+.tier-featured .card-emoji{font-size:44px;flex-shrink:0;}
+
+
+.tier-featured .card-info{flex:1;}
+
+
+.tier-featured .card-name{font-size:15px;margin-bottom:4px;}
+
+
+.tier-featured .card-desc{font-size:10px;}
+
+
+
+
+
+#noResults{text-align:center;padding:60px 24px;display:none;}
+
+
+#noResults .nr-emoji{font-size:48px;margin-bottom:12px;}
+
+
+#noResults .nr-text{font-size:13px;color:var(--muted);letter-spacing:1px;}
+
+
+
+
+
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(80px);background:rgba(18,18,32,0.97);border:1px solid var(--border);border-radius:24px;padding:11px 20px;font-size:12px;color:var(--text);z-index:999;transition:transform .3s cubic-bezier(.34,1.56,.64,1);white-space:nowrap;}
+
+
+.toast.show{transform:translateX(-50%) translateY(0);}
+
+
+
+
+
+@media(max-width:420px){
+
+
+  .card-grid{grid-template-columns:repeat(2,1fr);}
+
+
+  .card-emoji{font-size:26px;}
+
+
+  .card-name{font-size:10px;}
+
+
+  .stats-bar{flex-wrap:wrap;overflow-x:visible;justify-content:center;row-gap:6px;}
+
+
+  .stat-pill{border-right:none;}
+
+
+}
+
+
+</style>
+
+
+<script src="/static/js/csrf.js"></script>
+
+
+
+</head>
+
+
+<body>
+
+
+
+
+
+<header class="site-header">
+
+
+  <a class="btn-back" href="/">
+
+
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>
+
+
+    DASHBOARD
+
+
+  </a>
+
+
+  <span class="header-title">🎮 GAMES</span>
+
+
+
+  <div class="vol-wrap">
+
+
+
+    <button class="vol-toggle" id="ambientToggle" onclick="toggleAmbient()" title="Casino ambient">🎵</button>
+
+
+
+    <input type="range" id="volSlider" min="0" max="100" value="30" oninput="setVolume(this.value/100)" title="Volume">
+
+
+
+    <button class="vol-toggle" id="sndToggle" onclick="toggleSound()" title="Toggle sound">🔊</button>
+
+
+
+  </div>
+
+
+
+  <span class="header-balance" id="balanceDisplay">$—</span>
+
+
+</header>
+
+
+
+
+
+<div class="search-wrap">
+
+
+  <div class="search-inner">
+
+
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+
+
+    <input id="searchInput" type="text" placeholder="SEARCH GAMES…" autocomplete="off" spellcheck="false">
+
+
+    <button class="search-clear" id="searchClear" onclick="clearSearch()">✕</button>
+
+
+  </div>
+
+
+</div>
+
+
+
+
+
+<div class="stats-bar">
+
+
+  <div class="stat-pill">💰 Balance <span class="sp-val" id="statBal">—</span></div>
+
+
+  <div class="stat-pill">🎮 Games <span class="sp-val">50</span></div>
+
+
+  <div class="stat-pill">🔴 Live <span class="sp-val" id="statLive">4</span></div>
+
+
+  <div class="stat-pill">🏆 Wins Today <span class="sp-val" id="statWins">—</span></div>
+
+
+</div>
+
+
+
+
+
+<div class="page" id="gamePage">
+
+
+
+
+
+  <!-- TICKET ARCADE -->
+
+
+  <section class="tier-section tier-arcade" data-tier="arcade">
+
+
+    <div class="tier-header">
+
+
+      <div class="tier-dot"></div>
+
+
+      <div class="tier-name">Ticket Arcade</div>
+
+
+      <div class="tier-count">5 GAMES</div>
+
+
+      <div class="tier-line"></div>
+
+
+    </div>
+
+
+    <div class="card-grid">
+
+
+      <a class="game-card" href="/?arcade=reaction" data-name="reaction time reflex speed ms milliseconds ticket arcade">
+
+
+        <div class="badge-ticket">1 🎟️</div>
+
+
+        <div class="card-emoji">⚡</div>
+
+
+        <div class="card-name">REACTION TIME</div>
+
+
+        <div class="card-desc">Click the moment the screen flashes. Sub-150ms wins 8 tickets.</div>
+
+
+      </a>
+
+
+      <a class="game-card" href="/?arcade=aim" data-name="aim trainer targets click accuracy shoot ticket arcade">
+
+
+        <div class="badge-ticket">1 🎟️</div>
+
+
+        <div class="card-emoji">🎯</div>
+
+
+        <div class="card-name">AIM TRAINER</div>
+
+
+        <div class="card-desc">20 targets, 10 seconds. Hit 20 and walk away with 6 tickets.</div>
+
+
+      </a>
+
+
+      <a class="game-card" href="/?arcade=bomb" data-name="bomb defuse wire cut cs2 guess ticket arcade">
+
+
+        <div class="badge-ticket">1 🎟️</div>
+
+
+        <div class="card-emoji">💣</div>
+
+
+        <div class="card-name">BOMB DEFUSE</div>
+
+
+        <div class="card-desc">5 wires. One is safe. Cut the right one for 3 tickets.</div>
+
+
+      </a>
+
+
+      <a class="game-card" href="/?arcade=float" data-name="float guesser cs2 skin wear value guess ticket arcade">
+
+
+        <div class="badge-ticket">1 🎟️</div>
+
+
+        <div class="card-emoji">🔫</div>
+
+
+        <div class="card-name">FLOAT GUESSER</div>
+
+
+        <div class="card-desc">Guess a CS2 skin's float value. Within 0.01 wins 8 tickets.</div>
+
+
+      </a>
+
+
+      <a class="game-card" href="/?arcade=memory" data-name="memory sequence pattern repeat remember ticket arcade">
+
+
+        <div class="badge-ticket">1 🎟️</div>
+
+
+        <div class="card-emoji">🧠</div>
+
+
+        <div class="card-name">MEMORY SEQUENCE</div>
+
+
+        <div class="card-desc">Memorise a 10-number sequence and repeat it perfectly.</div>
+
+
+      </a>
+
+
+    </div>
+
+
+  </section>
+
+
+
+
+
+  <!-- EASY -->
+
+
+  <section class="tier-section tier-easy" data-tier="easy">
+
+
+    <div class="tier-header">
+
+
+      <div class="tier-dot"></div>
+
+
+      <div class="tier-name">Easy</div>
+
+
+      <div class="tier-count">11 GAMES</div>
+
+
+      <div class="tier-line"></div>
+
+
+    </div>
+
+
+    <div class="card-grid">
+
+
+      <a class="game-card" href="/games/slots.html" data-name="slots classic fruit machine reel">
+
+
+        <div class="badge-new">NEW</div>
+
+
+        <div class="card-emoji">🎰</div>
+
+
+        <div class="card-name">SLOTS</div>
+
+
+        <div class="card-desc">Classic 3-reel fruit machine. Match symbols, win big.</div>
+
+
+      </a>
+
+
+      <a class="game-card" href="/games/slots-cs2.html" data-name="cs2 weapon rarity slots blue purple pink red gold">
+
+
+        <div class="card-emoji">🔫</div>
+
+
+        <div class="card-name">CS2 SLOTS</div>
+
+
+        <div class="card-desc">Rarity reels. Blue to Gold — pure case opening energy.</div>
+
+
+      </a>
+
+
+      <a class="game-card" href="/games/slots-jackpot.html" data-name="jackpot slots 5 reel progressive pot">
+
+
+        <div class="badge-live"><div class="live-dot"></div>LIVE POT</div>
+
+
+        <div class="card-emoji">🏆</div>
+
+
+        <div class="card-name">JACKPOT</div>
+
+
+        <div class="card-desc">5-reel progressive. Every spin feeds the pot.</div>
+
+
+        <div class="card-hot">🔥 <span id="jackpotDisplay">Loading…</span></div>
+
+
+      </a>
+
+
+      <a class="game-card" href="/games/slots-bomb.html" data-name="bomb defuse slots ct terrorist bust penalty">
+
+
+        <div class="card-emoji">💣</div>
+
+
+        <div class="card-name">BOMB SLOTS</div>
+
+
+        <div class="card-desc">CT vs T reels. Triple bomb busts your bet — plus a penalty.</div>
+
+
+      </a>
+
+
+      <a class="game-card" href="/games/skin-spin.html" data-name="skin spin 5 reel guaranteed weapon grant real skins">
+
+
+        <div class="badge-new">NEW</div>
+
+
+        <div class="card-emoji">💎</div>
+
+
+        <div class="card-name">SKIN SPIN</div>
+
+
+        <div class="card-desc">5 reels, real skins only. Match 3+ and you keep the weapon.</div>
+
+
+      </a>
+
+
+      <a class="game-card" href="/games/coinflip.html" data-name="coinflip heads tails 50 50">
+
+
+        <div class="card-emoji">🪙</div>
+
+
+        <div class="card-name">COINFLIP</div>
+
+
+        <div class="card-desc">50/50. Heads or tails. Nothing more, nothing less.</div>
+
+
+      </a>
+
+
+      <a class="game-card" href="/games/dice.html" data-name="dice roll over under target 1 100">
+
+
+        <div class="card-emoji">🎲</div>
+
+
+        <div class="card-name">DICE</div>
+
+
+        <div class="card-desc">Set your target. Roll over or under it.</div>
+
+
+      </a>
+
+
+      <a class="game-card" href="/games/limbo.html" data-name="limbo multiplier target number">
+
+
+        <div class="card-emoji">📉</div>
+
+
+        <div class="card-name">LIMBO</div>
+
+
+        <div class="card-desc">Name a multiplier. The number has to reach it.</div>
+
+
+      </a>
+
+
+      <a class="game-card" href="/games/keno.html" data-name="keno pick numbers balls draw lottery">
+
+
+        <div class="card-emoji">🔢</div>
+
+
+        <div class="card-name">KENO</div>
+
+
+        <div class="card-desc">Pick your lucky numbers. Watch 20 balls drop.</div>
+
+
+      </a>
+
+
+      <a class="game-card" href="/games/hilo.html" data-name="hi lo higher lower card chain multiply">
+
+
+        <div class="card-emoji">🃏</div>
+
+
+        <div class="card-name">HI-LO</div>
+
+
+        <div class="card-desc">Higher or lower? Chain correct guesses to multiply your pot.</div>
+
+
+      </a>
+
+
+      <a class="game-card" href="/games/crash.html" data-name="crash multiplier cashout live 4 player">
+
+
+        <div class="badge-live"><div class="live-dot"></div>LIVE</div>
+
+
+        <div class="card-emoji">🚀</div>
+
+
+        <div class="card-name">CRASH</div>
+
+
+        <div class="card-desc">Multiplier climbs. Cash out before it crashes. 4 players.</div>
+
+
+        <div class="card-hot">🔥 Most popular</div>
+
+
+      </a>
+
+
+      <a class="game-card" href="/games/dragon-tiger.html" data-name="dragon tiger card dragon vs tiger pick side">
+
+
+        <div class="card-emoji">🐉</div>
+
+
+        <div class="card-name">DRAGON TIGER</div>
+
+
+        <div class="card-desc">Dragon vs Tiger. Pick your side, closest card wins.</div>
+
+
+      </a>
+
+
+    </div>
+
+
+  </section>
+
+
+
+
+
+  <!-- MEDIUM -->
+
+
+  <section class="tier-section tier-medium" data-tier="medium">
+
+
+    <div class="tier-header">
+
+
+      <div class="tier-dot"></div>
+
+
+      <div class="tier-name">Medium</div>
+
+
+      <div class="tier-count">6 GAMES</div>
+
+
+      <div class="tier-line"></div>
+
+
+    </div>
+
+
+    <div class="card-grid">
+
+
+      <a class="game-card" href="/games/mines.html" data-name="mines bombs tiles reveal safe">
+
+
+        <div class="card-emoji">💣</div>
+
+
+        <div class="card-name">MINES</div>
+
+
+        <div class="card-desc">Reveal safe tiles. One wrong move and it's over.</div>
+
+
+      </a>
+
+
+      <a class="game-card" href="/games/plinko.html" data-name="plinko ball drop pegs physics">
+
+
+        <div class="card-emoji">⚽</div>
+
+
+        <div class="card-name">PLINKO</div>
+
+
+        <div class="card-desc">Drop the ball through the pegs. Where it lands is your fate.</div>
+
+
+      </a>
+
+
+      <a class="game-card" href="/games/tower.html" data-name="tower climb floors pick safe box eliminate">
+
+
+        <div class="card-emoji">🏗️</div>
+
+
+        <div class="card-name">TOWER</div>
+
+
+        <div class="card-desc">Climb floors by picking safe boxes. Higher = bigger risk.</div>
+
+
+      </a>
+
+
+      <a class="game-card" href="/games/roulette.html" data-name="roulette wheel spin numbers colors red black">
+
+
+        <div class="card-emoji">🎡</div>
+
+
+        <div class="card-name">ROULETTE</div>
+
+
+        <div class="card-desc">Full wheel. Red, black, or call the exact number.</div>
+
+
+      </a>
+
+
+      <a class="game-card" href="/games/shotgun.html" data-name="shotgun cs2 chamber gamble shell">
+
+
+        <div class="card-emoji">🔫</div>
+
+
+        <div class="card-name">SHOTGUN</div>
+
+
+        <div class="card-desc">CS2 chambers. Pick your shell. One click could wipe you.</div>
+
+
+      </a>
+
+
+      <a class="game-card" href="/games/ladder-climb.html" data-name="ladder climb rungs risk reward multiplier">
+
+
+        <div class="card-emoji">🪜</div>
+
+
+        <div class="card-name">LADDER CLIMB</div>
+
+
+        <div class="card-desc">Each rung multiplies your pot. One slip ends it all.</div>
+
+
+      </a>
+
+
+    </div>
+
+
+  </section>
+
+
+
+
+
+  <!-- HARD -->
+
+
+  <section class="tier-section tier-hard" data-tier="hard">
+
+
+    <div class="tier-header">
+
+
+      <div class="tier-dot"></div>
+
+
+      <div class="tier-name">Hard</div>
+
+
+      <div class="tier-count">5 GAMES</div>
+
+
+      <div class="tier-line"></div>
+
+
+    </div>
+
+
+    <div class="card-grid">
+
+
+      <a class="game-card" href="/games/slide.html" data-name="slide puck multiplier zones launch">
+
+
+        <div class="card-emoji">🎯</div>
+
+
+        <div class="card-name">SLIDE</div>
+
+
+        <div class="card-desc">Launch the puck. Land in the highest multiplier zone.</div>
+
+
+      </a>
+
+
+      <a class="game-card" href="/games/mystery-box.html" data-name="mystery box cs2 skin multiplier bomb">
+
+
+        <div class="card-emoji">📦</div>
+
+
+        <div class="card-name">MYSTERY BOX</div>
+
+
+        <div class="card-desc">CS2 boxes hide multipliers and bombs. Open carefully.</div>
+
+
+      </a>
+
+
+      <a class="game-card" href="/games/russian-roulette.html" data-name="russian roulette gun bot ai bluff tension">
+
+
+        <div class="card-emoji">🔴</div>
+
+
+        <div class="card-name">RUSSIAN ROULETTE</div>
+
+
+        <div class="card-desc">You vs an AI with attitude. Pull the trigger. Hope.</div>
+
+
+      </a>
+
+
+      <a class="game-card" href="/games/baccarat.html" data-name="baccarat player banker card 9">
+
+
+        <div class="card-emoji">🃏</div>
+
+
+        <div class="card-name">BACCARAT</div>
+
+
+        <div class="card-desc">Player vs Banker. Closest to 9 wins. Classic card game.</div>
+
+
+      </a>
+
+
+      <a class="game-card" href="/games/blackjack.html" data-name="blackjack 21 dealer hit stand split double down">
+
+
+        <div class="card-emoji">🂡</div>
+
+
+        <div class="card-name">BLACKJACK</div>
+
+
+        <div class="card-desc">Beat the dealer. Hit, stand, split, double down.</div>
+
+
+      </a>
+
+
+    </div>
+
+
+  </section>
+
+
+
+
+
+  <!-- HEAVY -->
+
+
+  <section class="tier-section tier-heavy" data-tier="heavy">
+
+
+    <div class="tier-header">
+
+
+      <div class="tier-dot"></div>
+
+
+      <div class="tier-name">Heavy</div>
+
+
+      <div class="tier-count">2 GAMES</div>
+
+
+      <div class="tier-line"></div>
+
+
+    </div>
+
+
+    <div class="card-grid">
+
+
+      <a class="game-card" href="/games/live-race.html" data-name="live race cs2 agents run sprint track pvp bots">
+
+
+        <div class="badge-live"><div class="live-dot"></div>LIVE</div>
+
+
+        <div class="card-emoji">🏃</div>
+
+
+        <div class="card-name">LIVE RACE</div>
+
+
+        <div class="card-desc">CS2 agents sprint the track. 4 players + bots. Bet your runner.</div>
+
+
+        <div class="card-hot">🔥 4-player live</div>
+
+
+      </a>
+
+
+      <a class="game-card" href="/battle-setup" data-name="case battles open cases pvp 4 player bots">
+
+
+        <div class="badge-live"><div class="live-dot"></div>LIVE</div>
+
+
+        <div class="card-emoji">⚔️</div>
+
+
+        <div class="card-name">CASE BATTLES</div>
+
+
+        <div class="card-desc">Open cases head-to-head. 4 players + bots. Highest total value wins the pool.</div>
+
+
+        <div class="card-hot">🔥 4-player live</div>
+
+
+      </a>
+
+
+
+
+    </div>
+
+
+  </section>
+
+
+
+
+
+  <!-- FEATURED -->
+
+
+  <section class="tier-section tier-featured" data-tier="featured">
+
+
+    <div class="tier-header">
+
+
+      <div class="tier-dot"></div>
+
+
+      <div class="tier-name">Featured</div>
+
+
+      <div class="tier-count">1 GAME</div>
+
+
+      <div class="tier-line"></div>
+
+
+    </div>
+
+
+    <div class="card-grid">
+
+
+      <a class="game-card" href="/games/poker.html" data-name="poker texas holdem video pvp 4 player bots">
+
+
+        <div class="badge-featured">★ FEATURED</div>
+
+
+        <div class="card-emoji">♠️</div>
+
+
+        <div class="card-info">
+
+
+          <div class="card-name">POKER</div>
+
+
+          <div class="card-desc">Texas Hold'em or Video Poker. Up to 4 players — bots fill empty seats. The most strategic game on the site.</div>
+
+
+          <div class="card-hot" style="margin-top:8px;">🏆 4-player Texas Hold'em · Video Poker solo mode</div>
+
+
+        </div>
+
+
+      </a>
+
+
+    </div>
+
+
+  </section>
+
+
+  <!-- DUELS -->
+
+  <section class="tier-section tier-duels" data-tier="duels">
+
+    <div class="tier-header">
+
+      <div class="tier-dot"></div>
+
+      <div class="tier-name">Duels</div>
+
+      <div class="tier-count">5 GAMES</div>
+
+      <div class="tier-line"></div>
+
+    </div>
+
+    <div class="card-grid">
+
+      <a class="game-card" href="/games/dice-duel.html" data-name="dice duel 1v1 cash roll off pvp">
+
+        <div class="card-emoji">🎲</div>
+
+        <div class="card-info">
+
+          <div class="card-name">DICE DUEL</div>
+
+          <div class="card-desc">Stake cash against an opponent. Higher roll wins both stakes -- no house cut. Ties reroll automatically.</div>
+
+          <div class="card-hot" style="margin-top:8px;">🎲 1v1 · No rake</div>
+
+        </div>
+
+      </a>
+
+      <a class="game-card" href="/games/weapon-duel.html" data-name="cs2 weapon duel 1v1 cash pvp gun">
+
+        <div class="card-emoji">🔫</div>
+
+        <div class="card-info">
+
+          <div class="card-name">CS2 WEAPON DUEL</div>
+
+          <div class="card-desc">Draw a random weapon, then roll for the win. Same fair odds as Dice Duel with CS2 flavor.</div>
+
+          <div class="card-hot" style="margin-top:8px;">🔫 1v1 · No rake</div>
+
+        </div>
+
+      </a>
+
+      <a class="game-card" href="/games/reaction-duel.html" data-name="reaction duel 1v1 cash click speed pvp">
+
+        <div class="card-emoji">⚡</div>
+
+        <div class="card-info">
+
+          <div class="card-name">REACTION DUEL</div>
+
+          <div class="card-desc">Click the instant the panel turns green. Click early and you lose automatically -- fastest reaction wins both stakes.</div>
+
+          <div class="card-hot" style="margin-top:8px;">⚡ 1v1 · No rake</div>
+
+        </div>
+
+      </a>
+
+      <a class="game-card" href="/games/case-draft-duel.html" data-name="case draft duel 1v1 alternating pick cases pvp">
+
+        <div class="card-emoji">🃏</div>
+
+        <div class="card-info">
+
+          <div class="card-name">CASE DRAFT DUEL</div>
+
+          <div class="card-desc">Pay an entry fee, alternate drafting 3 cases each from a shared pool of 6. Every item is yours to keep -- highest total wins the pot.</div>
+
+          <div class="card-hot" style="margin-top:8px;">🃏 1v1 · 5% rake</div>
+
+        </div>
+
+      </a>
+
+      <a class="game-card" href="/tournament" data-name="elimination coinflip bracket tournament pvp">
+
+        <div class="card-emoji">👑</div>
+
+        <div class="card-info">
+
+          <div class="card-name">ELIMINATION COINFLIP</div>
+
+          <div class="card-desc">Start or join a self-service 4/8/16-player bracket. Auto-starts once full -- every round resolves instantly, 70% of the pool to the champion.</div>
+
+          <div class="card-hot" style="margin-top:8px;">👑 Bracket · No rake</div>
+
+        </div>
+
+      </a>
+
+    </div>
+
+  </section>
+
+
+
+  <!-- LIVE TABLE -->
+
+  <section class="tier-section tier-live_table" data-tier="live_table">
+
+    <div class="tier-header">
+
+      <div class="tier-dot"></div>
+
+      <div class="tier-name">Live Table</div>
+
+      <div class="tier-count">4 GAMES</div>
+
+      <div class="tier-line"></div>
+
+    </div>
+
+    <div class="card-grid">
+
+      <a class="game-card" href="/games/live-roulette.html" data-name="live roulette shared wheel multiplayer pvp">
+
+        <div class="badge-featured">🎡 NEW</div>
+
+        <div class="card-emoji">🎡</div>
+
+        <div class="card-info">
+
+          <div class="card-name">LIVE ROULETTE</div>
+
+          <div class="card-desc">Place any of 11 bet types during the betting countdown -- one shared wheel spin decides the whole table.</div>
+
+          <div class="card-hot" style="margin-top:8px;">🎡 Shared table · Up to 10 bets</div>
+
+        </div>
+
+      </a>
+
+      <a class="game-card" href="/games/live-keno.html" data-name="live keno draw shared draw multiplayer pvp">
+
+        <div class="badge-featured">🎱 NEW</div>
+
+        <div class="card-emoji">🎱</div>
+
+        <div class="card-info">
+
+          <div class="card-name">LIVE KENO DRAW</div>
+
+          <div class="card-desc">Pick your numbers in private during the countdown -- one shared draw scores every player's picks at once.</div>
+
+          <div class="card-hot" style="margin-top:8px;">🎱 Shared draw · Private picks</div>
+
+        </div>
+
+      </a>
+
+      <a class="game-card" href="/games/sync-spin-slots.html" data-name="sync spin slots synchronized reels multiplayer">
+
+        <div class="badge-featured">🎰 NEW</div>
+
+        <div class="card-emoji">🎰</div>
+
+        <div class="card-info">
+
+          <div class="card-name">SYNC-SPIN SLOTS</div>
+
+          <div class="card-desc">Lock in a bet and spin together with the room -- everyone's reels launch at the same moment, results are your own.</div>
+
+          <div class="card-hot" style="margin-top:8px;">🎰 Synced timing · Independent results</div>
+
+        </div>
+
+      </a>
+
+      <a class="game-card" href="/games/live-blackjack.html" data-name="live blackjack multi seat table turn based pvp">
+
+        <div class="badge-featured">♠️ NEW</div>
+
+        <div class="card-emoji">♠️</div>
+
+        <div class="card-info">
+
+          <div class="card-name">LIVE BLACKJACK</div>
+
+          <div class="card-desc">Sit at a real table with up to 7 players. Seat-order turns against one shared dealer hand -- 30s to act or you auto-stand.</div>
+
+          <div class="card-hot" style="margin-top:8px;">♠️ Up to 7 seats · Real turn order</div>
+
+        </div>
+
+      </a>
+
+    </div>
+
+  </section>
+
+
+
+  <!-- ITEM WAGER -->
+
+  <section class="tier-section tier-item_wager" data-tier="item_wager">
+
+    <div class="tier-header">
+
+      <div class="tier-dot"></div>
+
+      <div class="tier-name">Item Wager</div>
+
+      <div class="tier-count">4 GAMES</div>
+
+      <div class="tier-line"></div>
+
+    </div>
+
+    <div class="card-grid">
+
+      <a class="game-card" href="/games/item-jackpot.html" data-name="item jackpot skin stake pvp pot winner takes all">
+
+        <div class="card-emoji">🎁</div>
+
+        <div class="card-info">
+
+          <div class="card-name">ITEM JACKPOT</div>
+
+          <div class="card-desc">Stake a real skin into a shared pot. 2-8 players, odds weighted by item value -- winner takes every item, no house cut.</div>
+
+          <div class="card-hot" style="margin-top:8px;">🎲 Real skins on the line · No rake</div>
+
+        </div>
+
+      </a>
+
+      <a class="game-card" href="/games/item-house-jackpot.html" data-name="item vs house double or nothing skin wager solo">
+
+        <div class="card-emoji">🎲</div>
+
+        <div class="card-info">
+
+          <div class="card-name">ITEM VS HOUSE</div>
+
+          <div class="card-desc">Stake a real skin against the house. Win and get it back plus a matching cash bonus -- lose and it's gone.</div>
+
+          <div class="card-hot" style="margin-top:8px;">🎲 Double or nothing</div>
+
+        </div>
+
+      </a>
+
+      <a class="game-card" href="/games/item-wager-duel.html" data-name="item wager duel 1v1 skin stake pvp coinflip">
+
+        <div class="card-emoji">⚔️</div>
+
+        <div class="card-info">
+
+          <div class="card-name">ITEM WAGER DUEL</div>
+
+          <div class="card-desc">Stake a real skin against one opponent. Odds weighted by item value -- winner takes both items, no house cut.</div>
+
+          <div class="card-hot" style="margin-top:8px;">⚔️ 1v1 · No rake</div>
+
+        </div>
+
+      </a>
+
+      <a class="game-card" href="/games/item-trade-up-duel.html" data-name="item trade up duel next tier contract skin pvp">
+
+        <div class="card-emoji">🔺</div>
+
+        <div class="card-info">
+
+          <div class="card-name">TRADE-UP DUEL</div>
+
+          <div class="card-desc">Stake a same-tier skin against an opponent. Both items are consumed -- the winner gets a brand-new item at the next rarity tier up.</div>
+
+          <div class="card-hot" style="margin-top:8px;">🔺 Contract-style upgrade</div>
+
+        </div>
+
+      </a>
+
+    </div>
+
+  </section>
+
+
+  <!-- ELIMINATION / RACE -->
+
+  <section class="tier-section tier-elimination_race" data-tier="elimination_race">
+
+    <div class="tier-header">
+
+      <div class="tier-dot"></div>
+
+      <div class="tier-name">Elimination / Race</div>
+
+      <div class="tier-count">5 GAMES</div>
+
+      <div class="tier-line"></div>
+
+    </div>
+
+    <div class="card-grid">
+
+      <a class="game-card" href="/games/koth-ladder.html" data-name="king of the hill ladder climb bonus pot pvp">
+
+        <div class="badge-featured">🪜 NEW</div>
+
+        <div class="card-emoji">🪜</div>
+
+        <div class="card-info">
+
+          <div class="card-name">KING OF THE HILL</div>
+
+          <div class="card-desc">Climb the ladder for your own solo-style cashout -- whoever holds the highest rung when the round ends also wins a bonus pot on top.</div>
+
+          <div class="card-hot" style="margin-top:8px;">🪜 Solo payout + bonus pot</div>
+
+        </div>
+
+      </a>
+
+      <a class="game-card" href="/games/ladder-race.html" data-name="pvp ladder race first to top wins pot">
+
+        <div class="badge-featured">🏁 NEW</div>
+
+        <div class="card-emoji">🏁</div>
+
+        <div class="card-info">
+
+          <div class="card-name">LADDER RACE</div>
+
+          <div class="card-desc">Pure PvP race up the same ladder -- first to safely reach the top rung takes the entire shared pot, no rake.</div>
+
+          <div class="card-hot" style="margin-top:8px;">🏁 Winner takes all</div>
+
+        </div>
+
+      </a>
+
+      <a class="game-card" href="/games/battle-royale-mines.html" data-name="battle royale minefield mines bonus pot pvp">
+
+        <div class="badge-featured">💣 NEW</div>
+
+        <div class="card-emoji">💣</div>
+
+        <div class="card-info">
+
+          <div class="card-name">BATTLE ROYALE MINEFIELD</div>
+
+          <div class="card-desc">Reveal tiles on your own board for your own solo-style cashout -- hitting a mine feeds a bonus pot the highest surviving multiplier wins.</div>
+
+          <div class="card-hot" style="margin-top:8px;">💣 Solo payout + bonus pot</div>
+
+        </div>
+
+      </a>
+
+      <a class="game-card" href="/games/mines-race.html" data-name="pvp mines race safe reveals pot">
+
+        <div class="badge-featured">⛏️ NEW</div>
+
+        <div class="card-emoji">⛏️</div>
+
+        <div class="card-info">
+
+          <div class="card-name">MINES RACE</div>
+
+          <div class="card-desc">Same 3-mine board for everyone -- first player to safely reveal 5 tiles takes the entire shared pot, no rake.</div>
+
+          <div class="card-hot" style="margin-top:8px;">⛏️ Winner takes all</div>
+
+        </div>
+
+      </a>
+
+      <a class="game-card" href="/games/speed-case-race.html" data-name="speed case race timed value opening pot">
+
+        <div class="badge-featured">📦 NEW</div>
+
+        <div class="card-emoji">📦</div>
+
+        <div class="card-info">
+
+          <div class="card-name">SPEED CASE RACE</div>
+
+          <div class="card-desc">Open as many cases as you want before the timer runs out -- highest total value opened wins a shared bonus pot.</div>
+
+          <div class="card-hot" style="margin-top:8px;">📦 Timed value race</div>
+
+        </div>
+
+      </a>
+
+    </div>
+
+  </section>
+
+
+  <!-- NOVEL -->
+
+  <section class="tier-section tier-novel" data-tier="novel">
+
+    <div class="tier-header">
+
+      <div class="tier-dot"></div>
+
+      <div class="tier-name">Novel</div>
+
+      <div class="tier-count">2 GAMES</div>
+
+      <div class="tier-line"></div>
+
+    </div>
+
+    <div class="card-grid">
+
+      <a class="game-card" href="/games/live-case-auction.html" data-name="live case auction blind bid mystery case pvp">
+
+        <div class="badge-featured">🔨 NEW</div>
+
+        <div class="card-emoji">🔨</div>
+
+        <div class="card-info">
+
+          <div class="card-name">LIVE CASE AUCTION</div>
+
+          <div class="card-desc">Bid blind on a mystery case -- the winning bidder pays their final bid and keeps whatever the case rolls, win or lose.</div>
+
+          <div class="card-hot" style="margin-top:8px;">🔨 Escrowed bidding · Anti-snipe</div>
+
+        </div>
+
+      </a>
+
+      <a class="game-card" href="/games/skin-bingo.html" data-name="skin bingo shared card lottery pvp">
+
+        <div class="badge-featured">🎫 NEW</div>
+
+        <div class="card-emoji">🎫</div>
+
+        <div class="card-info">
+
+          <div class="card-name">SKIN BINGO</div>
+
+          <div class="card-desc">One shared stream of drawn numbers, everyone plays their own card against it -- first completed line takes the whole pot.</div>
+
+          <div class="card-hot" style="margin-top:8px;">🎫 Winner takes all</div>
+
+        </div>
+
+      </a>
+
+    </div>
+
+  </section>
+
+
+  <div id="noResults">
+
+
+    <div class="nr-emoji">🔍</div>
+
+
+    <div class="nr-text">No games found for "<span id="noResultsTerm"></span>"</div>
+
+
+  </div>
+
+
+
+
+
+</div>
+
+
+
+
+
+<div style="text-align:center;color:#555;font-size:10px;padding:16px 20px 24px;">CS2CaseBot is not affiliated with Valve Corporation. All CS2 trademarks belong to their respective owners. Virtual items and currency have no real-world value.</div>
+
+<div class="toast" id="toast"></div>
+
+
+
+
+
+<script>
+
+
+function toggleSound(){
+
+
+
+  const muted=Sound.toggle();
+
+
+
+  Sound.Haptic.toggle();
+
+
+
+  document.getElementById('sndToggle').textContent=muted?'🔇':'🔊';
+
+
+
+  document.getElementById('sndToggle').classList.toggle('muted',muted);
+
+
+
+}
+
+
+
+function toggleAmbient(){
+
+
+
+  const active=Sound.Ambient.toggle();
+
+
+
+  document.getElementById('ambientToggle').classList.toggle('active',active);
+
+
+
+}
+
+
+
+function setVolume(v){
+
+
+
+  Sound.volume=v;
+
+
+
+  document.getElementById('sndToggle').textContent=v===0?'🔇':v<0.5?'🔉':'🔊';
+
+
+
+}
+
+
+
+function initVolSlider(){
+
+
+
+  const sl=document.getElementById('volSlider');
+
+
+
+  sl.value=(Sound.volume*100).toFixed(0);
+
+
+
+  sl.addEventListener('dblclick',()=>{sl.value=30;setVolume(0.3);});
+
+
+
+}
+
+
+
+
+
+document.querySelectorAll('.game-card').forEach(card=>{
+
+
+  card.addEventListener('mouseenter',()=>Sound.Haptic.click());
+
+
+  card.addEventListener('click',()=>{Sound.click();Sound.Haptic.click();});
+
+
+});
+
+
+
+
+
+async function init(){
+
+
+
+  initVolSlider();
+
+
+
+  await loadUser();
+
+
+
+  await loadJackpotPool();
+
+
+
+  simulateLiveStats();
+
+
+
+}
+
+
+
+
+
+async function loadUser(){
+
+
+
+  try{
+
+
+
+    const d=await api('/api/user/me');
+
+
+
+    const el=document.getElementById('balanceDisplay');
+
+
+
+    if(!d||d.balance==null)throw new Error('no balance');
+
+
+
+    const nxt='$'+Number(d.balance).toLocaleString(undefined,{minimumFractionDigits:0});
+
+
+
+    const cur=el.textContent||'';
+
+
+
+    if(cur&&cur!=='$—'&&cur!==nxt){
+
+
+
+      var pv=parseFloat(cur.replace(/[,$]/g,''));
+
+
+
+      if(!isNaN(pv)&&pv!==d.balance){
+
+
+
+        animateBalance(el,cur,nxt,d.balance>pv);
+
+
+
+        document.getElementById('statBal').textContent=nxt;
+
+
+
+        return
+
+
+
+      }
+
+
+
+    }
+
+
+
+    el.textContent=nxt;
+
+
+
+    document.getElementById('statBal').textContent=nxt;
+
+
+
+  }catch(e){
+
+
+
+    document.getElementById('balanceDisplay').textContent='⚠️';
+
+
+
+    document.getElementById('statBal').textContent='ERR';
+
+
+
+  }
+
+
+
+}
+
+
+
+
+
+async function loadJackpotPool(){
+
+
+  try{
+
+
+    const d=await api('/api/games/easy/slots/jackpot/pool');
+
+
+    const val='$'+Number(d.pool).toLocaleString(undefined,{minimumFractionDigits:0});
+
+
+    document.getElementById('jackpotDisplay').textContent=val+' POT';
+
+
+  }catch(e){
+
+
+    document.getElementById('jackpotDisplay').textContent='VIEW POT';
+
+
+  }
+
+
+}
+
+
+
+
+
+function simulateLiveStats(){
+
+
+  loadWinsToday();
+  setInterval(loadWinsToday, 30000);
+
+
+  let live=4+Math.floor(Math.random()*8);
+
+
+  document.getElementById('statLive').textContent=live;
+
+
+  setInterval(()=>{live=Math.max(2,live+(Math.random()>.5?1:-1));document.getElementById('statLive').textContent=live;},12000);
+
+
+}
+
+async function loadWinsToday(){
+  try{
+    const data = await api('/api/stats/wins-today');
+    document.getElementById('statWins').textContent = data.wins_today;
+  }catch(e){}
+}
+
+
+
+
+
+const searchInput=document.getElementById('searchInput');
+
+
+const searchClear=document.getElementById('searchClear');
+
+
+const sections=document.querySelectorAll('.tier-section');
+
+
+
+
+
+searchInput.addEventListener('input',()=>{
+
+
+  const q=searchInput.value.trim().toLowerCase();
+
+
+  searchClear.classList.toggle('show',q.length>0);
+
+
+  filterGames(q);
+
+
+});
+
+
+
+
+
+function clearSearch(){
+
+
+  searchInput.value='';
+
+
+  searchClear.classList.remove('show');
+
+
+  filterGames('');
+
+
+  searchInput.focus();
+
+
+}
+
+
+
+
+
+function filterGames(q){
+
+
+  let anyVisible=false;
+
+
+  sections.forEach(sec=>{
+
+
+    const cards=sec.querySelectorAll('.game-card');
+
+
+    let secVisible=false;
+
+
+    cards.forEach(card=>{
+
+
+      const name=(card.dataset.name||'').toLowerCase();
+
+
+      const show=!q||name.includes(q);
+
+
+      card.style.display=show?'':'none';
+
+
+      if(show){secVisible=true;anyVisible=true;}
+
+
+    });
+
+
+    sec.style.display=secVisible?'':'none';
+
+
+  });
+
+
+  document.getElementById('noResults').style.display=anyVisible?'none':'block';
+
+
+  document.getElementById('noResultsTerm').textContent=q;
+
+
+}
+
+
+
+
+
+async function api(url){
+
+
+  const r=await fetch(url,{credentials:'include'});
+
+
+  if(!r.ok)throw new Error('API error');
+
+
+  return r.json();
+
+
+}
+
+
+
+
+
+init();
+
+
+</script>
+
+
+<script>if("serviceWorker"in navigator){navigator.serviceWorker.register("/static/sw.js").catch(function(){})}</script>
+
+
+
+<script src="/static/chat.js"></script>
+<script src="/static/js/site-notices.js"></script>
+
+<script src="/static/js/agent-egg.js"></script>
+
+
+</body>
+
+
+</html>
+
+
+
+
+
+
+
+
+
+

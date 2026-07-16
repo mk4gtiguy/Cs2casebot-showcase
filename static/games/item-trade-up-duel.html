@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>🔺  Item Trade-Up Duel — CS2CaseBot</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+:root{--bg:#06070a;--accent:#ffd700;--green:#22c55e;--red:#ef4444;--muted:#556;--font:'Orbitron',monospace;}
+html,body{min-height:100vh;background:var(--bg);font-family:var(--font);overflow-x:hidden;color:#c8d0e8;}
+.hdr{display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(6,7,10,0.98);border-bottom:1px solid rgba(255,215,0,0.12);position:sticky;top:0;z-index:50;}
+.back{display:flex;align-items:center;gap:5px;color:#2a2a3a;font-size:10px;letter-spacing:1px;text-decoration:none;transition:color .2s;}
+.back:hover{color:var(--accent);}
+.back svg{width:14px;height:14px;}
+.title{flex:1;font-size:13px;font-weight:900;letter-spacing:2px;color:var(--accent);}
+.bal{font-size:13px;font-weight:700;color:var(--accent);font-family:monospace;}
+.page{max-width:460px;margin:0 auto;padding:16px 14px 80px;}
+
+.section-label{font-size:9px;letter-spacing:2px;color:var(--muted);margin:14px 0 8px;text-transform:uppercase;}
+.duel-list{display:flex;flex-direction:column;gap:8px;}
+.duel-card{background:rgba(0,0,0,0.4);border:1px solid rgba(255,215,0,0.1);border-radius:12px;padding:12px 14px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:all .15s;}
+.duel-card:hover{border-color:rgba(255,215,0,0.35);background:rgba(255,215,0,0.03);}
+.duel-card .dc-icon{font-size:22px;}
+.duel-card .dc-info{flex:1;}
+.duel-card .dc-value{font-size:15px;font-weight:900;color:var(--accent);font-family:monospace;}
+.duel-card .dc-meta{font-size:9px;color:var(--muted);margin-top:2px;letter-spacing:.5px;}
+.empty-lobby{text-align:center;padding:30px 10px;color:var(--muted);font-size:11px;}
+.btn-new-duel{width:100%;padding:15px;border:none;border-radius:12px;font-family:var(--font);font-size:12px;font-weight:900;letter-spacing:2px;cursor:pointer;transition:all .2s;background:linear-gradient(135deg,#7a5c00,var(--accent));color:#06070a;box-shadow:0 4px 20px rgba(255,215,0,0.3);margin-top:14px;}
+.btn-new-duel:hover{transform:translateY(-2px);box-shadow:0 6px 32px rgba(255,215,0,0.5);}
+
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:200;display:none;align-items:flex-end;justify-content:center;}
+.modal-overlay.show{display:flex;}
+.modal-sheet{background:#0d0e14;border:1px solid rgba(255,215,0,0.15);border-radius:20px 20px 0 0;width:100%;max-width:460px;max-height:82vh;display:flex;flex-direction:column;padding:16px;}
+.modal-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.modal-hdr h3{font-size:13px;letter-spacing:1px;color:var(--accent);}
+.modal-close{background:none;border:none;color:var(--muted);font-size:20px;cursor:pointer;line-height:1;}
+.picker-hint{font-size:10px;color:var(--muted);margin-bottom:10px;}
+.picker-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:8px;overflow-y:auto;padding-bottom:6px;flex:1;}
+.pick-item{border:2px solid rgba(255,255,255,0.06);border-radius:10px;padding:6px;text-align:center;cursor:pointer;background:rgba(255,255,255,0.02);transition:all .15s;}
+.pick-item.selected{border-color:var(--accent);background:rgba(255,215,0,0.08);}
+.pick-item img{width:100%;aspect-ratio:1;object-fit:contain;background:rgba(0,0,0,0.3);border-radius:6px;margin-bottom:4px;}
+.pick-item .pi-name{font-size:9px;color:#aaa;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pick-item .pi-price{font-size:10px;color:var(--accent);font-weight:700;margin-top:2px;}
+.btn-stake{width:100%;padding:14px;margin-top:12px;border:none;border-radius:10px;font-family:var(--font);font-size:12px;font-weight:900;letter-spacing:2px;cursor:pointer;background:linear-gradient(135deg,#7a5c00,var(--accent));color:#06070a;}
+.btn-stake:disabled{opacity:.35;cursor:not-allowed;}
+
+.duel-hdr{text-align:center;margin-bottom:8px;}
+.duel-total{font-size:clamp(28px,8vw,40px);font-weight:900;color:var(--accent);font-family:monospace;line-height:1;}
+.duel-total-label{font-size:9px;letter-spacing:2px;color:var(--muted);margin-top:4px;}
+.upgrade-banner{text-align:center;font-size:10px;color:var(--accent);letter-spacing:1px;margin-bottom:10px;padding:8px;background:rgba(255,215,0,0.06);border:1px solid rgba(255,215,0,0.15);border-radius:8px;}
+.duel-status-banner{text-align:center;min-height:24px;font-size:11px;font-weight:700;letter-spacing:2px;margin-bottom:12px;}
+.duel-status-banner.waiting{color:var(--muted);}
+.duel-status-banner.locking{color:var(--accent);animation:pulse-cd .5s infinite;}
+@keyframes pulse-cd{0%,100%{opacity:1;}50%{opacity:.5;}}
+.duel-status-banner.rolling{color:#ff8800;animation:pulse-cd .5s infinite;}
+.duel-status-banner.completed{color:var(--green);}
+
+.vs-row{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+.vs-slot{flex:1;border:2px solid rgba(255,255,255,0.06);border-radius:14px;padding:14px 10px;text-align:center;background:rgba(255,255,255,0.02);transition:all .2s;min-height:140px;display:flex;flex-direction:column;justify-content:center;}
+.vs-slot.filled{border-color:rgba(255,215,0,0.2);}
+.vs-slot.me{border-color:rgba(255,215,0,0.4);}
+.vs-slot.winner{border-color:var(--green);background:rgba(34,197,94,0.08);box-shadow:0 0 16px rgba(34,197,94,0.3);}
+.vs-slot img{width:70px;height:70px;object-fit:contain;background:rgba(0,0,0,0.3);border-radius:8px;margin:0 auto 6px;}
+.vs-slot .vs-empty{font-size:10px;color:var(--muted);letter-spacing:1px;}
+.vs-slot .vs-user{font-size:9px;color:var(--muted);}
+.vs-slot .vs-name{font-size:9px;color:#ccc;margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.vs-slot .vs-price{font-size:12px;color:var(--accent);font-weight:700;margin-top:3px;}
+.vs-slot .vs-odds{font-size:8px;color:var(--muted);margin-top:2px;}
+.vs-mid{font-size:20px;font-weight:900;color:var(--muted);}
+
+.cond-badge{font-size:7px;font-weight:700;padding:1px 4px;border-radius:3px;text-transform:uppercase;letter-spacing:.4px;display:inline-block;margin-top:2px;}
+.cond-fn{background:rgba(74,222,128,.15);color:#4ade80;border:1px solid rgba(74,222,128,.3);}
+.cond-mw{background:rgba(134,239,172,.12);color:#86efac;border:1px solid rgba(134,239,172,.25);}
+.cond-ft{background:rgba(251,191,36,.12);color:#fbbf24;border:1px solid rgba(251,191,36,.25);}
+.cond-ww{background:rgba(249,115,22,.12);color:#f97316;border:1px solid rgba(249,115,22,.25);}
+.cond-bs{background:rgba(239,68,68,.12);color:#ef4444;border:1px solid rgba(239,68,68,.25);}
+
+.duel-actions{display:flex;gap:8px;margin-top:6px;}
+.btn-join-duel,.btn-backout,.btn-lobby{flex:1;padding:14px;border-radius:10px;font-family:var(--font);font-size:11px;font-weight:900;letter-spacing:2px;cursor:pointer;transition:all .2s;}
+.btn-join-duel{border:none;background:linear-gradient(135deg,#7a5c00,var(--accent));color:#06070a;}
+.btn-backout{border:1px solid rgba(239,68,68,0.4);background:rgba(239,68,68,0.08);color:var(--red);}
+.btn-lobby{border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.03);color:#ccc;}
+
+.upgrade-reveal{text-align:center;padding:14px 10px;margin-top:8px;border:1px solid rgba(255,215,0,0.2);border-radius:12px;background:rgba(255,215,0,0.04);}
+.upgrade-reveal img{width:80px;height:80px;object-fit:contain;background:rgba(0,0,0,0.3);border-radius:8px;margin:0 auto 8px;}
+.upgrade-reveal .ur-name{font-size:12px;color:#ddd;}
+.upgrade-reveal .ur-price{font-size:16px;color:var(--accent);font-weight:900;font-family:monospace;margin-top:4px;}
+
+.disclaimer-inline{font-size:10px;color:var(--muted);margin-top:18px;text-align:center;line-height:1.5;}
+</style>
+    <script src="/static/sound.js"></script>
+    <script src="/static/big-win.js"></script>
+    <script src="/static/balance-animation.js"></script>
+    <script src="/static/page-transitions.js"></script>
+<link rel="stylesheet" href="/static/games-shared.css"><script src="/static/js/csrf.js"></script>
+</head>
+<body>
+
+<header class="hdr">
+  <a class="back" href="/games"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>GAMES</a>
+  <span class="title">🔺  TRADE-UP DUEL</span>
+  <span class="bal" id="balDisplay">$—</span>
+</header>
+
+<div class="page">
+
+  <div id="lobbyView">
+    <div class="section-label">Open Trade-Up Duels</div>
+    <div class="duel-list" id="duelList"></div>
+    <button class="btn-new-duel" onclick="openPicker(null)">🔺  STAKE AN ITEM — START A DUEL</button>
+    <div class="disclaimer-inline">⚠️ Stake a same-tier item against an opponent. Both items are consumed — the winner gets a brand-new item at the next rarity tier up. Gold-tier items can't enter (no tier above Gold). This is a simulation; items have no real-world value.</div>
+  </div>
+
+  <div id="duelView" style="display:none;">
+    <div class="duel-hdr">
+      <div class="duel-total" id="duelTotal">$0.00</div>
+      <div class="duel-total-label" id="duelTotalLabel">TOTAL AT STAKE</div>
+    </div>
+    <div class="upgrade-banner" id="upgradeBanner">WINNER RECEIVES: A NEXT-TIER ITEM</div>
+    <div class="duel-status-banner waiting" id="duelStatusBanner">WAITING FOR AN OPPONENT</div>
+    <div class="vs-row" id="vsRow">
+      <div class="vs-slot" id="vsSlotA"><div class="vs-empty">EMPTY</div></div>
+      <div class="vs-mid">VS</div>
+      <div class="vs-slot" id="vsSlotB"><div class="vs-empty">EMPTY</div></div>
+    </div>
+    <div id="upgradeReveal"></div>
+    <div class="duel-actions" id="duelActions"></div>
+    <div style="text-align:center;margin-top:10px;">
+      <button class="btn-lobby" style="max-width:200px;margin:0 auto;display:block;" onclick="showLobby()">← BACK TO LOBBY</button>
+    </div>
+  </div>
+
+</div>
+
+<div class="modal-overlay" id="pickerModal">
+  <div class="modal-sheet">
+    <div class="modal-hdr">
+      <h3>SELECT AN ITEM TO STAKE</h3>
+      <button class="modal-close" onclick="closePicker()">✕</button>
+    </div>
+    <div class="picker-hint">Only kept, unequipped, non-Gold items worth $0.50+ can enter a trade-up.</div>
+    <div class="picker-grid" id="pickerGrid"><div style="grid-column:1/-1;text-align:center;color:var(--muted);font-size:11px;padding:20px;">Loading inventory…</div></div>
+    <button class="btn-stake" id="stakeBtn" disabled onclick="confirmStake()">STAKE SELECTED ITEM</button>
+  </div>
+</div>
+
+<script>
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const CONDITION_SHORT = { 'Factory New':'FN', 'Minimal Wear':'MW', 'Field-Tested':'FT', 'Well-Worn':'WW', 'Battle-Scarred':'BS' };
+function condBadgeHtml(condition) {
+  const short = CONDITION_SHORT[condition];
+  if (!short) return '';
+  return `<span class="cond-badge cond-${short.toLowerCase()}">${short}</span>`;
+}
+const NEXT_TIER = { 'Blue':'Purple', 'Purple':'Pink', 'Pink':'Red', 'Red':'Gold' };
+
+let balance = 0, myUserId = null;
+let balDisplayInited = false;
+let currentDuelId = null;
+let ws = null;
+let pickerDuelId = null;
+let pickerSelectedId = null;
+let pickerItems = [];
+let lobbyTimer = null;
+let lockRAF = null;
+let lastDuel = null;
+
+async function init(){
+  try{ const d = await api('/api/user/me'); balance = d.balance; myUserId = String(d.user_id); updateBal(); }catch(e){}
+  const params = new URLSearchParams(location.search);
+  const duelParam = params.get('duel');
+  if (duelParam){
+    try{
+      const data = await api('/api/games/tradeup/duels/' + duelParam);
+      enterDuel(Number(duelParam), data);
+      return;
+    }catch(e){ showToast('Could not load that duel'); }
+  }
+  showLobby();
+}
+
+function updateBal(){
+  const e = document.getElementById('balDisplay');
+  const n = '$'+balance.toLocaleString(undefined,{maximumFractionDigits:0});
+  if (balDisplayInited && window.animateBalance) { animateBalance(e, e.textContent, n, true); }
+  else { e.textContent = n; }
+  balDisplayInited = true;
+}
+async function refreshBal(){ try{ const d = await api('/api/user/me'); return d.balance; }catch(e){ return balance; } }
+
+function showLobby(){
+  closeWS();
+  currentDuelId = null;
+  document.getElementById('duelView').style.display = 'none';
+  document.getElementById('lobbyView').style.display = 'block';
+  loadLobby();
+  if (lobbyTimer) clearInterval(lobbyTimer);
+  lobbyTimer = setInterval(loadLobby, 4000);
+}
+
+async function loadLobby(){
+  try{
+    const data = await api('/api/games/tradeup/duels');
+    const list = document.getElementById('duelList');
+    if (!data.duels.length){
+      list.innerHTML = '<div class="empty-lobby">No open trade-up duels right now — start one!</div>';
+      return;
+    }
+    list.innerHTML = data.duels.map(d => `
+      <div class="duel-card" onclick="joinExistingDuel(${d.duel_id})">
+        <div class="dc-icon">🔺</div>
+        <div class="dc-info">
+          <div class="dc-value">$${d.total_value.toFixed(2)}</div>
+          <div class="dc-meta">${d.tier || '?'} → ${d.next_tier || '?'} — ${d.player_count}/2 PLAYERS</div>
+        </div>
+      </div>
+    `).join('');
+  }catch(e){}
+}
+
+function joinExistingDuel(duelId){ openPicker(duelId); }
+
+async function openPicker(duelId){
+  pickerDuelId = duelId;
+  pickerSelectedId = null;
+  document.getElementById('stakeBtn').disabled = true;
+  document.getElementById('pickerModal').classList.add('show');
+  const grid = document.getElementById('pickerGrid');
+  grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--muted);font-size:11px;padding:20px;">Loading inventory…</div>';
+  try{
+    const data = await api('/api/user/me/inventory?limit=200');
+    pickerItems = (data.items || []).filter(it => Number(it.price) >= 0.50 && !it.in_loadout && !it.protected && NEXT_TIER[it.rarity]);
+    if (!pickerItems.length){
+      grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--muted);font-size:11px;padding:20px;">No eligible items (need a kept, unequipped, unprotected, non-Gold item worth $0.50+).</div>';
+      return;
+    }
+    grid.innerHTML = pickerItems.map(it => `
+      <div class="pick-item" id="pick-${it.id}" onclick="selectPickerItem(${it.id})">
+        <img src="${it.image_url || ''}" alt="" onerror="this.style.display='none'">
+        <div class="pi-name">${esc(it.display_name || it.item_name)}</div>
+        <div class="pi-price">$${Number(it.price).toFixed(2)}</div>
+      </div>
+    `).join('');
+  }catch(e){
+    grid.innerHTML = '<div style="grid-column:1/-1;text-align:center;color:var(--red);font-size:11px;padding:20px;">Error loading inventory.</div>';
+  }
+}
+
+function closePicker(){ document.getElementById('pickerModal').classList.remove('show'); }
+
+function selectPickerItem(id){
+  Sound && Sound.click && Sound.click();
+  document.querySelectorAll('.pick-item').forEach(el => el.classList.remove('selected'));
+  document.getElementById('pick-'+id).classList.add('selected');
+  pickerSelectedId = id;
+  document.getElementById('stakeBtn').disabled = false;
+}
+
+async function confirmStake(){
+  if (!pickerSelectedId) return;
+  document.getElementById('stakeBtn').disabled = true;
+  try{
+    const body = { inventory_id: pickerSelectedId };
+    if (pickerDuelId) body.duel_id = pickerDuelId;
+    const data = await api('/api/games/tradeup/join', { method: 'POST', body: JSON.stringify(body) });
+    closePicker();
+    balance = await refreshBal(); updateBal();
+    enterDuel(data.duel_id, data.duel);
+  }catch(e){
+    document.getElementById('stakeBtn').disabled = false;
+    showToast(e.message || 'Could not join duel');
+  }
+}
+
+function enterDuel(duelId, duel){
+  if (lobbyTimer) { clearInterval(lobbyTimer); lobbyTimer = null; }
+  currentDuelId = duelId;
+  document.getElementById('lobbyView').style.display = 'none';
+  document.getElementById('duelView').style.display = 'block';
+  document.getElementById('upgradeReveal').innerHTML = '';
+  renderDuel(duel);
+  connectWS(duelId);
+}
+
+function connectWS(duelId){
+  closeWS();
+  const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
+  ws = new WebSocket(proto + '//' + location.host + '/api/games/tradeup/ws/' + duelId);
+  ws.onmessage = (ev) => handleWSMsg(JSON.parse(ev.data));
+  ws.onclose = () => { if (currentDuelId === duelId) setTimeout(() => { if (currentDuelId === duelId) connectWS(duelId); }, 2000); };
+}
+
+function closeWS(){ if (ws) { try{ ws.close(); }catch(e){} ws = null; } }
+
+function handleWSMsg(msg){
+  if (msg.type === 'room_state'){
+    renderDuel(msg);
+  } else if (msg.type === 'player_joined' || msg.type === 'player_left'){
+    renderDuel(msg.duel);
+  } else if (msg.type === 'locking_start'){
+    lastDuel.status = 'locking';
+    lastDuel.lock_deadline = msg.deadline;
+    renderDuel(lastDuel);
+  } else if (msg.type === 'rolling'){
+    lastDuel.status = 'rolling';
+    renderDuel(lastDuel);
+    Sound && Sound.click && Sound.click();
+  } else if (msg.type === 'roll_result'){
+    handleRollResult(msg);
+  } else if (msg.type === 'cancelled'){
+    showToast('Duel cancelled — your item was returned.');
+    showLobby();
+  } else if (msg.type === 'no_room'){
+    showToast('This duel no longer exists.');
+    showLobby();
+  }
+}
+
+function renderDuel(duel){
+  lastDuel = duel;
+  document.getElementById('duelTotal').textContent = '$' + Number(duel.total_value).toFixed(2);
+  document.getElementById('upgradeBanner').textContent = duel.tier
+    ? `WINNER RECEIVES: A ${duel.next_tier || '?'}-TIER ITEM (${duel.tier} → ${duel.next_tier || '?'})`
+    : 'WINNER RECEIVES: A NEXT-TIER ITEM';
+
+  const banner = document.getElementById('duelStatusBanner');
+  banner.className = 'duel-status-banner ' + duel.status;
+  const iAmIn = duel.entries.some(e => e.user_id === myUserId);
+
+  if (duel.status === 'waiting') banner.textContent = `WAITING FOR AN OPPONENT (${duel.entries.length}/2)`;
+  else if (duel.status === 'locking') banner.textContent = 'LOCKING IN…';
+  else if (duel.status === 'rolling') banner.textContent = '🎲 ROLLING…';
+  else if (duel.status === 'completed') banner.textContent = 'DUEL COMPLETE';
+  else banner.textContent = duel.status.toUpperCase();
+
+  renderLockCountdown(duel);
+  renderVsSlots(duel, null);
+  renderActions(duel, iAmIn);
+}
+
+function renderLockCountdown(duel){
+  if (lockRAF) { cancelAnimationFrame(lockRAF); lockRAF = null; }
+  const label = document.getElementById('duelTotalLabel');
+  if (duel.status !== 'locking' || !duel.lock_deadline) { label.textContent = 'TOTAL AT STAKE'; return; }
+  function tick(){
+    const remaining = Math.max(0, duel.lock_deadline - Date.now()/1000);
+    label.textContent = remaining > 0 ? `ROLLING IN ${Math.ceil(remaining)}s` : 'ROLLING…';
+    if (remaining > 0 && lastDuel && lastDuel.status === 'locking') lockRAF = requestAnimationFrame(tick);
+    else label.textContent = 'TOTAL AT STAKE';
+  }
+  tick();
+}
+
+function slotHtml(e, total){
+  if (!e) return '<div class="vs-empty">EMPTY</div>';
+  const odds = total > 0 ? ((Number(e.value) / total) * 100).toFixed(1) : '50.0';
+  return `
+    <img src="${e.image_url || ''}" alt="" onerror="this.style.display='none'">
+    <div class="vs-user">${esc(e.username || 'Player')}</div>
+    <div class="vs-name">${esc(e.item_name || '')}</div>
+    ${e.condition ? condBadgeHtml(e.condition) : ''}
+    <div class="vs-price">$${Number(e.value).toFixed(2)}</div>
+    <div class="vs-odds">${odds}% chance</div>
+  `;
+}
+
+function renderVsSlots(duel, winnerUserId){
+  const total = duel.entries.reduce((s,e) => s + Number(e.value), 0) || 0;
+  const a = duel.entries[0], b = duel.entries[1];
+  const slotA = document.getElementById('vsSlotA');
+  const slotB = document.getElementById('vsSlotB');
+  slotA.className = 'vs-slot' + (a ? ' filled' : '') + (a && a.user_id === myUserId ? ' me' : '') + (winnerUserId && a && a.user_id === winnerUserId ? ' winner' : '');
+  slotB.className = 'vs-slot' + (b ? ' filled' : '') + (b && b.user_id === myUserId ? ' me' : '') + (winnerUserId && b && b.user_id === winnerUserId ? ' winner' : '');
+  slotA.innerHTML = slotHtml(a, total);
+  slotB.innerHTML = slotHtml(b, total);
+}
+
+function renderActions(duel, iAmIn){
+  const actions = document.getElementById('duelActions');
+  if (duel.status === 'waiting' && iAmIn){
+    actions.innerHTML = `<button class="btn-backout" onclick="backOut()">↩️  BACK OUT</button>`;
+  } else if (duel.status === 'waiting' && !iAmIn){
+    actions.innerHTML = `<button class="btn-join-duel" onclick="openPicker(${duel.duel_id})">🔺  ACCEPT THIS DUEL</button>`;
+  } else {
+    actions.innerHTML = '';
+  }
+}
+
+async function backOut(){
+  if (!currentDuelId) return;
+  try{
+    await api('/api/games/tradeup/leave', { method: 'POST', body: JSON.stringify({ duel_id: currentDuelId }) });
+    showToast('Item returned to your inventory.');
+    balance = await refreshBal(); updateBal();
+    showLobby();
+  }catch(e){
+    showToast(e.message || 'Could not back out');
+  }
+}
+
+async function handleRollResult(msg){
+  Sound && Sound.click && Sound.click();
+  const duel = { ...lastDuel, status: 'completed', entries: msg.entries, total_value: msg.total_value };
+  renderDuel(duel);
+
+  await new Promise(r => setTimeout(r, 1400));
+
+  renderVsSlots(duel, msg.winner_id);
+  const iWon = msg.winner_id === myUserId;
+  const banner = document.getElementById('duelStatusBanner');
+  banner.textContent = iWon ? '🏆 YOU WON THE TRADE-UP!' : `${esc(msg.winner_username || 'Your opponent')} WON THE TRADE-UP`;
+
+  const revealEl = document.getElementById('upgradeReveal');
+  if (msg.upgraded_item){
+    const u = msg.upgraded_item;
+    revealEl.innerHTML = `
+      <div class="upgrade-reveal">
+        <img src="${u.image_filename ? '/static/images/skins/' + u.image_filename : ''}" alt="" onerror="this.style.display='none'">
+        <div class="ur-name">${esc(u.display_name || u.name)}</div>
+        <div class="ur-price">$${Number(u.price).toFixed(2)}</div>
+      </div>`;
+  } else {
+    revealEl.innerHTML = '';
+  }
+
+  document.getElementById('duelActions').innerHTML =
+    '<button class="btn-lobby" onclick="showLobby()">🔺  PLAY AGAIN</button>';
+
+  if (iWon){
+    Sound && Sound.win && Sound.win();
+    spawnConfettiSafe();
+    balance = await refreshBal(); updateBal();
+    if (window.maybeBigWin && msg.upgraded_item) maybeBigWin(msg.upgraded_item.price, 2);
+  } else {
+    Sound && Sound.loss && Sound.loss();
+  }
+}
+
+function spawnConfettiSafe(){
+  try{ if (window.spawnConfettiExplosion) spawnConfettiExplosion(); else if (window.spawnConfetti) spawnConfetti('Gold', 60); }catch(e){}
+}
+
+function showToast(msg){
+  let t = document.getElementById('tuToast');
+  if (!t){
+    t = document.createElement('div');
+    t.id = 'tuToast';
+    t.style.cssText = 'position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:rgba(20,20,30,0.95);border:1px solid rgba(255,215,0,0.3);color:#fff;padding:10px 18px;border-radius:10px;font-size:11px;z-index:500;max-width:90vw;text-align:center;';
+    document.body.appendChild(t);
+  }
+  t.textContent = msg;
+  t.style.opacity = '1';
+  clearTimeout(t._hideTimer);
+  t._hideTimer = setTimeout(() => { t.style.opacity = '0'; }, 3000);
+}
+
+async function api(url, opts = {}){
+  const r = await fetch(url, { credentials: 'include', headers: { 'Content-Type': 'application/json' }, ...opts });
+  if (!r.ok){ const e = await r.json().catch(() => ({})); throw new Error(e.detail || 'Error'); }
+  return r.json();
+}
+
+init();
+</script>
+<script>if("serviceWorker"in navigator){navigator.serviceWorker.register("/static/sw.js").catch(function(){})}</script>
+<script src="/static/chat.js"></script>
+
+</body>
+</html>

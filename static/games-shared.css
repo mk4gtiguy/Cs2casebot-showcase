@@ -1,0 +1,466 @@
+/* ── CS2CaseBot Shared Game Styles ────────────────────────────
+   Responsive helpers, skeleton loading, layout utilities
+   ──────────────────────────────────────────────────────────── */
+
+/* ── Skeleton Loading ──────────────────────────────────────── */
+@keyframes skeleton-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.skeleton {
+  background: linear-gradient(90deg, rgba(255,255,255,0.03) 25%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.03) 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+  border-radius: 6px;
+  color: transparent !important;
+  user-select: none;
+  pointer-events: none;
+}
+.skeleton-text { height: 14px; width: 60%; margin: 4px 0; }
+.skeleton-block { height: 40px; width: 100%; margin: 4px 0; }
+.skeleton-card {
+  height: 120px; width: 100%; border-radius: 12px;
+  background: linear-gradient(90deg, rgba(255,255,255,0.02) 25%, rgba(255,255,255,0.06) 50%, rgba(255,255,255,0.02) 75%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.5s ease-in-out infinite;
+}
+
+/* -- Header overflow fix --------------------------------------
+   Every game page defines its own .hdr/.title/.bal with plain
+   single-class selectors and no flex-wrap/overflow handling, so
+   on narrow screens the balance (last flex child; .title has no
+   min-width:0 to let it shrink) gets pushed past the viewport
+   edge and silently clipped by each page's own body{overflow-x:hidden}.
+   These compound selectors always win on specificity over a
+   game's own single-class rules, regardless of <link> order. */
+.hdr { flex-wrap: nowrap; }
+.hdr .title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hdr .back { flex-shrink: 0; }
+.hdr .bal { flex-shrink: 0; white-space: nowrap; }
+
+/* -- Games hub header (games.html uses .site-header/.header-title/
+   .header-balance instead of .hdr/.title/.bal) -- same overflow fix. */
+.site-header .header-title { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.site-header .header-balance { flex-shrink: 0; white-space: nowrap; }
+.site-header .btn-back { flex-shrink: 0; }
+.skeleton-circle { height: 44px; width: 44px; border-radius: 50%; }
+
+/* ── Responsive Base ───────────────────────────────────────── */
+@media (max-width: 520px) {
+  .hdr { padding: 10px 12px; }
+  .hdr .title { font-size: 12px; letter-spacing: 2px; }
+  .hdr .bal { font-size: 11px; }
+  .page, .cabinet { padding-left: 10px; padding-right: 10px; }
+
+  .bet-ctrl { padding: 12px 10px; }
+  .bet-row { flex-wrap: wrap; }
+  .bet-inp { font-size: 12px; padding: 8px 10px; }
+  .adj { padding: 8px 10px; font-size: 10px; }
+
+  .qrow { flex-wrap: wrap; gap: 4px; }
+  .qb { font-size: 7px; padding: 6px 2px; min-width: 0; }
+
+  .action-row { flex-wrap: wrap; }
+  .action-row .btn-bet, .action-row .btn-co, .action-row .btn-start-m, .action-row .btn-cashout-m { font-size: 10px; padding: 12px 8px; }
+
+  .stats-row { grid-template-columns: repeat(2, 1fr); gap: 6px; }
+  .stat { padding: 6px; }
+  .stat .sv { font-size: 12px; }
+  .stat .sl { font-size: 7px; }
+
+  .stats-bar { grid-template-columns: repeat(2, 1fr); gap: 6px; }
+  .sb { padding: 6px; }
+  .sb .sv { font-size: 13px; }
+  .sb .sl { font-size: 7px; }
+}
+
+@media (max-width: 380px) {
+  .page, .cabinet { padding-left: 6px; padding-right: 6px; }
+  .hdr .title { font-size: 10px; letter-spacing: 1px; }
+  .hdr .bal { font-size: 10px; }
+  .bet-inp { font-size: 11px; padding: 6px 8px; }
+  .stats-row { grid-template-columns: repeat(2, 1fr); gap: 4px; }
+  .stats-bar { grid-template-columns: repeat(2, 1fr); gap: 4px; }
+}
+
+/* ── Volume Slider ─────────────────────────────────────────── */
+.vol-wrap {
+  display: flex; align-items: center; gap: 6px;
+  padding: 0 8px;
+}
+.vol-wrap input[type=range] {
+  -webkit-appearance: none; appearance: none;
+  width: 60px; height: 3px;
+  background: rgba(255,215,0,0.2);
+  border-radius: 2px; outline: none;
+  cursor: pointer; flex-shrink: 0;
+}
+.vol-wrap input[type=range]::-webkit-slider-thumb {
+  -webkit-appearance: none; appearance: none;
+  width: 12px; height: 12px; border-radius: 50%;
+  background: #ffd700; cursor: pointer;
+  border: none; box-shadow: 0 0 6px rgba(255,215,0,0.4);
+}
+.vol-wrap input[type=range]::-moz-range-thumb {
+  width: 12px; height: 12px; border-radius: 50%;
+  background: #ffd700; cursor: pointer; border: none;
+}
+.vol-toggle {
+  background: none; border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 8px; color: var(--muted, #52546a);
+  cursor: pointer; font-size: 14px; padding: 6px 8px;
+  transition: all .2s; line-height: 1; flex-shrink: 0;
+}
+.vol-toggle:hover { border-color: var(--gold, #ffd700); color: var(--gold, #ffd700); }
+.vol-toggle.muted { opacity: .4; }
+
+/* ── Ambient Toggle ────────────────────────────────────────── */
+.ambient-toggle {
+  background: none; border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 8px; color: var(--muted, #52546a);
+  cursor: pointer; font-size: 13px; padding: 6px 8px;
+  transition: all .2s; line-height: 1; flex-shrink: 0;
+}
+.ambient-toggle:hover { border-color: var(--gold, #ffd700); color: var(--gold, #ffd700); }
+.ambient-toggle.active { color: #22c55e; border-color: rgba(34,197,94,0.3); }
+
+/* ── Autoplay Panel ────────────────────────────────────────── */
+.autoplay-panel {
+  background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.06);
+  border-radius: 10px; padding: 10px 12px; margin-top: 8px;
+  display: none;
+}
+.autoplay-panel.open { display: block; }
+.ap-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; font-size: 9px; }
+.ap-row:last-child { margin-bottom: 0; }
+.ap-row label { color: #888; letter-spacing: 1px; flex-shrink: 0; }
+.ap-row input[type=number] {
+  flex: 1; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 6px; padding: 5px 8px; color: #c8d0e8;
+  font-family: var(--font, 'Orbitron', monospace); font-size: 10px; font-weight: 700;
+  outline: none; text-align: center; min-width: 0;
+}
+.ap-row input[type=number]:focus { border-color: rgba(255,215,0,0.3); }
+.ap-row input[type=checkbox] { accent-color: #ffd700; cursor: pointer; }
+.ap-status {
+  font-size: 9px; color: #22c55e; text-align: center;
+  letter-spacing: 1px; margin-top: 6px; display: none;
+}
+.ap-status.running { display: block; }
+.ap-btn {
+  padding: 8px 14px; border: 1px solid rgba(255,215,0,0.2);
+  border-radius: 8px; background: rgba(255,215,0,0.06);
+  color: #ffd700; font-family: var(--font, 'Orbitron', monospace);
+  font-size: 9px; font-weight: 700; letter-spacing: 1px;
+  cursor: pointer; transition: all .15s; text-align: center;
+}
+.ap-btn:hover { background: rgba(255,215,0,0.12); border-color: rgba(255,215,0,0.4); }
+.ap-btn.active { background: rgba(239,68,68,0.12); border-color: rgba(239,68,68,0.3); color: #ef4444; }
+
+/* ── Game-Specific Responsive Overrides ───────────────────── */
+
+/* CRASH */
+@media (max-width: 520px) {
+  .chart-wrap { padding: 10px; }
+  canvas#crashChart { height: 160px; }
+  .mult-num { font-size: clamp(28px, 8vw, 40px); }
+  .player-chip { font-size: 8px; padding: 4px 8px; }
+  .players-row { gap: 4px; }
+  .crash-history { gap: 4px; }
+  .ch-pill { font-size: 8px; padding: 3px 8px; }
+  #autoCashInp { font-size: 10px; padding: 5px 6px; }
+}
+
+/* SLOTS / REEL GAMES */
+@media (max-width: 520px) {
+  .reel-cabinet { padding: 14px 10px; }
+  .reel-window { height: 72px; }
+  .reel-cell { height: 72px; font-size: 28px; }
+  .reel-cell span { font-size: 7px; }
+  .slot-reel { width: 70px; height: 105px; }
+  .slot-reel .reel-symbol { height: 35px; font-size: 24px; }
+  .quick-bets { gap: 4px; }
+  .bet-display { font-size: 18px; }
+  .paytable { padding: 10px; }
+  .pt-combo { font-size: 13px; }
+  .pt-name { font-size: 7px; }
+  .pt-mult { font-size: 9px; }
+  .session-log { max-height: 60px; }
+  #jpPrize { font-size: clamp(18px, 5vw, 32px); }
+}
+@media (max-width: 380px) {
+  .reel-window { height: 56px; }
+  .reel-cell { height: 56px; font-size: 22px; }
+  .slot-reel { width: 55px; height: 85px; }
+  .slot-reel .reel-symbol { height: 28px; font-size: 20px; }
+  .reel-cabinet { padding: 10px 6px; }
+  .reels-row { gap: 5px; }
+  .slot-machine-container { padding: 12px; }
+}
+
+/* MINES */
+@media (max-width: 520px) {
+  .mine-grid { gap: 4px; }
+  .mine-cell { font-size: clamp(14px, 4vw, 20px); border-radius: 6px; }
+  .mine-chips { gap: 4px; }
+  .mc { padding: 6px 10px; font-size: 8px; }
+  #mineChips .mc { font-size: 8px; padding: 5px 8px; }
+  .mine-select { padding: 10px; }
+  .hist-dot { width: 10px; height: 10px; }
+}
+@media (max-width: 380px) {
+  .mine-grid { gap: 3px; }
+  .mine-cell { min-width: 36px; min-height: 36px; font-size: clamp(12px, 3.5vw, 16px); }
+}
+
+/* ROULETTE */
+@media (max-width: 520px) {
+  .wheel-wrap { padding: 14px 10px; }
+  canvas#wheelCanvas { width: 180px; height: 180px; }
+  .color-btn { padding: 8px 4px; }
+  .color-btn .cb-icon { font-size: 16px; }
+  .color-btn .cb-name { font-size: 8px; }
+  .color-btn .cb-odds { font-size: 7px; }
+  .num-row { flex-wrap: wrap; gap: 4px; }
+  .nr-label { min-width: 28px; font-size: 7px; }
+  .nr-btn { font-size: 7px; padding: 4px 6px; }
+  .straight-inp { font-size: 10px; padding: 6px 8px; }
+  .bt-title { font-size: 8px; }
+  .active-bets { gap: 3px; }
+  .ab-pill { font-size: 7px; padding: 3px 6px; }
+  .result-summary { font-size: 10px; }
+}
+
+/* BLACKJACK */
+@media (max-width: 520px) {
+  .felt-table { padding: 14px 8px; }
+  .bj-card { width: 38px; height: 54px; }
+  .bj-card .bc { font-size: 14px; }
+  .bj-card .bs { font-size: 10px; }
+  .cards-row { gap: 4px; min-height: 56px; }
+  .hand-block { min-width: 80px; }
+  .ab { font-size: 8px; padding: 10px 4px; min-width: 50px; }
+  .ab.primary { font-size: 9px; }
+  .stats-bj { grid-template-columns: repeat(2, 1fr); }
+  .sj .sjv { font-size: 10px; }
+  .bj-result { font-size: 10px; }
+}
+
+/* POKER */
+@media (max-width: 520px) {
+  .poker-table { padding: 14px 8px; }
+  .poker-card { width: 36px; height: 50px; }
+  .poker-card .pc-rank { font-size: 13px; }
+  .poker-card .pc-suit { font-size: 10px; }
+  .community-cards { gap: 4px; }
+  .player-seat { padding: 8px; }
+  .player-seat .ps-name { font-size: 8px; }
+  .player-seat .ps-chips { font-size: 9px; }
+  .poker-actions { gap: 4px; }
+  .poker-actions .pa-btn { font-size: 8px; padding: 8px 4px; min-width: 40px; }
+}
+
+/* DICE */
+@media (max-width: 520px) {
+  .dice-wrapper { width: 80px; height: 80px; }
+  .dice-face { width: 80px; height: 80px; padding: 12px; }
+  .dice-face .dot { width: 14px; height: 14px; }
+}
+
+/* COINFLIP */
+@media (max-width: 520px) {
+  .coin-display { width: 80px; height: 80px; font-size: 40px; }
+}
+
+/* KENO */
+@media (max-width: 520px) {
+  .keno-grid { gap: 3px; }
+  .keno-cell { width: 32px; height: 32px; font-size: 10px; border-radius: 5px; }
+  .keno-picks { gap: 4px; }
+  .keno-pick { font-size: 8px; padding: 3px 6px; }
+  .keno-drawn { gap: 3px; }
+}
+
+/* PLINKO */
+@media (max-width: 520px) {
+  canvas#plinkoCanvas { height: 300px; }
+  .plinko-rows { gap: 4px; }
+}
+
+/* TOWER */
+@media (max-width: 520px) {
+  .tower-grid { gap: 4px; }
+  .tower-cell { min-width: 32px; min-height: 32px; font-size: 14px; border-radius: 6px; }
+}
+
+/* HILO */
+@media (max-width: 520px) {
+  .hilo-card { width: 56px; height: 80px; font-size: 24px; }
+  .hilo-streak { font-size: 24px; }
+}
+
+/* LADDER CLIMB */
+@media (max-width: 520px) {
+  .ladder-rungs { gap: 4px; }
+  .ladder-rung { padding: 8px; font-size: 10px; }
+}
+
+/* SLIDE */
+@media (max-width: 520px) {
+  .slide-track { height: 200px; }
+  .slide-zones { gap: 2px; }
+  .slide-zone { font-size: 8px; padding: 4px; }
+}
+
+/* MYSTERY BOX */
+@media (max-width: 520px) {
+  .mystery-grid { gap: 6px; }
+  .mystery-cell { min-width: 50px; min-height: 50px; font-size: 18px; border-radius: 8px; }
+}
+
+/* BACCARAT / DRAGON TIGER */
+@media (max-width: 520px) {
+  .baccarat-cards { gap: 4px; }
+  .baccarat-card { width: 38px; height: 54px; font-size: 14px; }
+  .dragon-tiger-cards { gap: 4px; }
+}
+
+/* LIVE RACE */
+@media (max-width: 520px) {
+  .race-track { height: 120px; }
+  .race-lane { font-size: 8px; }
+  .race-agent { width: 20px; height: 20px; font-size: 12px; }
+}
+
+/* AIM TRAINER */
+@media (max-width: 520px) {
+  .aim-target { width: 44px; height: 44px; font-size: 16px; }
+  .aim-stats { grid-template-columns: repeat(2, 1fr); }
+}
+
+/* BOMB DEFUSE */
+@media (max-width: 520px) {
+  .bomb-wires { gap: 4px; }
+  .bomb-wire { padding: 8px 12px; font-size: 10px; }
+  .bomb-timer { font-size: 28px; }
+}
+
+/* REACTION TIME */
+@media (max-width: 520px) {
+  .reaction-area { min-height: 160px; font-size: 14px; padding: 20px; }
+}
+
+/* FLOAT GUESSER */
+@media (max-width: 520px) {
+  .float-target { font-size: 24px; }
+  .float-input { font-size: 14px; }
+}
+
+/* MEMORY SEQUENCE */
+@media (max-width: 520px) {
+  .mem-grid { gap: 4px; }
+  .mem-cell { width: 40px; height: 40px; font-size: 14px; }
+}
+
+/* SLOTS BOMB */
+@media (max-width: 520px) {
+  .bomb-reels { gap: 4px; }
+  .bomb-reel { width: 60px; height: 80px; }
+  .penalty-bar { font-size: 10px; padding: 6px; }
+}
+
+/* HDR VOLUME SLIDER ON MOBILE */
+@media (max-width: 520px) {
+  .vol-wrap input[type=range] { width: 40px; }
+  .vol-toggle { font-size: 12px; padding: 4px 6px; }
+  .vol-wrap { gap: 4px; padding: 0 4px; }
+  .site-header { flex-wrap: wrap; }
+  .site-header .vol-wrap { order: 10; flex-basis: 100%; justify-content: center; margin-top: 6px; }
+}
+
+/* ── reel-stop keyframe animations ── */
+@keyframes reel-stop { 0%{animation-timing-function:cubic-bezier(.5,0,.5,1);transform:translateY(0)} 100%{transform:translateY(0)} }
+@keyframes reel-bounce { 0%{transform:translateY(0)} 20%{transform:translateY(-12px)} 40%{transform:translateY(6px)} 60%{transform:translateY(-3px)} 80%{transform:translateY(1px)} 100%{transform:translateY(0)} }
+@keyframes reel-glow { 0%{box-shadow:0 0 0 transparent} 50%{box-shadow:0 0 20px rgba(108,92,231,.6)} 100%{box-shadow:0 0 0 transparent} }
+
+/* Subtle overshoot bounce on reel stop via cubic-bezier transition */
+.reel-strip { transition: transform .35s cubic-bezier(.2, .9, .3, 1.15); }
+/* Win glow pulse on reel-window after a win */
+.reel-window.win-glow { animation: reel-glow .8s ease-in-out 3; }
+
+/* ── camera shake on big wins ── */
+@keyframes win-shake { 0%,100%{transform:translateX(0)} 10%{transform:translateX(-6px)} 30%{transform:translateX(6px)} 50%{transform:translateX(-4px)} 70%{transform:translateX(4px)} 90%{transform:translateX(-2px)} }
+.win-shake { animation:win-shake .5s ease-in-out; }
+@keyframes win-shake-heavy { 0%,100%{transform:translate(0,0) rotate(0)} 15%{transform:translate(-8px,3px) rotate(-1deg)} 35%{transform:translate(8px,-2px) rotate(1deg)} 55%{transform:translate(-5px,2px) rotate(-.5deg)} 75%{transform:translate(5px,-1px) rotate(.5deg)} }
+.win-shake-heavy { animation:win-shake-heavy .6s ease-in-out; }
+
+/* -- big win overlay (same treatment as case openings) -- */
+.big-win-overlay { position:fixed; inset:0; background:rgba(0,0,0,0); z-index:10000; display:none; justify-content:center; align-items:center; flex-direction:column; pointer-events:none; transition:background .8s ease; }
+.big-win-overlay.active { display:flex; background:rgba(0,0,0,.85); }
+.big-win-overlay.fade-out { background:rgba(0,0,0,0); transition:background 1.5s ease; }
+.big-win-label { font-size:clamp(32px,6vw,80px); font-weight:900; letter-spacing:.15em; text-transform:uppercase; text-shadow:0 0 60px currentColor,0 0 120px currentColor; animation:bigWinLabelIn .6s cubic-bezier(.34,1.56,.64,1) forwards; opacity:0; transform:scale(.5); font-family:var(--font,inherit); }
+.big-win-label.big { color:#ffd700; font-size:clamp(42px,7vw,96px); }
+.big-win-label.mega { color:#ff4444; font-size:clamp(48px,8vw,110px); text-shadow:0 0 60px #ff4444,0 0 120px #ff4444; }
+.big-win-label.jackpot { color:#ff00ff; font-size:clamp(56px,9vw,130px); text-shadow:0 0 60px #ff00ff,0 0 120px #ff00ff,0 0 180px #ff00ff; animation:bigWinLabelPulse .8s ease-in-out infinite alternate; }
+@keyframes bigWinLabelIn { 0%{opacity:0; transform:scale(.5) rotate(-5deg);} 100%{opacity:1; transform:scale(1) rotate(0deg);} }
+@keyframes bigWinLabelPulse { 0%{transform:scale(1); text-shadow:0 0 60px currentColor,0 0 120px currentColor;} 100%{transform:scale(1.05); text-shadow:0 0 80px currentColor,0 0 160px currentColor,0 0 240px currentColor;} }
+.big-win-number { font-size:clamp(64px,12vw,160px); font-weight:900; color:#ffd700; text-shadow:0 0 40px rgba(255,215,0,.5),0 0 80px rgba(255,215,0,.3); margin-top:10px; opacity:0; animation:bigWinNumberIn .8s .3s cubic-bezier(.34,1.56,.64,1) forwards; font-variant-numeric:tabular-nums; font-family:var(--font,inherit); }
+@keyframes bigWinNumberIn { 0%{opacity:0; transform:translateY(40px) scale(.8);} 100%{opacity:1; transform:translateY(0) scale(1);} }
+.big-win-coin-container { position:fixed; inset:0; pointer-events:none; z-index:10001; overflow:hidden; }
+.big-win-coin { position:absolute; font-size:20px; animation:bigWinCoinBurst linear forwards; opacity:0; }
+@keyframes bigWinCoinBurst { 0%{transform:translate(0,0) scale(0) rotate(0deg); opacity:1;} 20%{opacity:1;} 100%{transform:translate(var(--bx),var(--by)) scale(1) rotate(var(--br)); opacity:0;} }
+
+/* ── crossfade page transition overlay ── */
+#page-overlay { position:fixed; inset:0; z-index:99998; background:#0a0a12; pointer-events:none; opacity:0; transition:opacity .15s ease; }
+#page-overlay.active { opacity:1; }
+
+/* ── achievement toast popup ── */
+.achievement-toast { position:fixed; top:70px; left:50%; transform:translateX(-50%); z-index:99999; background:linear-gradient(135deg,#1c1c2a,#2a1a3a); border:1px solid #ffd700; border-radius:12px; padding:16px 24px; display:flex; align-items:center; gap:14px; box-shadow:0 8px 32px rgba(255,215,0,.2); animation:achievement-slide .5s ease-out; max-width:90vw; }
+@keyframes achievement-slide { 0%{transform:translateX(-50%) translateY(-100px);opacity:0} 100%{transform:translateX(-50%) translateY(0);opacity:1} }
+.achievement-toast .icon { font-size:36px; }
+.achievement-toast .info { display:flex; flex-direction:column; }
+.achievement-toast .title { font-weight:700; color:#ffd700; font-size:15px; }
+.achievement-toast .desc { color:#ccc; font-size:12px; margin-top:2px; }
+.achievement-toast .xp { color:#a29bfe; font-size:11px; margin-top:2px; }
+.achievement-toast .close-btn { position:absolute; top:4px; right:8px; background:none; border:none; color:#888; cursor:pointer; font-size:14px; }
+/* -- arcade high-score celebration (lighter/shorter than big-win, ticket-themed) -- */
+.arcade-celebrate-toast { position:fixed; top:70px; left:50%; transform:translateX(-50%); z-index:99999; background:linear-gradient(135deg,#1c1c2a,#2a1a3a); border:1px solid #a29bfe; border-radius:12px; padding:12px 20px; display:none; align-items:center; gap:12px; box-shadow:0 8px 32px rgba(162,155,254,.25); max-width:90vw; }
+.arcade-celebrate-toast.active { display:flex; animation:achievement-slide .4s ease-out; }
+.arcade-celebrate-toast.fade-out { animation:arcade-celebrate-out .4s ease-in forwards; }
+@keyframes arcade-celebrate-out { 0%{opacity:1; transform:translateX(-50%) translateY(0);} 100%{opacity:0; transform:translateX(-50%) translateY(-40px);} }
+.arcade-celebrate-icon { font-size:28px; }
+.arcade-celebrate-title { font-weight:700; color:#a29bfe; font-size:13px; letter-spacing:.03em; }
+.arcade-celebrate-desc { color:#ccc; font-size:11px; margin-top:2px; }
+.arcade-celebrate-burst { position:fixed; inset:0; pointer-events:none; z-index:99998; overflow:hidden; }
+.arcade-celebrate-ticket { position:absolute; animation:arcade-ticket-burst linear forwards; opacity:0; }
+@keyframes arcade-ticket-burst { 0%{transform:translate(0,0) scale(0) rotate(0deg); opacity:1;} 20%{opacity:1;} 100%{transform:translate(var(--bx),var(--by)) scale(1) rotate(360deg); opacity:0;} }
+
+/* -- arcade leaderboard (small ranked list embedded on each arcade game page) -- */
+.arcade-lb-title { font-size:10px; letter-spacing:.1em; color:#888; margin-bottom:8px; font-weight:700; }
+.arcade-lb-row { display:flex; align-items:center; gap:8px; padding:5px 0; font-size:12px; border-bottom:1px solid rgba(255,255,255,.05); }
+.arcade-lb-rank { color:#a29bfe; font-weight:700; width:28px; flex-shrink:0; }
+.arcade-lb-name { flex:1; color:#ddd; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.arcade-lb-score { color:#ffd700; font-weight:700; font-variant-numeric:tabular-nums; }
+.arcade-lb-yours { margin-top:8px; padding-top:8px; border-top:1px solid rgba(255,255,255,.08); font-size:11px; color:#a29bfe; }
+.arcade-lb-empty { color:#666; font-size:11px; padding:8px 0; }
+
+/* ---- Desktop scaling: render game elements bigger on wide viewports ----
+   Every game page hardcodes plain px (no rem/em basis), so a rem multiplier
+   is not viable here -- transform:scale on the shared .page/.hud-frame
+   wrapper is the one centralized lever. transform does not add to normal-flow
+   layout height, so page-transitions.js measures each page's real
+   (untransformed) offsetHeight on load/resize and sets an exact
+   margin-bottom compensation -- a fixed guess here was tried first and
+   measured short on a real page, so do not reintroduce one. Floor is
+   well above any mobile width. */
+@media (min-width: 900px) {
+  .page, .hud-frame {
+    transform: scale(1.35);
+    transform-origin: top center;
+  }
+}
+@media (min-width: 1300px) {
+  .page, .hud-frame {
+    transform: scale(1.55);
+  }
+}

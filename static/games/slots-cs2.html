@@ -1,0 +1,910 @@
+﻿<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+
+<title>🔫  CS2 Slots — CS2CaseBot</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+
+<style>
+
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+
+:root{--bg:#080c10;--steel:#8899aa;--gold:#ffd700;--blue:#4488ff;--purple:#aa44ff;--pink:#ff69b4;--red:#ff3333;--font:'Orbitron',monospace;}
+
+html,body{min-height:100vh;background:var(--bg);font-family:var(--font);overflow-x:hidden;color:#c0ccd8;}
+
+body{background-image:linear-gradient(180deg,rgba(68,136,255,0.04) 0%,transparent 50%),
+
+  radial-gradient(ellipse 80% 30% at 50% 0%,rgba(255,215,0,0.03) 0%,transparent 70%);}
+
+
+
+/* HEADER */
+
+.hdr{display:flex;align-items:center;gap:12px;padding:12px 16px;
+
+  background:rgba(8,12,16,0.98);border-bottom:1px solid rgba(68,136,255,0.1);
+
+  position:sticky;top:0;z-index:50;}
+
+.back{display:flex;align-items:center;gap:5px;color:#3a4a5a;font-size:10px;letter-spacing:1px;text-decoration:none;transition:color .2s;}
+
+.back:hover{color:var(--blue);}
+
+.back svg{width:14px;height:14px;}
+
+.title{flex:1;font-size:13px;font-weight:900;letter-spacing:3px;color:var(--steel);}
+
+.bal{font-size:13px;font-weight:700;color:var(--gold);font-family:monospace;}
+
+
+
+/* HUD frame */
+
+.hud-frame{
+
+  max-width:420px;margin:20px auto;padding:0 14px 80px;
+
+}
+
+
+
+/* Scan line texture */
+
+.scan-overlay{position:fixed;inset:0;pointer-events:none;z-index:0;
+
+  background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(68,136,255,0.015) 3px,rgba(68,136,255,0.015) 4px);}
+
+
+
+/* CASE DISPLAY */
+
+.case-display{
+
+  position:relative;z-index:1;
+
+  background:rgba(4,8,14,0.98);
+
+  border:1px solid rgba(68,136,255,0.15);
+
+  border-radius:16px;padding:20px 16px;
+
+  margin-bottom:16px;
+
+  box-shadow:inset 0 0 40px rgba(0,0,0,0.5);
+
+}
+
+.case-display::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;
+
+  background:linear-gradient(90deg,transparent,rgba(68,136,255,0.4),transparent);}
+
+
+
+/* Rarity indicator row */
+
+.rarity-row{display:flex;gap:3px;margin-bottom:14px;}
+
+.rar-pip{flex:1;height:3px;border-radius:1px;opacity:0.3;transition:opacity .3s,box-shadow .3s;}
+
+.rar-pip.active{opacity:1;box-shadow:0 0 6px currentColor;}
+
+.rar-pip.blue{background:var(--blue);color:var(--blue);}
+
+.rar-pip.purple{background:var(--purple);color:var(--purple);}
+
+.rar-pip.pink{background:var(--pink);color:var(--pink);}
+
+.rar-pip.red{background:var(--red);color:var(--red);}
+
+.rar-pip.gold{background:var(--gold);color:var(--gold);}
+
+
+
+/* REELS */
+
+.reels{display:flex;gap:6px;margin-bottom:14px;}
+
+.reel-win{
+
+  flex:1;height:110px;overflow:hidden;
+
+  background:rgba(0,0,0,0.6);
+
+  border:1px solid rgba(68,136,255,0.1);
+
+  border-radius:10px;position:relative;
+
+}
+
+.reel-win::after{content:'';position:absolute;top:50%;left:0;right:0;height:1px;
+
+  background:rgba(68,136,255,0.25);transform:translateY(-50%);pointer-events:none;z-index:2;}
+
+.reel-strip-cs2{display:flex;flex-direction:column;align-items:center;will-change:transform;}
+
+.reel-cell-cs2{height:110px;width:100%;display:flex;flex-direction:column;
+
+  align-items:center;justify-content:center;gap:4px;flex-shrink:0;}
+
+.reel-cell-cs2 .r-emoji{font-size:38px;line-height:1;}
+
+.reel-cell-cs2 .r-rar{font-size:8px;letter-spacing:1px;}
+
+/* After landing, glow the winning window */
+
+.reel-win.glow-Blue{border-color:var(--blue);box-shadow:0 0 16px rgba(68,136,255,0.4);}
+
+.reel-win.glow-Purple{border-color:var(--purple);box-shadow:0 0 16px rgba(170,68,255,0.4);}
+
+.reel-win.glow-Pink{border-color:var(--pink);box-shadow:0 0 20px rgba(255,105,180,0.5);}
+
+.reel-win.glow-Red{border-color:var(--red);box-shadow:0 0 24px rgba(255,51,51,0.55);}
+
+.reel-win.glow-Gold{border-color:var(--gold);box-shadow:0 0 32px rgba(255,215,0,0.7);}
+
+
+
+/* RESULT */
+
+.result-display{min-height:42px;text-align:center;margin-bottom:14px;display:flex;flex-direction:column;gap:4px;align-items:center;justify-content:center;}
+
+.res-label{font-size:13px;font-weight:900;letter-spacing:2px;}
+
+.res-label.miss{color:#2a3a4a;}
+
+.res-label.blue{color:var(--blue);}
+
+.res-label.purple{color:var(--purple);}
+
+.res-label.pink{color:var(--pink);}
+
+.res-label.red{color:var(--red);}
+
+.res-label.gold{color:var(--gold);text-shadow:0 0 20px rgba(255,215,0,0.5);font-size:16px;}
+
+.res-sub{font-size:9px;color:#3a4a5a;letter-spacing:1px;}
+
+
+
+/* BET + SPIN */
+
+.controls{background:rgba(0,0,0,0.4);border:1px solid rgba(68,136,255,0.06);border-radius:14px;padding:14px;position:relative;z-index:1;}
+
+.bet-label{font-size:8px;color:#3a4a5a;letter-spacing:2px;margin-bottom:8px;}
+
+.bet-disp{font-size:20px;font-weight:900;color:var(--gold);font-family:monospace;text-align:center;margin-bottom:8px;}
+
+.qrow{display:flex;gap:5px;margin-bottom:8px;}
+
+.qb{flex:1;padding:7px 4px;background:rgba(68,136,255,0.05);border:1px solid rgba(68,136,255,0.1);
+
+  border-radius:6px;color:#3a4a5a;font-size:8px;letter-spacing:1px;cursor:pointer;text-align:center;transition:all .15s;}
+
+.qb:hover{border-color:var(--blue);color:var(--blue);}
+
+.qb.active{border-color:var(--blue);color:var(--blue);background:rgba(68,136,255,0.1);}
+
+.adj-row{display:flex;gap:6px;margin-bottom:10px;}
+
+.adj{flex:1;padding:8px;background:rgba(68,136,255,0.04);border:1px solid rgba(68,136,255,0.08);
+
+  border-radius:8px;color:#3a4a5a;font-family:var(--font);font-size:10px;cursor:pointer;text-align:center;transition:all .15s;}
+
+.adj:hover{color:var(--blue);border-color:rgba(68,136,255,0.2);}
+
+
+
+.btn-spin{width:100%;padding:15px;border:none;border-radius:10px;font-family:var(--font);font-size:13px;font-weight:900;letter-spacing:3px;cursor:pointer;transition:all .2s;background:linear-gradient(135deg,#1a3a5a,var(--blue));color:#fff;box-shadow:0 4px 20px rgba(68,136,255,0.3);}
+
+.btn-spin:not(:disabled):hover{transform:translateY(-2px);box-shadow:0 6px 32px rgba(68,136,255,0.5);}
+
+.btn-spin:disabled{opacity:.4;cursor:not-allowed;transform:none!important;}
+
+
+
+/* PAYTABLE */
+
+.pt{display:grid;grid-template-columns:repeat(2,1fr);gap:4px;margin-top:14px;position:relative;z-index:1;}
+
+.pt-row{display:flex;justify-content:space-between;align-items:center;padding:6px 8px;background:rgba(68,136,255,0.03);border:1px solid rgba(68,136,255,0.06);border-radius:8px;}
+
+.pt-combo{font-size:13px;}
+
+.pt-name{font-size:8px;flex:1;margin-left:6px;}
+
+.pt-mult{font-size:10px;font-weight:700;font-family:monospace;}
+
+.pt-row.blue .pt-name,.pt-row.blue .pt-mult{color:var(--blue);}
+
+.pt-row.purple .pt-name,.pt-row.purple .pt-mult{color:var(--purple);}
+
+.pt-row.pink .pt-name,.pt-row.pink .pt-mult{color:var(--pink);}
+
+.pt-row.red .pt-name,.pt-row.red .pt-mult{color:var(--red);}
+
+.pt-row.gold .pt-name,.pt-row.gold .pt-mult{color:var(--gold);}
+
+
+
+.hist-row{display:flex;gap:4px;flex-wrap:wrap;align-items:center;min-height:14px;margin-top:10px;}
+
+.hist-lbl{font-size:8px;color:#3a4a5a;letter-spacing:1px;flex-shrink:0;margin-right:2px;}
+
+.hist-dot{width:12px;height:12px;border-radius:50%;}
+
+.cstats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:12px;position:relative;z-index:1;}
+
+.cstat{background:rgba(68,136,255,0.05);border:1px solid rgba(68,136,255,0.1);border-radius:8px;padding:8px;text-align:center;}
+
+.cstat .sv{font-size:14px;font-weight:900;font-family:monospace;color:var(--blue);}
+
+.cstat .sl{font-size:8px;color:#3a4a5a;letter-spacing:1px;margin-top:2px;}
+
+/* RARITY DROP FLASH */
+
+#rarFlash{position:fixed;inset:0;pointer-events:none;opacity:0;z-index:200;}
+
+#rarFlash.show{animation:rf .5s ease;}
+
+@keyframes rf{0%,100%{opacity:0;}30%{opacity:1;}}
+
+
+
+/* GOLD OVERLAY */
+
+#goldOv{position:fixed;inset:0;z-index:300;background:rgba(0,0,0,0.82);display:none;flex-direction:column;align-items:center;justify-content:center;gap:14px;}
+
+#goldOv.show{display:flex;}
+
+.go-star{font-size:52px;animation:spin-star 2s linear infinite;}
+
+@keyframes spin-star{0%{transform:rotate(0deg);}100%{transform:rotate(360deg);}}
+
+.go-title{font-size:clamp(20px,6vw,36px);font-weight:900;letter-spacing:4px;color:var(--gold);text-shadow:0 0 30px rgba(255,215,0,0.6);}
+
+.go-item{font-size:clamp(12px,3.5vw,18px);color:#fff;max-width:80%;text-align:center;}
+
+.go-mult{font-size:clamp(18px,5vw,28px);font-weight:900;color:var(--gold);font-family:monospace;}
+
+.go-close{padding:12px 28px;background:var(--gold);color:#080c10;border:none;border-radius:24px;font-family:var(--font);font-size:10px;font-weight:700;letter-spacing:2px;cursor:pointer;margin-top:6px;}
+
+/* ITEM WON OVERLAY (generic weapon grant reveal, any rarity) */
+#itemWonOv{position:fixed;inset:0;z-index:300;background:rgba(0,0,0,0.85);display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;}
+#itemWonOv.show{display:flex;animation:fadeInPopup .3s ease;}
+@keyframes fadeInPopup{from{opacity:0;}to{opacity:1;}}
+.iw-title{font-size:clamp(16px,4.5vw,26px);font-weight:900;letter-spacing:3px;text-shadow:0 0 24px currentColor;}
+.iw-img{width:120px;height:120px;object-fit:contain;filter:drop-shadow(0 8px 30px rgba(0,0,0,0.6));}
+.iw-name{font-size:clamp(12px,3.2vw,16px);color:#fff;max-width:85%;text-align:center;}
+.iw-price{font-size:clamp(14px,4vw,20px);font-weight:900;color:var(--gold);font-family:monospace;}
+.iw-close{padding:12px 28px;background:var(--gold);color:#080c10;border:none;border-radius:24px;font-family:var(--font);font-size:10px;font-weight:700;letter-spacing:2px;cursor:pointer;margin-top:6px;}
+
+/* BONUS ROUND OVERLAY */
+#bonusOv{position:fixed;inset:0;z-index:290;background:rgba(0,0,0,0.9);display:none;flex-direction:column;align-items:center;justify-content:center;gap:16px;}
+#bonusOv.show{display:flex;animation:fadeInPopup .3s ease;}
+.bonus-title{font-size:clamp(18px,5vw,28px);font-weight:900;letter-spacing:4px;color:#ff69b4;text-shadow:0 0 30px rgba(255,105,180,0.6);animation:bonusPulse 1s ease-in-out infinite alternate;}
+@keyframes bonusPulse{from{transform:scale(1);}to{transform:scale(1.06);}}
+.bonus-sub{font-size:11px;color:#8899aa;letter-spacing:1px;}
+.bonus-reels{display:flex;gap:8px;}
+.bonus-reel{width:64px;height:64px;border-radius:10px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,105,180,0.2);display:flex;align-items:center;justify-content:center;font-size:32px;}
+
+</style>
+
+    <script src="/static/sound.js"></script>
+
+    <script src="/static/big-win.js"></script>
+
+
+    <script src="/static/balance-animation.js"></script>
+
+
+    <script src="/static/page-transitions.js"></script>
+
+
+    <script src="/static/autoplay.js"></script>
+
+
+<link rel="stylesheet" href="/static/games-shared.css"><script src="/static/js/csrf.js"></script>
+
+
+</head>
+
+<body>
+
+<div id="rarFlash"></div>
+
+<div id="goldOv">
+
+  <div class="go-star">⭐</div>
+
+  <div class="go-title">LEGENDARY DROP</div>
+
+  <div class="go-item" id="goItem">—</div>
+
+  <div class="go-mult" id="goMult">—</div>
+
+  <button class="go-close" onclick="closeGold()">CLAIM</button>
+
+</div>
+
+<div id="itemWonOv">
+
+  <div class="iw-title" id="iwTitle">WEAPON WON!</div>
+
+  <img class="iw-img" id="iwImg" src="" alt="" onerror="this.style.display='none'">
+
+  <div class="iw-name" id="iwName">—</div>
+
+  <div class="iw-price" id="iwPrice">—</div>
+
+  <button class="iw-close" onclick="closeItemWon()">CLAIM</button>
+
+</div>
+
+<div id="bonusOv">
+
+  <div class="bonus-title">🎁 BONUS ROUND!</div>
+
+  <div class="bonus-sub" id="bonusSub">Free spin — rarity reels only, no cash involved</div>
+
+  <div class="bonus-reels" id="bonusReels">
+    <div class="bonus-reel">?</div>
+    <div class="bonus-reel">?</div>
+    <div class="bonus-reel">?</div>
+  </div>
+
+</div>
+
+<div class="scan-overlay"></div>
+
+
+
+<header class="hdr">
+
+  <a class="back" href="/games"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>GAMES</a>
+
+  <span class="title">🔫  CS2 WEAPON SLOTS</span>
+
+  <span class="bal" id="balDisplay">$—</span>
+
+</header>
+
+
+
+<div class="hud-frame">
+
+  <div class="case-display">
+
+    <div class="rarity-row">
+
+      <div class="rar-pip blue" id="pip0"></div>
+
+      <div class="rar-pip purple" id="pip1"></div>
+
+      <div class="rar-pip pink" id="pip2"></div>
+
+      <div class="rar-pip red" id="pip3"></div>
+
+      <div class="rar-pip gold" id="pip4"></div>
+
+    </div>
+
+    <div class="reels" id="reelsRow">
+
+      <div class="reel-win" id="rw0"><div class="reel-strip-cs2" id="rs0"></div></div>
+
+      <div class="reel-win" id="rw1"><div class="reel-strip-cs2" id="rs1"></div></div>
+
+      <div class="reel-win" id="rw2"><div class="reel-strip-cs2" id="rs2"></div></div>
+
+    </div>
+
+    <div class="result-display">
+
+      <div class="res-label miss" id="resLabel">PLACE YOUR BET</div>
+
+      <div class="res-sub" id="resSub"></div>
+
+    </div>
+
+  </div>
+
+
+
+  <div class="cstats">
+
+    <div class="cstat"><div class="sv" id="csWins">0</div><div class="sl">WINS</div></div>
+
+    <div class="cstat"><div class="sv" id="csSpins">0</div><div class="sl">SPINS</div></div>
+
+    <div class="cstat"><div class="sv" id="csStreak">0</div><div class="sl">STREAK</div></div>
+
+  </div>
+
+
+
+  <div class="controls">
+
+    <div class="bet-label">BET AMOUNT</div>
+
+    <div class="bet-disp" id="betDisp">$500</div>
+
+    <div class="qrow">
+
+      <div class="qb" onclick="setBet(100)">$100</div>
+
+      <div class="qb active" onclick="setBet(500)">$500</div>
+
+      <div class="qb" onclick="setBet(1000)">$1K</div>
+
+      <div class="qb" onclick="setBet(5000)">$5K</div>
+
+      <div class="qb" onclick="setBet(10000)">$10K</div>
+
+    </div>
+
+    <div class="adj-row">
+
+      <div class="adj" onclick="halveBet()">½ BET</div>
+
+      <div class="adj" onclick="doubleBet()">2× BET</div>
+
+      <div class="adj" onclick="maxBet()">MAX BET</div>
+
+    </div>
+
+    <button class="btn-spin" id="spinBtn" onclick="spin()">🔫  OPEN CASE</button>
+
+    <button class="adj" style="width:100%;margin-top:8px;" onclick="toggleAutoPanel()">⚙️ AUTOPLAY</button>
+
+    <div id="cs2AutoPanel"></div>
+
+    <div class="hist-row" id="csHistRow"><span class="hist-lbl">SESSION:</span></div>
+
+  </div>
+
+
+
+  <div class="pt">
+
+    <div class="pt-row gold"><span class="pt-combo">⭐⭐⭐</span><span class="pt-name">TRIPLE GOLD</span><span class="pt-mult">500×</span></div>
+
+    <div class="pt-row gold"><span class="pt-combo">⭐⭐</span><span class="pt-name">DOUBLE GOLD</span><span class="pt-mult">20×</span></div>
+
+    <div class="pt-row red"><span class="pt-combo">🔴🔴🔴</span><span class="pt-name">TRIPLE RED</span><span class="pt-mult">100×</span></div>
+
+    <div class="pt-row red"><span class="pt-combo">🔴🔴</span><span class="pt-name">DOUBLE RED</span><span class="pt-mult">8×</span></div>
+
+    <div class="pt-row pink"><span class="pt-combo">💗💗💗</span><span class="pt-name">TRIPLE PINK</span><span class="pt-mult">40×</span></div>
+
+    <div class="pt-row pink"><span class="pt-combo">💗💗</span><span class="pt-name">DOUBLE PINK</span><span class="pt-mult">4×</span></div>
+
+    <div class="pt-row purple"><span class="pt-combo">🟪🟪🟪</span><span class="pt-name">TRIPLE PURPLE</span><span class="pt-mult">15×</span></div>
+
+    <div class="pt-row blue"><span class="pt-combo">🟦🟦🟦</span><span class="pt-name">TRIPLE BLUE</span><span class="pt-mult">5×</span></div>
+
+  </div>
+
+</div>
+
+
+
+<script>
+
+const RARITY_EMOJIS={Blue:'🟦',Purple:'🟪',Pink:'💗',Red:'🔴',Gold:'⭐',Bonus:'🎁'};
+
+// Bonus intentionally excluded -- it's a special symbol, not a rarity tier,
+// so it should never win the "highest rarity landed" comparison (indexOf
+// returns -1 for anything not in this list, which sorts it lowest, exactly
+// as intended).
+const RARITY_ORDER=['Blue','Purple','Pink','Red','Gold'];
+
+const RARITY_COLORS={Blue:'var(--blue)',Purple:'var(--purple)',Pink:'var(--pink)',Red:'var(--red)',Gold:'var(--gold)',Bonus:'#ff69b4'};
+
+const RARITY_DOT_COLS={Blue:'#4488ff',Purple:'#aa44ff',Pink:'#ff69b4',Red:'#ff3333',Gold:'#ffd700',Bonus:'#ff69b4'};
+
+let bet=500,balance=0,spinning=false,csWins=0,csSpins=0,csStreak=0,csHistory=[],csAP=null;
+
+
+
+async function init(){
+
+  try{const d=await api('/api/user/me');balance=d.balance;updateBal();}catch(e){}
+
+  buildReels();
+
+}
+
+
+
+function updateBal(){var e=document.getElementById('balDisplay'),c=e.textContent||'',n='$'+balance.toLocaleString(undefined,{maximumFractionDigits:0});if(c&&c!=='$—'&&c!==n){var p=parseFloat(c.replace(/[,$]/g,''));if(!isNaN(p)&&p!==balance){animateBalance(e,'$'+p.toLocaleString(undefined,{maximumFractionDigits:0}),n,balance>=p);return}}e.textContent=n}
+
+
+
+function buildReels(){
+
+  [0,1,2].forEach(i=>{
+
+    const strip=document.getElementById('rs'+i);
+
+    strip.innerHTML='';
+
+    for(let j=0;j<25;j++){
+
+      const rar=RARITY_ORDER[Math.floor(Math.random()*RARITY_ORDER.length)];
+
+      const cell=document.createElement('div');
+
+      cell.className='reel-cell-cs2';
+
+      const emojiEl=document.createElement('div');emojiEl.className='r-emoji';emojiEl.textContent=RARITY_EMOJIS[rar]||'';
+
+      const rarEl=document.createElement('div');rarEl.className='r-rar';rarEl.style.color=RARITY_COLORS[rar]||'';rarEl.textContent=rar.toUpperCase();
+
+      cell.appendChild(emojiEl);cell.appendChild(rarEl);
+
+      strip.appendChild(cell);
+
+    }
+
+    strip.style.transform=`translateY(-${12*110}px)`;
+
+  });
+
+}
+
+
+
+function setBet(v){Sound.click();bet=v;document.getElementById('betDisp').textContent='$'+bet.toLocaleString();document.querySelectorAll('.qb').forEach(b=>b.classList.remove('active'));}
+
+function halveBet(){setBet(Math.max(100,Math.floor(bet/2/100)*100));}
+
+function doubleBet(){setBet(Math.min(balance,bet*2));}
+
+function maxBet(){setBet(Math.min(balance,750000));}
+
+
+
+async function spin(){
+
+  if(spinning||bet>balance){setResult('❌ INSUFFICIENT BALANCE','miss');Sound.error();return {win:false,multiplier:0,winAmount:0};}
+
+  spinning=true;
+  let roundResult={win:false,multiplier:0,winAmount:0};
+
+
+  Sound.spin();
+
+
+  document.getElementById('spinBtn').disabled=true;
+
+
+  setResult('SPINNING…','miss');
+
+  document.getElementById('resSub').textContent='';
+
+  // Clear glows
+
+  [0,1,2].forEach(i=>document.getElementById('rw'+i).className='reel-win');
+
+  // Reset pips
+
+  RARITY_ORDER.forEach((_,i)=>document.getElementById('pip'+i).classList.remove('active'));
+
+
+
+  // Spin animation
+
+  [0,1,2].forEach(i=>{
+
+    const strip=document.getElementById('rs'+i);
+
+    const targetY=(12+Math.floor(Math.random()*8))*110;
+
+    strip.style.transition='none';
+
+    strip.style.transform=`translateY(-${12*110}px)`;
+
+    setTimeout(()=>{
+
+      strip.style.transition=`transform ${1.1+i*0.12}s cubic-bezier(.25,.46,.45,.94)`;
+
+      strip.style.transform=`translateY(-${targetY}px)`;
+
+    },20+i*30);
+
+  });
+
+
+
+  try{
+
+    const d=await api('/api/games/easy/slots/cs2/spin',{method:'POST',body:JSON.stringify({amount:bet})});
+
+    await delay(1350);
+
+
+
+    // Land on result rarities
+
+    [0,1,2].forEach(i=>{
+
+      const rar=d.rarities[i];
+
+      const strip=document.getElementById('rs'+i);
+
+      // Rebuild strip ending on correct rarity
+
+      strip.innerHTML='';
+
+      for(let j=0;j<20;j++){
+
+        const r2=j===15?rar:RARITY_ORDER[Math.floor(Math.random()*RARITY_ORDER.length)];
+
+        const cell=document.createElement('div');
+
+        cell.className='reel-cell-cs2';
+
+        const emojiEl2=document.createElement('div');emojiEl2.className='r-emoji';emojiEl2.textContent=RARITY_EMOJIS[r2]||'';
+
+        const rarEl2=document.createElement('div');rarEl2.className='r-rar';rarEl2.style.color=RARITY_COLORS[r2]||'';rarEl2.textContent=r2.toUpperCase();
+
+        cell.appendChild(emojiEl2);cell.appendChild(rarEl2);
+
+        strip.appendChild(cell);
+
+      }
+
+      strip.style.transition='none';strip.style.transform=`translateY(-${14*110}px)`;
+
+      setTimeout(()=>{strip.style.transition='transform .25s cubic-bezier(.34,1.56,.64,1)';strip.style.transform=`translateY(-${15*110}px)`;},20);
+
+      document.getElementById('rw'+i).className=`reel-win glow-${rar}`;
+
+    });
+
+
+
+    await delay(300);
+
+
+    Sound.reelStop();
+
+
+    balance=await refreshBal();updateBal();
+
+
+
+    // Activate rarity pips
+
+    const highestRar=d.rarities.reduce((a,b)=>RARITY_ORDER.indexOf(b)>RARITY_ORDER.indexOf(a)?b:a);
+
+    const pipIdx=RARITY_ORDER.indexOf(highestRar);
+
+    for(let i=0;i<=pipIdx;i++) document.getElementById('pip'+i).classList.add('active');
+
+
+
+    csSpins++;document.getElementById('csSpins').textContent=csSpins;
+
+    roundResult={win:d.win>0, multiplier:d.mult||0, winAmount:d.win||0};
+
+    if(d.win>0){
+
+      csWins++;csStreak++;document.getElementById('csWins').textContent=csWins;document.getElementById('csStreak').textContent=csStreak;
+
+      pushCSHist(highestRar);
+
+      const rarClass=highestRar.toLowerCase();
+
+      if(highestRar==='Gold'&&d.mult>=200){
+
+
+        Sound.jackpot();
+
+
+        document.getElementById('goItem').textContent=d.label;
+
+
+        document.getElementById('goMult').textContent=d.mult+'× · +$'+d.win.toLocaleString(undefined,{maximumFractionDigits:0});
+
+
+        document.getElementById('goldOv').classList.add('show');
+
+        await new Promise(resolve=>{_goldClaimResolve=resolve;});
+
+      }else{
+
+
+        Sound.win();
+
+
+        setResult(d.label||highestRar+' MATCH',rarClass);
+
+
+        document.getElementById('resSub').textContent=`${d.mult}× · +$${d.win.toLocaleString(undefined,{maximumFractionDigits:0})}`;
+
+
+        doFlash(highestRar);if(window.maybeBigWin)await maybeBigWin(bet,d.win);
+
+      }
+
+    }else{
+
+
+      Sound.loss();
+
+
+      csStreak=0;document.getElementById('csStreak').textContent=0;
+
+
+      pushCSHist(null);
+
+
+      setResult('MISS — TRY AGAIN','miss');
+
+    }
+
+    // A full 3-of-a-kind can ALSO grant a real weapon on top of (or
+    // instead of, if the item pool happened to miss) the cash payout --
+    // shown via its own reveal so it doesn't get lost inside the cash
+    // win/miss messaging above.
+    if(d.item_won){
+      await delay(highestRar==='Gold'&&d.mult>=200?0:400);
+      await showItemWon(d.item_won);
+    }
+
+    // A 🎁 landing anywhere queues a free bonus mini-round -- runs after
+    // the main result (and any item-won reveal) has been shown.
+    if(d.bonus_triggered&&d.bonus_token){
+      await delay(d.item_won?600:400);
+      await runBonusRound(d.bonus_token);
+    }
+
+  }catch(e){
+
+    setResult('ERROR','miss');
+
+  }finally{
+
+    spinning=false;document.getElementById('spinBtn').disabled=false;
+
+    if(csAP)csAP.setBalance(balance);
+
+  }
+
+  return roundResult;
+
+}
+
+let _itemWonResolve=null;
+let _goldClaimResolve=null;
+
+// Returns a Promise that resolves only when the user clicks CLAIM -- no
+// auto-timeout, so autoplay genuinely pauses until the skin is acknowledged.
+function showItemWon(item){
+  const rar=item.rarity||'Blue';
+  const color=RARITY_COLORS[rar]||RARITY_COLORS.Blue;
+  const titleEl=document.getElementById('iwTitle');
+  titleEl.textContent=(item.is_stattrak?'STATTRAK™ ':'')+rar.toUpperCase()+' WEAPON WON!';
+  titleEl.style.color=color;
+  document.getElementById('iwImg').src=item.image_url||'';
+  document.getElementById('iwName').textContent=item.name;
+  document.getElementById('iwPrice').textContent='$'+Number(item.price).toLocaleString(undefined,{maximumFractionDigits:2});
+  Sound.win();
+  document.getElementById('itemWonOv').classList.add('show');
+  return new Promise(resolve=>{_itemWonResolve=resolve;});
+}
+function closeItemWon(){
+  document.getElementById('itemWonOv').classList.remove('show');
+  if(_itemWonResolve){const r=_itemWonResolve;_itemWonResolve=null;r();}
+}
+
+async function runBonusRound(token){
+  const ov=document.getElementById('bonusOv');
+  const reels=document.getElementById('bonusReels').children;
+  [...reels].forEach(r=>r.textContent='?');
+  ov.classList.add('show');
+  await delay(900);
+  try{
+    const d=await api('/api/games/easy/slots/cs2/bonus/spin',{method:'POST',body:JSON.stringify({bonus_token:token})});
+    d.emojis.forEach((em,i)=>{ if(reels[i]) reels[i].textContent=em; });
+    await delay(700);
+    ov.classList.remove('show');
+    if(d.item_won) await showItemWon(d.item_won);
+  }catch(e){
+    ov.classList.remove('show');
+  }
+}
+
+
+
+function pushCSHist(rar){csHistory.push(rar);if(csHistory.length>20)csHistory.shift();const el=document.getElementById('csHistRow');if(!el)return;el.innerHTML='<span class="hist-lbl">SESSION:</span>';csHistory.forEach(r=>{const d=document.createElement('div');d.className='hist-dot';d.style.background=r?RARITY_DOT_COLS[r]||'#4488ff':'#2a3a4a';el.appendChild(d);});}
+
+function toggleAutoPanel(){
+  if(!csAP){
+    csAP=new AutoPlay({
+      onRound: async()=>{ return await spin(); },
+      onStop: (reason)=>{},
+      roundDelay: 400,
+    });
+    csAP.setBalance(balance);
+  }
+  const panel=document.getElementById('cs2AutoPanel');
+  if(panel.querySelector('.autoplay-panel')){ panel.innerHTML=''; return; }
+  csAP.bindUI(panel,{defaultRounds:10,getBalance:()=>balance});
+}
+
+function setResult(text,cls){
+
+  const el=document.getElementById('resLabel');
+
+  el.className='res-label '+cls;el.textContent=text;
+
+}
+
+function doFlash(rar){
+
+  const el=document.getElementById('rarFlash');
+
+  const colors={Blue:'rgba(68,136,255,0.2)',Purple:'rgba(170,68,255,0.2)',Pink:'rgba(255,105,180,0.25)',Red:'rgba(255,51,51,0.25)',Gold:'rgba(255,215,0,0.3)'};
+
+  el.style.background=`radial-gradient(ellipse at 50% 40%,${colors[rar]||colors.Blue},transparent 70%)`;
+
+  el.classList.remove('show');void el.offsetWidth;el.classList.add('show');
+
+}
+
+function closeGold(){
+  document.getElementById('goldOv').classList.remove('show');
+  if(_goldClaimResolve){const r=_goldClaimResolve;_goldClaimResolve=null;r();}
+}
+
+async function refreshBal(){try{const d=await api('/api/user/me');return d.balance;}catch(e){return balance;}}
+
+async function api(url,opts={}){const r=await fetch(url,{credentials:'include',headers:{'Content-Type':'application/json'},...opts});if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.detail||'Error');}return r.json();}
+
+function delay(ms){return new Promise(r=>setTimeout(r,ms));}
+
+init();
+
+</script>
+
+<script>if("serviceWorker"in navigator){navigator.serviceWorker.register("/static/sw.js").catch(function(){})}</script>
+
+
+<script src="/static/chat.js"></script>
+
+
+</body>
+
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,4517 @@
+<!DOCTYPE html>
+
+
+<html lang="en">
+
+
+<head>
+
+
+    <meta charset="UTF-8">
+
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+
+    <title>CS2CaseBot — Admin</title>
+
+
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+
+
+    <style>
+
+
+        /* -- Reset & Base -- */
+
+
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+
+        :root {
+
+
+            --gold: #ffd700;
+
+
+            --gold2: #f0a500;
+
+
+            --orange: #ff6b00;
+
+
+            --bg: #0a0a0f;
+
+
+            --bg2: #1a1a2e;
+
+
+            --bg3: #2a2a4e;
+
+
+            --border: rgba(255,215,0,.12);
+
+
+            --red: #ff4444;
+
+
+            --green: #4caf50;
+
+
+            --blue: #1a73e8;
+
+
+            --purple: #7b2fbe;
+
+
+            --text: #ddd;
+
+
+            --text-dim: #666;
+
+
+        }
+
+
+        body {
+
+
+            font-family: 'Orbitron', 'Segoe UI', Arial, sans-serif;
+
+
+            background: var(--bg);
+
+
+            background-image: radial-gradient(ellipse at top, #1a1a2e 0%, var(--bg) 70%);
+
+
+            color: var(--text);
+
+
+            min-height: 100vh;
+
+
+            display: flex;
+
+
+        }
+
+
+        a { color: var(--gold); text-decoration: none; }
+
+
+        
+
+
+        /* -- Sidebar -- */
+
+
+        .sidebar {
+
+
+            width: 220px;
+
+
+            flex-shrink: 0;
+
+
+            background: rgba(10,10,20,.95);
+
+
+            border-right: 1px solid var(--border);
+
+
+            display: flex;
+
+
+            flex-direction: column;
+
+
+            padding: 20px 0;
+
+
+            position: sticky;
+
+
+            top: 0;
+
+
+            height: 100vh;
+
+
+            overflow-y: auto;
+
+
+        }
+
+
+        .sidebar-logo {
+
+
+            padding: 0 20px 20px;
+
+
+            border-bottom: 1px solid var(--border);
+
+
+            margin-bottom: 10px;
+
+
+        }
+
+
+        .sidebar-logo h1 {
+
+
+            font-size: 14px;
+
+
+            background: linear-gradient(90deg, var(--gold), var(--orange));
+
+
+            -webkit-background-clip: text;
+
+
+            -webkit-text-fill-color: transparent;
+
+
+            letter-spacing: 1px;
+
+
+        }
+
+
+        .sidebar-logo .badge { display: inline-block; background: var(--red); color: #fff; font-size: 9px; padding: 2px 6px; border-radius: 4px; margin-top: 4px; letter-spacing: 1px; }
+
+
+        .nav-section { font-size: 9px; letter-spacing: 2px; color: #444; padding: 16px 20px 6px; }
+
+
+        .nav-item {
+
+
+            display: flex; align-items: center; gap: 10px; padding: 10px 20px;
+
+
+            cursor: pointer; font-size: 11px; letter-spacing: 1px; color: #888;
+
+
+            transition: all .2s; border-left: 3px solid transparent;
+
+
+        }
+
+
+        .nav-item:hover { color: #ccc; background: rgba(255,255,255,.03); }
+
+
+        .nav-item.active { color: var(--gold); border-left-color: var(--gold); background: rgba(255,215,0,.05); }
+
+
+
+
+
+        /* -- Main -- */
+
+
+        .main { flex: 1; padding: 24px; overflow-x: hidden; min-width: 0; }
+
+
+        .topbar {
+
+
+            display: flex; justify-content: space-between; align-items: center;
+
+
+            margin-bottom: 24px; flex-wrap: wrap; gap: 12px;
+
+
+        }
+
+
+        .topbar h2 { font-size: 18px; color: var(--gold); }
+
+
+        .topbar .meta { font-size: 11px; color: #555; }
+
+
+
+
+
+        /* -- Cards -- */
+
+
+        .panel {
+
+
+            background: rgba(26,26,46,.8);
+
+
+            backdrop-filter: blur(10px);
+
+
+            border: 1px solid var(--border);
+
+
+            border-radius: 12px;
+
+
+            margin-bottom: 20px;
+
+
+            overflow: hidden;
+
+
+        }
+
+
+        .panel-head {
+
+
+            display: flex; justify-content: space-between; align-items: center;
+
+
+            padding: 14px 18px; border-bottom: 1px solid var(--border);
+
+
+            flex-wrap: wrap; gap: 10px;
+
+
+        }
+
+
+        .panel-head h3 { font-size: 13px; color: var(--gold); }
+
+
+        .panel-body { padding: 16px 18px; overflow-x: auto; }
+
+
+
+
+
+        .kpi-grid {
+
+
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+
+
+            gap: 14px; margin-bottom: 24px;
+
+
+        }
+
+
+        .kpi {
+
+
+            background: rgba(26,26,46,.8); border: 1px solid var(--border);
+
+
+            border-radius: 12px; padding: 18px; transition: border-color .3s;
+
+
+        }
+
+
+        .kpi:hover { border-color: rgba(255,215,0,.3); }
+
+
+        .kpi .label { font-size: 10px; color: #666; letter-spacing: 1px; margin-bottom: 8px; }
+
+
+        .kpi .value {
+
+
+            font-size: 28px; font-weight: 900;
+
+
+            background: linear-gradient(135deg, var(--gold), var(--orange));
+
+
+            -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+
+
+        }
+
+
+        .kpi .sub { font-size: 10px; color: #555; margin-top: 4px; }
+
+
+
+
+
+        /* -- Tables -- */
+
+
+        table { width: 100%; border-collapse: collapse; font-size: 12px; }
+
+
+        th { color: #555; font-size: 10px; letter-spacing: 1px; padding: 8px 10px; text-align: left; border-bottom: 1px solid var(--border); }
+
+
+        td { padding: 10px 10px; border-bottom: 1px solid rgba(255,255,255,.04); vertical-align: middle; }
+
+
+        tr:hover td { background: rgba(255,215,0,.02); }
+
+
+        .text-muted { color: var(--text-dim); }
+
+
+
+
+
+        /* -- Buttons -- */
+
+
+        .btn {
+
+
+            display: inline-flex; align-items: center; gap: 6px;
+
+
+            padding: 7px 14px; border-radius: 6px; border: none;
+
+
+            cursor: pointer; font-family: 'Orbitron', sans-serif;
+
+
+            font-size: 10px; font-weight: 700; letter-spacing: 1px;
+
+
+            transition: all .2s; text-transform: uppercase;
+
+
+        }
+
+
+        .btn:hover { transform: translateY(-1px); }
+
+
+        .btn-gold   { background: linear-gradient(135deg, var(--gold), var(--gold2)); color: var(--bg); }
+
+
+        .btn-red    { background: linear-gradient(135deg, var(--red), #cc0000); color: #fff; }
+
+
+        .btn-green  { background: linear-gradient(135deg, var(--green), #2e7d32); color: #fff; }
+
+
+        .btn-blue   { background: linear-gradient(135deg, var(--blue), #0d47a1); color: #fff; }
+
+
+        .btn-purple { background: linear-gradient(135deg, var(--purple), #4a148c); color: #fff; }
+
+
+        .btn-ghost  { background: transparent; border: 1px solid var(--border); color: #888; }
+
+
+        .btn-ghost:hover { border-color: var(--gold); color: var(--gold); }
+
+
+        .btn-sm { padding: 4px 10px; font-size: 9px; }
+
+
+        .btn-block { width: 100%; justify-content: center; }
+
+
+
+
+
+        /* -- Forms -- */
+
+
+        input, select, textarea {
+
+
+            background: rgba(0,0,0,.4); border: 1px solid var(--border);
+
+
+            color: #fff; padding: 8px 12px; border-radius: 6px;
+
+
+            font-family: 'Orbitron', sans-serif; font-size: 11px;
+
+
+            outline: none; transition: border-color .2s; width: 100%;
+
+
+        }
+
+
+        input:focus, select:focus, textarea:focus { border-color: var(--gold); }
+
+
+        .input-label { font-size: 10px; color: #666; letter-spacing: 1px; margin-bottom: 5px; }
+
+
+        .input-row { display: flex; gap: 12px; flex-wrap: wrap; align-items: end; }
+
+
+        .input-row > div { flex: 1; min-width: 150px; }
+
+
+
+
+
+        /* -- Tabs -- */
+
+
+        .tab-content { display: none; animation: fadeIn .3s ease; }
+
+
+        .tab-content.active { display: block; }
+
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+
+
+
+
+        /* -- Misc -- */
+
+
+        .badge-rarity {
+
+
+            display: inline-block; padding: 2px 8px; border-radius: 4px;
+
+
+            font-size: 10px; font-weight: 700; letter-spacing: .5px;
+
+
+        }
+
+
+        .rarity-Gold   { background: rgba(255,215,0,.15); color: var(--gold); }
+
+
+        .rarity-Red    { background: rgba(255,68,68,.15); color: #ff6666; }
+
+
+        .rarity-Pink   { background: rgba(255,105,180,.15); color: #ff88cc; }
+
+
+        .rarity-Purple { background: rgba(170,0,255,.15); color: #cc66ff; }
+
+
+        .rarity-Blue   { background: rgba(68,136,255,.15); color: #88aaff; }
+
+
+
+
+
+        .pagination { display: flex; gap: 6px; align-items: center; margin-top: 12px; flex-wrap: wrap; }
+
+
+        .toggle-switch { position: relative; width: 40px; height: 22px; background: #444; border-radius: 11px; cursor: pointer; transition: .3s; display: inline-block; flex-shrink: 0; }
+
+
+        .toggle-switch.active { background: var(--gold); }
+
+
+        .toggle-switch .slider { position: absolute; top: 2px; left: 2px; width: 18px; height: 18px; background: #fff; border-radius: 50%; transition: .3s; }
+
+
+        .toggle-switch.active .slider { left: 20px; }
+
+
+
+
+
+        #toast {
+
+
+            position: fixed; bottom: 24px; right: 24px;
+
+
+            background: rgba(26,26,46,.95); border: 1px solid var(--border);
+
+
+            border-radius: 10px; padding: 12px 18px; font-size: 12px;
+
+
+            color: #fff; z-index: 9999; opacity: 0; transform: translateY(20px);
+
+
+            transition: all .3s; pointer-events: none; max-width: 400px;
+
+
+        }
+
+
+        #toast.show { opacity: 1; transform: translateY(0); }
+
+
+
+
+
+        .modal-overlay {
+
+
+            position: fixed; inset: 0; background: rgba(0,0,0,.8); backdrop-filter: blur(10px);
+
+
+            z-index: 9998; display: none; align-items: center; justify-content: center;
+
+
+        }
+
+
+        .modal-overlay.show { display: flex; }
+
+
+        .modal-content {
+
+
+            background: var(--bg2); border: 1px solid var(--border); border-radius: 12px;
+
+
+            padding: 24px; max-width: 600px; width: 95%; max-height: 90vh; overflow-y: auto;
+
+
+        }
+
+
+
+
+
+        .sidebar-toggle {
+            display: none;
+            background: rgba(255,255,255,.05);
+            border: 1px solid var(--border);
+            color: var(--gold);
+            font-size: 16px;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        .sidebar-backdrop {
+            display: none;
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,.6);
+            z-index: 150;
+        }
+        .sidebar-backdrop.show { display: block; }
+
+        @media (max-width: 768px) {
+
+
+            .sidebar-toggle { display: inline-flex; align-items: center; }
+
+
+            .sidebar {
+                position: fixed; left: 0; top: 0; height: 100vh; z-index: 200;
+                transform: translateX(-100%);
+                transition: transform .25s ease;
+            }
+
+
+            .sidebar.mobile-open { transform: translateX(0); box-shadow: 8px 0 30px rgba(0,0,0,.5); }
+
+
+            .main { padding: 16px; }
+
+
+            .kpi-grid { grid-template-columns: 1fr 1fr; }
+
+
+            .input-row { flex-direction: column; align-items: stretch; }
+
+
+            .input-row > div { min-width: unset; }
+
+
+        }
+
+
+        @media (max-width: 480px) {
+
+
+            .kpi-grid { grid-template-columns: 1fr; }
+
+
+            .topbar h2 { font-size: 14px; }
+
+
+        }
+
+
+    </style>
+
+
+<script src="/static/js/csrf.js"></script>
+
+
+
+</head>
+
+
+<body>
+
+
+
+
+
+<!-- --- SIDEBAR --- -->
+
+
+<aside class="sidebar" id="sidebar">
+
+
+    <div class="sidebar-logo">
+
+
+        <h1>🎮  CS2CASEBOT</h1>
+
+
+        <span class="badge">ADMIN</span>
+
+
+    </div>
+
+
+    <span class="nav-section">OVERVIEW</span>
+
+
+    <div class="nav-item active" data-tab="dashboard">🌐 Dashboard</div>
+
+
+    <span class="nav-section">MANAGEMENT</span>
+
+
+    <div class="nav-item" data-tab="users">👥  Users</div>
+
+
+    <div class="nav-item" data-tab="economy">💰  Economy</div>
+
+
+    <div class="nav-item" data-tab="games">🎮 Games</div>
+
+
+    <div class="nav-item" data-tab="battles">⚔️ Battles</div>
+
+
+    <div class="nav-item" data-tab="giveaways">🎁  Giveaways</div>
+
+
+    <div class="nav-item" data-tab="vip">👑  VIP</div>
+
+
+    <div class="nav-item" data-tab="inventory">🎒 Inventory</div>
+
+
+    <span class="nav-section">SYSTEM</span>
+
+
+    <div class="nav-item" data-tab="announcements">📢  Announcements</div>
+
+
+    <div class="nav-item" data-tab="settings">⚙️ Settings</div>
+
+
+    <div class="nav-item" data-tab="audit">📜  Audit Log</div>
+
+
+    <div class="nav-item" data-tab="analytics">📊  Analytics</div>
+
+
+    <div class="nav-item" data-tab="beta">🧪  Beta</div>
+
+
+    <div class="nav-item" data-tab="live">📡  Live Feed</div>
+
+
+    <div style="flex:1"></div>
+
+
+    <div class="nav-item" onclick="window.location='/'">🏠  Back to Site</div>
+
+
+</aside>
+
+
+<div class="sidebar-backdrop" id="sidebarBackdrop" onclick="toggleSidebar(false)"></div>
+
+
+
+
+
+<!-- --- MAIN --- -->
+
+
+<main class="main">
+
+
+    <div class="topbar">
+
+
+        <button class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()" aria-label="Toggle navigation">☰</button>
+
+
+        <h2 id="pageTitle">📊  Admin Dashboard</h2>
+
+
+        <div style="display:flex;gap:8px;flex-wrap:wrap;">
+
+
+            <span id="adminUserBadge" style="color:var(--gold);font-size:11px;"></span>
+
+
+            <button class="btn btn-ghost btn-sm" onclick="loadAll()">↻ Refresh</button>
+
+
+            <button class="btn btn-red btn-sm" onclick="confirmLogout()">Logout</button>
+
+
+        </div>
+
+
+    </div>
+
+
+
+
+
+    <!-- --- TAB: DASHBOARD --- -->
+
+
+    <div id="tab-dashboard" class="tab-content active">
+
+
+        <div class="kpi-grid" id="kpiGrid">
+
+
+            <div class="kpi"><div class="label">TOTAL USERS</div><div class="value" id="kpiUsers">—</div><div class="sub" id="kpiUsersNew"></div></div>
+
+
+            <div class="kpi"><div class="label">ECONOMY BALANCE</div><div class="value" id="kpiEconomy">—</div><div class="sub">In circulation</div></div>
+
+
+            <div class="kpi"><div class="label">CASES OPENED</div><div class="value" id="kpiOpens">—</div><div class="sub" id="kpiOpens24h"></div></div>
+
+
+            <div class="kpi"><div class="label">REVENUE</div><div class="value" id="kpiRevenue">—</div><div class="sub" id="kpiRevenue30"></div></div>
+
+
+            <div class="kpi"><div class="label">VIP SUBSCRIBERS</div><div class="value" id="kpiVIP">—</div><div class="sub" id="kpiVIPSub"></div></div>
+
+
+            <div class="kpi"><div class="label">TICKETS IN CIRC.</div><div class="value" id="kpiTickets">—</div><div class="sub" id="kpiTicketsSold"></div></div>
+
+
+        </div>
+
+
+        <div class="panel">
+
+
+            <div class="panel-head"><h3>⚡ Quick Actions</h3></div>
+
+
+            <div class="panel-body" style="display:flex;gap:10px;flex-wrap:wrap;">
+
+
+                <button class="btn btn-gold btn-sm" onclick="togglePremium()">🎟️  Toggle Premium</button>
+
+
+                <button class="btn btn-blue btn-sm" onclick="toggleMaintenance()">🔧  Toggle Maintenance</button>
+
+
+                <button class="btn btn-green btn-sm" onclick="refreshAllData()">🔄  Refresh All</button>
+
+
+            </div>
+
+
+        </div>
+
+
+        <div class="panel">
+
+
+            <div class="panel-head"><h3>📋  Recent Admin Actions</h3></div>
+
+
+            <div class="panel-body" id="recentActions"><span class="text-muted">Loading...</span></div>
+
+
+        </div>
+
+
+    </div>
+
+
+
+
+
+    <!-- --- TAB: USERS --- -->
+
+
+    <div id="tab-users" class="tab-content">
+
+
+        <div class="panel">
+
+
+            <div class="panel-head">
+
+
+                <h3>👥  User Management</h3>
+
+
+                <div class="input-row" style="flex:1;max-width:500px;">
+
+
+                    <input type="text" id="userSearch" placeholder="Search by username or ID..." oninput="debounceSearch()" style="flex:1;">
+
+
+                    <button class="btn btn-ghost btn-sm" onclick="loadUsers()">Go</button>
+
+
+                </div>
+
+
+            </div>
+
+
+            <div class="panel-body">
+
+
+                <div style="overflow-x:auto;">
+
+
+                    <table>
+
+
+                        <thead><tr><th>ID</th><th>Username</th><th>Balance</th><th>Opens</th><th>Level</th><th>Status</th><th>Actions</th></tr></thead>
+
+
+                        <tbody id="usersTableBody"><tr><td colspan="7" class="text-muted">Loading...</td></tr></tbody>
+
+
+                    </table>
+
+
+                </div>
+
+
+                <div class="pagination" id="usersPagination"></div>
+
+
+            </div>
+
+
+        </div>
+
+
+        <!-- User Detail Modal -->
+
+
+        <div class="modal-overlay" id="userModal">
+
+
+            <div class="modal-content">
+
+
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;">
+
+
+                    <h3 style="color:var(--gold);" id="userModalTitle">User Details</h3>
+
+
+                    <button class="btn btn-ghost btn-sm" onclick="closeModal('userModal')">✕</button>
+
+
+                </div>
+
+
+                <div id="userModalBody"></div>
+
+
+            </div>
+
+
+        </div>
+
+
+    </div>
+
+
+
+
+
+    <!-- --- TAB: ECONOMY --- -->
+
+
+    <div id="tab-economy" class="tab-content">
+
+
+        <div class="panel">
+
+
+            <div class="panel-head"><h3>📦 Cases</h3></div>
+
+
+            <div class="panel-body" id="caseList"><span class="text-muted">Loading...</span></div>
+
+        </div>
+
+        <div class="panel">
+
+            <div class="panel-head"><h3>🧷 Sticker Capsules</h3></div>
+
+            <div class="panel-body" id="capsuleList"><span class="text-muted">Loading...</span></div>
+
+
+        </div>
+
+
+        <div class="panel">
+
+
+            <div class="panel-head"><h3>📈  Economy Health</h3></div>
+
+
+            <div class="panel-body" id="economyHealth"><span class="text-muted">Loading...</span></div>
+
+
+        </div>
+
+
+        <div class="panel">
+
+
+            <div class="panel-head"><h3>🔥  Fire Sale</h3></div>
+
+
+            <div class="panel-body">
+
+
+                <div class="input-row">
+
+
+                    <div><div class="input-label">Discount %</div><input type="number" id="fireSaleDiscount" value="20" min="1" max="90"></div>
+
+
+                    <div><div class="input-label">Duration (hours)</div><input type="number" id="fireSaleDuration" value="24" min="1"></div>
+
+
+                    <div><div class="input-label">Case (optional)</div><input type="text" id="fireSaleCase" placeholder="Leave blank for all"></div>
+
+
+                    <div><button class="btn btn-gold" onclick="startFireSale()">🔥  Start Fire Sale</button></div>
+
+
+                </div>
+
+
+            </div>
+
+
+        </div>
+
+
+    </div>
+
+
+
+
+
+    <!-- --- TAB: GAMES --- -->
+
+
+    <div id="tab-games" class="tab-content">
+
+
+        <div class="panel">
+
+
+            <div class="panel-head"><h3>🎮  Game Settings</h3></div>
+
+
+            <div class="panel-body" id="gameSettingsPanel"><span class="text-muted">Loading...</span></div>
+
+
+        </div>
+
+
+    </div>
+
+
+
+
+
+<!-- --- TAB: BATTLES --- -->
+
+
+<div id="tab-battles" class="tab-content">
+
+
+    <div class="panel">
+
+
+        <div class="panel-head"><h3>⚔️  Battle Settings</h3></div>
+
+
+        <div class="panel-body" id="battleAdminPanel">
+
+
+            <div class="input-row">
+
+
+                <div><div class="input-label">Enabled</div>
+
+
+                    <span class="toggle-switch active" onclick="toggleSwitch(this, 'battleEnabledAdmin')">
+
+
+                        <span class="slider"></span>
+
+
+                    </span>
+
+
+                    <input type="hidden" id="battleEnabledAdmin" value="true">
+
+
+                </div>
+
+
+                <div><div class="input-label">Fee Tiers (comma separated)</div>
+
+
+                    <input type="text" id="battleFeeTiersAdmin" value="100,500,1000,5000,10000">
+
+
+                </div>
+
+
+                <div><div class="input-label">Round Options (comma separated)</div>
+
+
+                    <input type="text" id="battleRoundsAdmin" value="3,5,7">
+
+
+                </div>
+
+
+                <div><button class="btn btn-gold" onclick="saveBattleSettingsAdmin()">💾  Save</button></div>
+
+
+            </div>
+
+
+            <div id="battleAdminResult"></div>
+
+
+        </div>
+
+
+    </div>
+
+
+</div>
+
+
+
+
+
+<!-- --- TAB: GIVEAWAYS --- -->
+
+
+    <div id="tab-giveaways" class="tab-content">
+
+
+        <div class="panel">
+
+
+            <div class="panel-head"><h3>🎁  Create Giveaway</h3></div>
+
+
+            <div class="panel-body">
+
+
+                <div class="input-row">
+
+
+                    <div><div class="input-label">Prize ($)</div><input type="number" id="gwPrize" placeholder="e.g. 5000"></div>
+
+
+                    <div><div class="input-label">Winner Count</div><input type="number" id="gwWinners" value="1" min="1"></div>
+
+
+                    <div><div class="input-label">Duration (mins)</div><input type="number" id="gwDuration" value="60" min="5"></div>
+
+
+                    <div><div class="input-label">Required Level</div><input type="number" id="gwLevel" value="0" min="0"></div>
+
+
+                    <div><button class="btn btn-gold" onclick="createGiveaway()">🎁  Create</button></div>
+
+
+                </div>
+
+
+            </div>
+
+
+        </div>
+
+
+        <div class="panel">
+
+
+            <div class="panel-head"><h3>📋  Active Giveaways</h3></div>
+
+
+            <div class="panel-body" id="giveawayList"><span class="text-muted">Loading...</span></div>
+
+
+        </div>
+
+
+    </div>
+
+
+
+
+
+<!-- --- TAB: INVENTORY (Secret) --- -->
+
+
+    <div id="tab-inventory" class="tab-content">
+
+
+        <div class="panel">
+
+
+            <div class="panel-head"><h3>🎨  Secret Inventory Deposit</h3></div>
+
+
+            <div class="panel-body">
+
+
+                <div class="input-row">
+
+
+                    <div><div class="input-label">User ID</div><input type="text" id="depositUserId" placeholder="Discord User ID"></div>
+
+
+                    <div><div class="input-label">Item Name</div><input type="text" id="depositItemName" placeholder="e.g. AK-47 | Redline"></div>
+
+
+                    <div><div class="input-label">Rarity</div>
+
+
+                        <select id="depositRarity">
+
+
+                            <option value="Blue">Blue</option>
+
+
+                            <option value="Purple">Purple</option>
+
+
+                            <option value="Pink">Pink</option>
+
+
+                            <option value="Red">Red</option>
+
+
+                            <option value="Gold">Gold</option>
+
+
+                        </select>
+
+
+                    </div>
+
+
+                    <div><div class="input-label">Condition</div>
+
+
+                        <select id="depositCondition">
+
+
+                            <option value="Factory New">Factory New</option>
+
+
+                            <option value="Minimal Wear">Minimal Wear</option>
+
+
+                            <option value="Field-Tested">Field-Tested</option>
+
+
+                            <option value="Well-Worn">Well-Worn</option>
+
+
+                            <option value="Battle-Scarred">Battle-Scarred</option>
+
+
+                        </select>
+
+
+                    </div>
+
+
+                    <div><div class="input-label">StatTrak</div>
+
+
+                        <select id="depositStattrak">
+
+
+                            <option value="false">No</option>
+
+
+                            <option value="true">Yes</option>
+
+
+                        </select>
+
+
+                    </div>
+
+
+                    <div><div class="input-label">Custom Price (optional)</div><input type="number" id="depositPrice" placeholder="Leave empty for auto" step="0.01"></div>
+
+
+                    <div><div class="input-label">Custom Message</div><input type="text" id="depositMessage" value="Thanks for playing CS2CaseBot! 🎉"></div>
+
+
+                    <div><button class="btn btn-gold" onclick="depositItem()">🎁  Deposit</button></div>
+
+
+                </div>
+
+
+                <div id="depositResult" style="margin-top:10px;"></div>
+
+
+            </div>
+
+
+        </div>
+
+
+    </div>
+
+
+
+
+
+    <!-- --- TAB: ANNOUNCEMENTS --- -->
+
+
+    <div id="tab-announcements" class="tab-content">
+
+
+        <div class="panel">
+
+
+            <div class="panel-head"><h3>📢  Create Announcement</h3></div>
+
+
+            <div class="panel-body">
+
+
+                <div class="input-row">
+
+
+                    <div><div class="input-label">Title</div><input type="text" id="annTitle" placeholder="Announcement Title"></div>
+
+
+                    <div><div class="input-label">Message</div><input type="text" id="annMessage" placeholder="Your message here"></div>
+
+
+                    <div><div class="input-label">Type</div>
+
+
+                        <select id="annType">
+
+
+                            <option value="info">Info</option>
+
+
+                            <option value="success">Success</option>
+
+
+                            <option value="warning">Warning</option>
+
+
+                            <option value="event">Event</option>
+
+
+                        </select>
+
+
+                    </div>
+
+
+                    <div><button class="btn btn-gold" onclick="createAnnouncement()">📢  Post</button></div>
+
+
+                </div>
+
+
+            </div>
+
+
+        </div>
+
+
+        <div class="panel">
+
+
+            <div class="panel-head"><h3>📋  Active Announcements</h3></div>
+
+
+            <div class="panel-body" id="announcementList"><span class="text-muted">Loading...</span></div>
+
+
+        </div>
+
+
+    </div>
+
+
+
+
+
+    <!-- --- TAB: SETTINGS --- -->
+
+
+    <div id="tab-settings" class="tab-content">
+
+
+        <div class="panel">
+
+
+            <div class="panel-head"><h3>🔧  Site Settings</h3></div>
+
+
+            <div class="panel-body" id="settingsPanel"><span class="text-muted">Loading...</span></div>
+
+
+        </div>
+
+
+        <div class="panel">
+
+
+            <div class="panel-head"><h3>🔄  Backup</h3></div>
+
+
+            <div class="panel-body">
+
+
+                <button class="btn btn-blue" onclick="createBackup()">💾  Create Backup</button>
+
+
+                <div id="backupResult" style="margin-top:10px;"></div>
+
+
+            </div>
+
+
+        </div>
+
+
+    </div>
+
+
+
+
+
+    <!-- --- TAB: AUDIT LOG --- -->
+
+
+    <div id="tab-audit" class="tab-content">
+
+
+        <div class="panel">
+
+
+            <div class="panel-head"><h3>📜  Audit Log</h3>
+
+
+                <div style="display:flex;gap:8px;">
+
+
+                    <input type="text" id="auditFilter" placeholder="Filter action..." oninput="loadAuditLog()" style="width:150px;padding:4px 8px;font-size:10px;">
+
+
+                    <button class="btn btn-ghost btn-sm" onclick="loadAuditLog()">Refresh</button>
+
+
+                </div>
+
+
+            </div>
+
+
+            <div class="panel-body" id="auditLogBody"><span class="text-muted">Loading...</span></div>
+
+
+            <div class="pagination" id="auditPagination"></div>
+
+
+        </div>
+
+
+    </div>
+
+
+
+
+
+    <!-- --- TAB: VIP --- -->
+
+
+    <div id="tab-vip" class="tab-content">
+
+
+
+
+
+        <!-- Revenue stats row -->
+
+
+        <div class="panel" style="margin-bottom:14px;">
+
+
+            <div class="panel-head"><h3>👑  VIP Revenue Stats</h3>
+
+
+                <button class="btn btn-ghost btn-sm" onclick="loadVIPAdmin()">🔄 Refresh</button>
+
+
+            </div>
+
+
+            <div class="panel-body">
+
+
+                <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;margin-bottom:16px;" id="vipStatsCards">
+
+
+                    <span class="text-muted">Loading...</span>
+
+
+                </div>
+
+
+            </div>
+
+
+        </div>
+
+
+
+
+
+        <!-- Grant VIP to user -->
+
+
+        <div class="panel" style="margin-bottom:14px;">
+
+
+            <div class="panel-head"><h3>🎁  Grant / Revoke VIP</h3></div>
+
+
+            <div class="panel-body">
+
+
+                <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
+
+
+                    <div>
+
+
+                        <div class="input-label">User ID</div>
+
+
+                        <input type="text" id="vipGrantUserId" placeholder="Discord user_id" style="width:180px;">
+
+
+                    </div>
+
+
+                    <div>
+
+
+                        <div class="input-label">Tier</div>
+
+
+                        <select id="vipGrantTier" style="width:120px;">
+
+
+                            <option value="silver">🔰  Silver</option>
+
+
+                            <option value="gold">⭐ Gold</option>
+
+
+                            <option value="platinum">👑  Platinum</option>
+
+
+                        </select>
+
+
+                    </div>
+
+
+                    <div>
+
+
+                        <div class="input-label">Days</div>
+
+
+                        <input type="number" id="vipGrantDays" value="30" style="width:70px;">
+
+
+                    </div>
+
+
+                    <button class="btn btn-gold" onclick="adminGrantVIP()">✅ Grant VIP</button>
+
+
+                    <button class="btn btn-red" onclick="adminRevokeVIP()">🚫  Revoke VIP</button>
+
+
+                </div>
+
+
+                <div id="vipGrantResult" style="margin-top:10px;font-size:12px;"></div>
+
+
+            </div>
+
+
+        </div>
+
+
+
+
+
+        <!-- Active VIP users table -->
+
+
+        <div class="panel">
+
+
+            <div class="panel-head"><h3>👥  Active VIP Users</h3>
+
+
+                <div style="display:flex;gap:8px;">
+
+
+                    <select id="vipTierFilter" onchange="loadVIPUsers()" style="font-size:11px;padding:4px 8px;">
+
+
+                        <option value="">All Tiers</option>
+
+
+                        <option value="silver">🔰  Silver</option>
+
+
+                        <option value="gold">⭐ Gold</option>
+
+
+                        <option value="platinum">👑  Platinum</option>
+
+
+                    </select>
+
+
+                    <button class="btn btn-ghost btn-sm" onclick="loadVIPUsers()">Refresh</button>
+
+
+                </div>
+
+
+            </div>
+
+
+            <div class="panel-body">
+
+
+                <table style="width:100%;border-collapse:collapse;font-size:12px;">
+
+
+                    <thead>
+
+
+                        <tr style="color:#888;border-bottom:1px solid rgba(255,255,255,0.06);">
+
+
+                            <th style="padding:8px;text-align:left;">User</th>
+
+
+                            <th style="padding:8px;text-align:left;">Tier</th>
+
+
+                            <th style="padding:8px;text-align:left;">Expires</th>
+
+
+                            <th style="padding:8px;text-align:right;">Tickets</th>
+
+
+                            <th style="padding:8px;text-align:right;">Received</th>
+
+
+                            <th style="padding:8px;text-align:center;">Actions</th>
+
+
+                        </tr>
+
+
+                    </thead>
+
+
+                    <tbody id="vipUsersBody"><tr><td colspan="6" style="color:#555;padding:20px;text-align:center;">Loading...</td></tr></tbody>
+
+
+                </table>
+
+
+                <div class="pagination" id="vipPagination"></div>
+
+
+            </div>
+
+
+        </div>
+
+
+    </div>
+
+
+
+
+
+    <!-- --- TAB: ANALYTICS --- -->
+
+
+    <div id="tab-analytics" class="tab-content">
+
+
+        <div class="panel">
+
+
+            <div class="panel-head"><h3>📊  Economy Analytics</h3></div>
+
+
+            <div class="panel-body" id="analyticsBody"><span class="text-muted">Loading...</span></div>
+
+
+        </div>
+
+
+    </div>
+
+
+
+
+
+    <!-- --- TAB: BETA --- -->
+
+
+    <div id="tab-beta" class="tab-content">
+
+
+        <div class="panel">
+
+
+            <div class="panel-head"><h3>🧪  Beta Testing</h3></div>
+
+
+            <div class="panel-body">
+
+
+                <div class="input-row">
+
+
+                    <div><div class="input-label">Add Beta Tester (User ID)</div><input type="text" id="betaUserId" placeholder="Discord User ID"></div>
+
+
+                    <div><button class="btn btn-purple" onclick="addBetaTester()">➕ Add</button></div>
+
+
+                </div>
+
+
+                <div id="betaResult" style="margin-top:10px;"></div>
+
+
+            </div>
+
+
+        </div>
+
+
+    </div>
+
+
+
+
+
+    <!-- --- TAB: LIVE FEED --- -->
+
+
+    <div id="tab-live" class="tab-content">
+
+
+        <div class="panel">
+
+
+            <div class="panel-head"><h3>📡  Live Feed</h3>
+
+
+                <button class="btn btn-ghost btn-sm" onclick="loadLiveFeed()">↻ Refresh</button>
+
+
+            </div>
+
+
+            <div class="panel-body" id="liveFeedBody"><span class="text-muted">Loading...</span></div>
+
+
+        </div>
+
+
+    </div>
+
+
+
+
+
+</main>
+
+
+
+
+
+<!-- --- TOAST --- -->
+
+
+<div id="toast"></div>
+
+
+
+
+
+<script src="/static/page-transitions.js"></script>
+
+
+<script>
+
+
+    const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
+
+
+
+
+    // --- State ---------------------------------------------
+
+
+    let usersPage = 0;
+
+
+    let auditPage = 0;
+
+
+    const PAGE_SIZE = 20;
+
+
+    let searchTimeout = null;
+
+
+
+
+
+    // --- Toast ----------------------------------------------
+
+
+    function toast(msg, type = 'info') {
+
+
+        const el = document.getElementById('toast');
+
+
+        el.textContent = msg;
+
+
+        el.style.borderColor = type === 'error' ? '#ff4444' : type === 'success' ? '#4caf50' : 'rgba(255,215,0,.3)';
+
+
+        el.classList.add('show');
+
+
+        setTimeout(() => el.classList.remove('show'), 3000);
+
+
+    }
+
+
+
+
+
+    // --- API Helper -----------------------------------------
+
+
+async function api(path, opts = {}) {
+
+
+  try {
+
+
+    let url = path;
+
+
+    if (!path.startsWith('/api/')) {
+
+
+      url = '/api/admin' + path;
+
+
+    }
+
+
+    const res = await fetch(url, {
+
+
+      headers: { 'Content-Type': 'application/json' },
+
+
+      credentials: 'include',
+
+
+      ...opts,
+
+
+    });
+
+
+    if (res.status === 401) {
+
+
+      window.location = '/auth/login';
+
+
+      return null;
+
+
+    }
+
+
+    if (res.status === 403) {
+
+
+      toast('⛔ Access denied', 'error');
+
+
+      return null;
+
+
+    }
+
+
+    if (!res.ok) {
+
+
+      const err = await res.json().catch(() => ({}));
+
+
+      toast(`❌ ${err.detail || err.error || res.statusText}`, 'error');
+
+
+      return null;
+
+
+    }
+
+
+    return await res.json();
+
+
+  } catch (e) {
+
+
+    toast('❌ Network error', 'error');
+
+
+    return null;
+
+
+  }
+
+
+}
+
+
+
+
+
+    // --- Tab Switching --------------------------------------
+
+
+    document.querySelectorAll('.nav-item[data-tab]').forEach(el => {
+
+
+        el.addEventListener('click', function() {
+
+
+            const tab = this.dataset.tab;
+
+
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+
+
+            this.classList.add('active');
+
+
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+
+
+            document.getElementById('tab-' + tab).classList.add('active');
+
+
+            document.getElementById('pageTitle').textContent = 
+
+
+                '📊 ' + this.textContent.trim();
+
+
+            const loaders = {
+
+
+                users: loadUsers, economy: loadEconomy, games: loadGames,
+
+
+                giveaways: loadGiveaways, announcements: loadAnnouncements,
+
+
+                settings: loadSettings, audit: loadAuditLog,
+
+
+                analytics: loadAnalytics, beta: loadBeta, live: loadLiveFeed,
+
+
+                dashboard: loadDashboard, battles: loadBattleSettingsAdmin,
+
+
+                vip: loadVIPAdmin, inventory: function() {} // static tab, no load needed
+
+
+            };
+
+
+            if (loaders[tab]) loaders[tab]();
+
+
+            toggleSidebar(false); // auto-close the off-canvas nav on mobile after picking a section
+
+
+        });
+
+
+    });
+
+
+    function toggleSidebar(force) {
+
+
+        const open = force !== undefined ? force : !document.getElementById('sidebar').classList.contains('mobile-open');
+
+
+        document.getElementById('sidebar').classList.toggle('mobile-open', open);
+
+
+        document.getElementById('sidebarBackdrop').classList.toggle('show', open);
+
+
+    }
+
+
+
+    // --- Dashboard -------------------------------------------
+
+
+    async function loadDashboard() {
+
+
+        const data = await api('/stats');
+
+
+        if (!data) return;
+
+
+        document.getElementById('kpiUsers').textContent = Number(data.users.total_users).toLocaleString();
+
+
+        document.getElementById('kpiUsersNew').textContent = `+${data.users.new_users_24h} today`;
+
+
+        document.getElementById('kpiEconomy').textContent = '$' + Number(data.users.total_balance_in_economy).toLocaleString();
+
+
+        document.getElementById('kpiOpens').textContent = Number(data.case_opens.total_opens).toLocaleString();
+
+
+        document.getElementById('kpiOpens24h').textContent = `${data.case_opens.opens_24h} today`;
+
+
+        document.getElementById('kpiRevenue').textContent = '$' + Number(data.revenue.total_revenue).toFixed(2);
+
+
+        document.getElementById('kpiRevenue30').textContent = `$${Number(data.revenue.revenue_30d).toFixed(2)} last 30d`;
+
+
+
+
+
+        // VIP & Ticket KPIs
+
+
+        if (data.vip) {
+
+
+            const vipEl = document.getElementById('kpiVIP');
+
+
+            if (vipEl) {
+
+
+                const byTier = data.vip.by_tier || {};
+
+
+                vipEl.textContent = data.vip.active_subscribers;
+
+
+                const subEl = document.getElementById('kpiVIPSub');
+
+
+                if (subEl) subEl.textContent =
+
+
+                    `🔰${byTier.silver||0} 🥇${byTier.gold||0} 👑${byTier.platinum||0}`;
+
+
+            }
+
+
+        }
+
+
+        if (data.tickets) {
+
+
+            const tkEl = document.getElementById('kpiTickets');
+
+
+            if (tkEl) tkEl.textContent = Number(data.tickets.in_circulation).toLocaleString();
+
+
+            const tkSoldEl = document.getElementById('kpiTicketsSold');
+
+
+            if (tkSoldEl) tkSoldEl.textContent = `+${data.tickets.sold_30d} sold (30d)`;
+
+
+        }
+
+
+
+
+
+        // Load recent actions
+
+
+        const logs = await api('/audit-log?limit=10');
+
+
+        const container = document.getElementById('recentActions');
+
+
+        if (logs && logs.logs.length) {
+
+
+            container.innerHTML = logs.logs.map(l => `
+
+
+                <div style="padding:6px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:11px;display:flex;justify-content:space-between;">
+
+
+                    <span><strong>${esc(l.admin_username || l.admin_id)}</strong> ${esc(l.action_type)} ? ${esc(l.target_username || 'N/A')}</span>
+
+
+                    <span style="color:#555;">${new Date(l.created_at).toLocaleString()}</span>
+
+
+                </div>
+
+
+            `).join('');
+
+
+        } else {
+
+
+            container.innerHTML = '<span class="text-muted">No recent actions</span>';
+
+
+        }
+
+
+    }
+
+
+
+
+
+    // --- Users ----------------------------------------------
+
+
+    function debounceSearch() {
+
+
+        clearTimeout(searchTimeout);
+
+
+        searchTimeout = setTimeout(() => { usersPage = 0; loadUsers(); }, 400);
+
+
+    }
+
+
+
+
+
+    async function loadUsers() {
+
+
+        const search = document.getElementById('userSearch').value.trim();
+
+
+        const data = await api(`/users?limit=${PAGE_SIZE}&offset=${usersPage * PAGE_SIZE}${search ? '&search='+encodeURIComponent(search) : ''}`);
+
+
+        if (!data) return;
+
+
+        const tbody = document.getElementById('usersTableBody');
+
+
+        if (!data.users.length) {
+
+
+            tbody.innerHTML = '<tr><td colspan="7" class="text-muted">No users found</td></tr>';
+
+
+            return;
+
+
+        }
+
+
+        tbody.innerHTML = data.users.map(u => {
+
+
+            const userId = u.user_id;
+
+
+            // Wrap ID in quotes to keep it as a string
+
+
+            return `
+
+
+                <tr>
+
+
+                    <td style="font-size:10px;color:#555">${userId}</td>
+
+
+                    <td style="font-weight:700;">${esc(u.username)}</td>
+
+
+                    <td style="color:var(--gold);">$${Number(u.balance).toFixed(2)}</td>
+
+
+                    <td>${u.total_opens || 0}</td>
+
+
+                    <td>${u.level || 1}</td>
+
+
+                    <td><span style="color:${u.is_banned ? 'var(--red)' : 'var(--green)'};">${u.is_banned ? '🔴 Banned' : '🟢  Active'}</span></td>
+
+
+                    <td style="display:flex;gap:4px;flex-wrap:wrap;">
+
+
+                        <button class="btn btn-ghost btn-sm" onclick="viewUser('${userId}')">View</button>
+
+
+                        ${u.is_banned ? `<button class="btn btn-green btn-sm" onclick="unbanUser('${userId}')">Unban</button>` : `<button class="btn btn-red btn-sm" onclick="banUser('${userId}')">Ban</button>`}
+
+
+                    </td>
+
+
+                </tr>
+
+
+            `;
+
+
+        }).join('');
+
+
+        document.getElementById('usersPagination').innerHTML = `
+
+
+            <button class="btn btn-ghost btn-sm" onclick="usersPage--;loadUsers()" ${usersPage===0?'disabled':''}>‹ Prev</button>
+
+
+            <span style="font-size:11px;color:#555;">Page ${usersPage+1} · ${data.total} total</span>
+
+
+            <button class="btn btn-ghost btn-sm" onclick="usersPage++;loadUsers()" ${(usersPage+1)*PAGE_SIZE >= data.total ? 'disabled':''}>Next ›</button>
+
+
+        `;
+
+
+    }
+
+
+
+
+
+    async function viewUser(user_id) {
+
+
+        const data = await api(`/users/${user_id}`);
+
+
+        if (!data) return;
+
+
+        const body = document.getElementById('userModalBody');
+
+
+        const u = data.user;
+
+
+        const vip = data.vip || {};
+
+
+        const vipColors = { none:'#555', silver:'#c0c0c0', gold:'#ffd700', platinum:'#8cd2ff' };
+
+
+        const vipColor = vipColors[vip.tier] || '#555';
+
+
+        body.innerHTML = `
+
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:15px;">
+
+
+                <div><strong>Username:</strong> ${esc(u.username)}</div>
+
+
+                <div><strong>Balance:</strong> $${Number(u.balance).toFixed(2)}</div>
+
+
+                <div><strong>Opens:</strong> ${u.total_opens || 0}</div>
+
+
+                <div><strong>Golds:</strong> ${u.total_golds || 0}</div>
+
+
+                <div><strong>Level:</strong> ${u.level || 1}</div>
+
+
+                <div><strong>Prestige:</strong> ${u.prestige || 0}</div>
+
+
+                <div><strong>Inventory Items:</strong> ${data.inventory_summary.total_items || 0}</div>
+
+
+                <div><strong>Inventory Value:</strong> $${Number(data.inventory_summary.total_value).toFixed(2)}</div>
+
+
+                <div><strong style="color:${vipColor};">VIP Tier:</strong> <span style="color:${vipColor};">${vip.tier || 'none'}</span></div>
+
+
+                <div><strong>Tickets:</strong> 🎟️ ${vip.tickets || 0}</div>
+
+
+                ${vip.expires_at ? `<div colspan="2" style="font-size:11px;color:#888;">VIP Expires: ${new Date(vip.expires_at).toLocaleDateString()}</div>` : ''}
+
+
+            </div>
+
+
+
+
+
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+
+
+                <div>
+
+
+                    <div class="input-label">Adjust Balance</div>
+
+
+                    <div class="input-row">
+
+
+                        <input type="number" id="adjBalanceAmount" placeholder="e.g. 500 or -200" style="flex:1;">
+
+
+                        <button class="btn btn-gold btn-sm" onclick="adjustBalance('${user_id}')">Apply</button>
+
+
+                    </div>
+
+
+                </div>
+
+
+                <div>
+
+
+                    <div class="input-label">Grant/Deduct Tickets</div>
+
+
+                    <div class="input-row">
+
+
+                        <input type="number" id="adjTicketAmount" placeholder="e.g. 10 or -5" style="flex:1;">
+
+
+                        <button class="btn btn-gold btn-sm" onclick="grantTickets('${user_id}')">Apply</button>
+
+
+                    </div>
+
+
+                </div>
+
+
+                <div>
+
+
+                    <div class="input-label">Set VIP Tier</div>
+
+
+                    <div class="input-row">
+
+
+                        <select id="vipTierSelect" style="flex:1;">
+
+
+                            <option value="none">none</option>
+
+
+                            <option value="silver">🔰  Silver</option>
+
+
+                            <option value="gold">⭐ Gold</option>
+
+
+                            <option value="platinum">👑  Platinum</option>
+
+
+                        </select>
+
+
+                        <input type="number" id="vipDays" placeholder="Days" value="30" style="width:60px;">
+
+
+                        <button class="btn btn-gold btn-sm" onclick="setVIP('${user_id}')">Grant</button>
+
+
+                    </div>
+
+
+                </div>
+
+
+                <div>
+
+
+                    <div class="input-label">Ban Duration (days)</div>
+
+
+                    <div class="input-row">
+
+
+                        <input type="number" id="banDuration" placeholder="Empty = permanent" style="flex:1;">
+
+
+                        <button class="btn btn-red btn-sm" onclick="banUserModal('${user_id}')">Ban</button>
+
+
+                        <button class="btn btn-green btn-sm" onclick="unbanUser('${user_id}')">Unban</button>
+
+
+                    </div>
+
+
+                </div>
+
+
+            </div>
+
+
+
+
+
+            <div style="margin-bottom:12px;">
+
+
+                <div class="input-label">Secret Deposit Item</div>
+
+
+                <div class="input-row">
+
+
+                    <input type="text" id="depositItemNameModal" placeholder="Item name" style="flex:1;">
+
+
+                    <select id="depositRarityModal" style="flex:0.5;">
+
+
+                        <option value="Blue">Blue</option>
+
+
+                        <option value="Purple">Purple</option>
+
+
+                        <option value="Pink">Pink</option>
+
+
+                        <option value="Red">Red</option>
+
+
+                        <option value="Gold">Gold</option>
+
+
+                    </select>
+
+
+                    <button class="btn btn-gold btn-sm" onclick="depositItemModal('${user_id}')">Deposit</button>
+
+
+                </div>
+
+
+            </div>
+
+
+
+
+
+            ${data.ticket_history && data.ticket_history.length ? `
+
+
+            <div style="margin-top:10px;">
+
+
+                <div class="input-label">Recent Ticket Activity</div>
+
+
+                <div style="font-size:11px;color:#888;">${data.ticket_history.map(t =>
+
+
+                    `<div style="display:flex;justify-content:space-between;padding:3px 0;border-bottom:1px solid rgba(255,255,255,0.03);">
+
+
+                        <span>${t.source}</span>
+
+
+                        <span style="color:${t.amount>0?'#4caf50':'#ff6b6b'}">${t.amount>0?'+':''}${t.amount} 🎟️</span>
+
+
+                        <span>${new Date(t.created_at).toLocaleDateString()}</span>
+
+
+                    </div>`
+
+
+                ).join('')}</div>
+
+
+            </div>` : ''}
+
+
+
+
+
+            <div id="userModalResult" style="margin-top:10px;"></div>
+
+
+        `;
+
+
+        document.getElementById('userModalTitle').textContent = `👤 ${u.username}`;
+
+
+        document.getElementById('userModal').classList.add('show');
+
+
+    }
+
+
+
+
+
+    async function adjustBalance(user_id) {
+
+
+        const amount = parseFloat(document.getElementById('adjBalanceAmount').value);
+
+
+        if (isNaN(amount)) { toast('Enter a valid amount', 'error'); return; }
+
+
+        const data = await api(`/users/${user_id}/balance`, {
+
+
+            method: 'POST',
+
+
+            body: JSON.stringify({ user_id: String(user_id), amount, reason: 'Admin adjustment' })
+
+
+        });
+
+
+        if (data) {
+
+
+            toast(`✅ New balance: $${data.new_balance.toFixed(2)}`, 'success');
+
+
+            document.getElementById('adjBalanceAmount').value = '';
+
+
+            loadUsers();
+
+
+            viewUser(user_id);
+
+
+        }
+
+
+    }
+
+
+
+
+
+    async function banUserModal(user_id) {
+
+
+        const duration = parseInt(document.getElementById('banDuration').value) || null;
+
+
+        const reason = prompt('Ban reason:');
+
+
+        if (reason === null) return;
+
+
+        const data = await api(`/users/${user_id}/ban`, {
+
+
+            method: 'POST',
+
+
+            body: JSON.stringify({ user_id: String(user_id), reason, duration_days: duration })
+
+
+        });
+
+
+        if (data) { toast('🔴 User banned', 'success'); loadUsers(); viewUser(user_id); }
+
+
+    }
+
+
+
+
+
+    async function banUser(user_id) {
+
+
+        const reason = prompt('Ban reason:');
+
+
+        if (reason === null) return;
+
+
+        const data = await api(`/users/${user_id}/ban`, {
+
+
+            method: 'POST',
+
+
+            body: JSON.stringify({ user_id: String(user_id), reason, duration_days: null })
+
+
+        });
+
+
+        if (data) { toast('🔴 User banned', 'success'); loadUsers(); }
+
+
+    }
+
+
+
+
+
+    async function unbanUser(user_id) {
+
+
+        const data = await api(`/users/${user_id}/unban`, { method: 'POST' });
+
+
+        if (data) { toast('🟢 User unbanned', 'success'); loadUsers(); }
+
+
+    }
+
+
+
+
+
+    async function grantTickets(user_id) {
+
+
+        const amount = parseInt(document.getElementById('adjTicketAmount').value);
+
+
+        if (isNaN(amount) || amount === 0) { toast('Enter a valid ticket amount', 'error'); return; }
+
+
+        const data = await api(`/users/${user_id}/tickets`, {
+
+
+            method: 'POST',
+
+
+            body: JSON.stringify({ amount, reason: 'Admin grant' })
+
+
+        });
+
+
+        if (data) {
+
+
+            toast(`✅ Tickets adjusted. New balance: ${data.new_ticket_balance} 🎟️`, 'success');
+
+
+            document.getElementById('adjTicketAmount').value = '';
+
+
+            viewUser(user_id);
+
+
+        }
+
+
+    }
+
+
+
+
+
+    async function setVIP(user_id) {
+
+
+        const tier = document.getElementById('vipTierSelect').value;
+
+
+        const days = parseInt(document.getElementById('vipDays').value) || 30;
+
+
+        const data = await api(`/users/${user_id}/vip`, {
+
+
+            method: 'POST',
+
+
+            body: JSON.stringify({ tier, days })
+
+
+        });
+
+
+        if (data) {
+
+
+            toast(`✅ VIP set to ${tier} for ${days} days`, 'success');
+
+
+            viewUser(user_id);
+
+
+            loadUsers();
+
+
+        }
+
+
+    }
+
+
+
+
+
+    // -- VIP Tab ------------------------------------------------
+
+
+    let vipPage = 0;
+
+
+    const VIP_PAGE = 20;
+
+
+
+
+
+    async function loadVIPAdmin() {
+
+
+        await Promise.all([loadVIPStats(), loadVIPUsers()]);
+
+
+    }
+
+
+
+
+
+    async function loadVIPStats() {
+
+
+        const data = await api('/vip/stats');
+
+
+        if (!data) return;
+
+
+        const el = document.getElementById('vipStatsCards');
+
+
+        if (!el) return;
+
+
+        const subs = data.subscribers || {};
+
+
+        const tierColors = { silver:'#c0c0c0', gold:'#ffd700', platinum:'#8cd2ff' };
+
+
+        el.innerHTML = `
+
+
+            ${['silver','gold','platinum'].map(t => `
+
+
+                <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:14px;text-align:center;">
+
+
+                    <div style="font-size:11px;color:#666;margin-bottom:4px;">${t.toUpperCase()}</div>
+
+
+                    <div style="font-size:24px;font-weight:bold;color:${tierColors[t]};">${subs[t]||0}</div>
+
+
+                    <div style="font-size:10px;color:#555;">subscribers</div>
+
+
+                </div>`).join('')}
+
+
+            <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:14px;text-align:center;">
+
+
+                <div style="font-size:11px;color:#666;margin-bottom:4px;">TICKETS GRANTED</div>
+
+
+                <div style="font-size:24px;font-weight:bold;color:#ffd700;">${Number(data.tickets_granted_total||0).toLocaleString()}</div>
+
+
+                <div style="font-size:10px;color:#555;">all time</div>
+
+
+            </div>
+
+
+            <div style="background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.07);border-radius:8px;padding:14px;text-align:center;">
+
+
+                <div style="font-size:11px;color:#666;margin-bottom:4px;">TICKETS SPENT (30D)</div>
+
+
+                <div style="font-size:24px;font-weight:bold;color:#ff6b6b;">${Number(data.tickets_spent_30d||0).toLocaleString()}</div>
+
+
+                <div style="font-size:10px;color:#555;">this month</div>
+
+
+            </div>
+
+
+        `;
+
+
+    }
+
+
+
+
+
+    async function loadVIPUsers() {
+
+
+        const tier = document.getElementById('vipTierFilter')?.value || '';
+
+
+        const data = await api(`/vip/users?limit=${VIP_PAGE}&offset=${vipPage*VIP_PAGE}${tier?'&tier='+tier:''}`);
+
+
+        if (!data) return;
+
+
+        const tbody = document.getElementById('vipUsersBody');
+
+
+        if (!tbody) return;
+
+
+        const tierLabels = { silver:'🔰 Silver', gold:'🥇 Gold', platinum:'👑  Platinum', none:'—' };
+
+
+        tbody.innerHTML = data.users.length ? data.users.map(u => {
+
+
+            const expires = u.vip_expires_at ? new Date(u.vip_expires_at) : null;
+
+
+            const daysLeft = expires ? Math.max(0, Math.ceil((expires - Date.now()) / 86400000)) : 0;
+
+
+            return `<tr style="border-bottom:1px solid rgba(255,255,255,0.04);">
+
+
+                <td style="padding:8px;"><strong>${esc(u.username)}</strong><br><span style="color:#555;font-size:10px;">${u.user_id}</span></td>
+
+
+                <td style="padding:8px;">${tierLabels[u.vip_tier]||u.vip_tier}</td>
+
+
+                <td style="padding:8px;">${daysLeft}d left</td>
+
+
+                <td style="padding:8px;text-align:right;">🎟️ ${u.tickets||0}</td>
+
+
+                <td style="padding:8px;text-align:right;">+${u.tickets_received||0}</td>
+
+
+                <td style="padding:8px;text-align:center;">
+
+
+                    <button class="btn btn-red btn-sm" style="font-size:9px;padding:3px 8px;" onclick="quickRevoke(${u.user_id})">Revoke</button>
+
+
+                </td>
+
+
+            </tr>`;
+
+
+        }).join('') : '<tr><td colspan="6" style="color:#555;padding:20px;text-align:center;">No active VIP users</td></tr>';
+
+
+
+
+
+        document.getElementById('vipPagination').innerHTML = `
+
+
+            <button class="btn btn-ghost btn-sm" onclick="vipPage--;loadVIPUsers()" ${vipPage===0?'disabled':''}>‹ Prev</button>
+
+
+            <span>Page ${vipPage+1}</span>
+
+
+            <button class="btn btn-ghost btn-sm" onclick="vipPage++;loadVIPUsers()" ${(vipPage+1)*VIP_PAGE>=data.total?'disabled':''}>Next ›</button>
+
+
+        `;
+
+
+    }
+
+
+
+
+
+    async function adminGrantVIP() {
+
+
+        const user_id = String(document.getElementById('vipGrantUserId').value).trim();
+
+
+        const tier    = document.getElementById('vipGrantTier').value;
+
+
+        const days    = parseInt(document.getElementById('vipGrantDays').value) || 30;
+
+
+        if (!user_id) { toast('Enter a valid user ID', 'error'); return; }
+
+
+        const data = await api('/vip/grant', {
+
+
+            method: 'POST', body: JSON.stringify({ user_id, tier, days })
+
+
+        });
+
+
+        if (data) {
+
+
+            document.getElementById('vipGrantResult').innerHTML =
+
+
+
+                `<span style="color:#4caf50;">✅ Granted ${esc(tier)} VIP to ${esc(user_id)} for ${days} days</span>`;
+
+
+            loadVIPAdmin();
+
+
+        }
+
+
+    }
+
+
+
+
+
+    async function adminRevokeVIP() {
+
+
+        const user_id = parseInt(document.getElementById('vipGrantUserId').value);
+
+
+        if (!user_id) { toast('Enter a valid user ID', 'error'); return; }
+
+
+        if (!confirm(`Revoke VIP from user ${user_id}?`)) return;
+
+
+        await quickRevoke(user_id);
+
+
+    }
+
+
+
+
+
+    async function quickRevoke(user_id) {
+
+
+        const data = await api('/vip/revoke', {
+
+
+            method: 'POST', body: JSON.stringify({ user_id, reason: 'Admin revoke' })
+
+
+        });
+
+
+        if (data) { toast('✅ VIP revoked', 'success'); loadVIPAdmin(); }
+
+
+    }
+
+
+
+
+
+    async function depositItemModal(user_id) {
+
+
+        const name = document.getElementById('depositItemNameModal').value;
+
+
+        const rarity = document.getElementById('depositRarityModal').value;
+
+
+        if (!name) { toast('Enter an item name', 'error'); return; }
+
+
+        const data = await api('/inventory/deposit', {
+
+
+            method: 'POST',
+
+
+            body: JSON.stringify({
+
+
+                user_id: String(user_id),
+
+
+                item_name: name,
+
+
+                rarity,
+
+
+                condition: 'Field-Tested',
+
+
+                is_stattrak: false,
+
+
+                custom_message: 'Thanks for playing CS2CaseBot! 🎉',
+
+
+                send_notification: true
+
+
+            })
+
+
+        });
+
+
+        if (data) { toast(`✅ ${data.message}`, 'success'); viewUser(user_id); }
+
+
+    }
+
+
+
+
+
+    // --- Economy ---------------------------------------------
+
+
+    async function loadEconomy() {
+
+
+        // Cases
+
+
+        const cases = await api('/cases');
+
+
+        if (cases) {
+
+
+            document.getElementById('caseList').innerHTML = cases.cases.map(c => `
+
+
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04);flex-wrap:wrap;gap:8px;">
+
+
+                    <span>${c.emoji} <strong>${c.name}</strong></span>
+
+
+                    <span style="color:var(--gold);">$${c.price.toFixed(2)}</span>
+
+
+                    <div style="display:flex;gap:6px;">
+
+
+                        <input type="number" id="price_${c.id}" value="${c.price}" style="width:80px;padding:4px;font-size:10px;">
+
+
+                        <button class="btn btn-ghost btn-sm" onclick="updateCasePrice('${c.id}')">Save</button>
+
+
+                        <button class="btn btn-sm ${c.featured ? 'btn-gold' : 'btn-ghost'}" onclick="toggleFeatured('${c.id}', ${c.featured})">
+
+
+                            ${c.featured ? '⭐' : '☆'}
+
+
+                        </button>
+
+
+                    </div>
+
+
+                </div>
+
+
+            `).join('');
+
+
+        }
+
+
+        // Capsules
+        const capsules = await api('/capsules');
+        if (capsules) {
+            document.getElementById('capsuleList').innerHTML = capsules.capsules.map(c => `
+                <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04);flex-wrap:wrap;gap:8px;">
+                    <span>${c.emoji} <strong>${c.name}</strong></span>
+                    <span style="color:var(--gold);">$${c.price.toFixed(2)}</span>
+                    <div style="display:flex;gap:6px;">
+                        <input type="number" id="cprice_${c.id}" value="${c.price}" style="width:80px;padding:4px;font-size:10px;">
+                        <button class="btn btn-ghost btn-sm" onclick="updateCapsulePrice('${c.id}')">Save</button>
+                        <button class="btn btn-sm ${c.featured ? 'btn-gold' : 'btn-ghost'}" onclick="toggleCapsuleFeatured('${c.id}', ${c.featured})">
+                            ${c.featured ? '⭐' : '☆'}
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+// Economy Health
+
+
+        const health = await api('/analytics/economy');
+
+
+        if (health) {
+
+
+            document.getElementById('economyHealth').innerHTML = `
+
+
+                <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;">
+
+
+                    <div><span class="text-muted">Total Balance</span><br><span style="font-size:20px;color:var(--gold);">$${Number(health.total_balance).toFixed(2)}</span></div>
+
+
+                    <div><span class="text-muted">Avg Balance</span><br><span style="font-size:20px;color:var(--gold);">$${Number(health.avg_balance).toFixed(2)}</span></div>
+
+
+                    <div><span class="text-muted">Inventory Value</span><br><span style="font-size:20px;color:var(--gold);">$${Number(health.total_inventory_value).toFixed(2)}</span></div>
+
+
+                    <div><span class="text-muted">Total Cases Opened</span><br><span style="font-size:20px;color:var(--gold);">${health.total_cases_opened.toLocaleString()}</span></div>
+
+
+                </div>
+
+
+            `;
+
+
+        }
+
+
+    }
+
+
+
+
+
+    async function updateCasePrice(caseId) {
+
+
+        const price = parseFloat(document.getElementById(`price_${caseId}`).value);
+
+
+        if (isNaN(price)) { toast('Invalid price', 'error'); return; }
+
+
+        const data = await api(`/cases/${caseId}/price`, {
+
+
+            method: 'POST',
+
+
+            body: JSON.stringify({ price })
+
+
+        });
+
+
+        if (data) { toast('✅ Price updated', 'success'); loadEconomy(); }
+
+
+    }
+
+
+
+
+
+    async function toggleFeatured(caseId, currentStatus) {
+
+
+        const data = await api(`/cases/${caseId}/featured`, {
+
+
+            method: 'POST',
+
+
+            body: JSON.stringify({ featured: !currentStatus })
+
+
+        });
+
+
+        if (data) { toast('✅ Featured toggled', 'success'); loadEconomy(); }
+    }
+
+    async function updateCapsulePrice(capsuleId) {
+        const price = parseFloat(document.getElementById(`cprice_${capsuleId}`).value);
+        if (isNaN(price)) { toast('Invalid price', 'error'); return; }
+        const data = await api(`/capsules/${capsuleId}/price`, {
+            method: 'POST',
+            body: JSON.stringify({ price })
+        });
+        if (data) { toast('Capsule price updated', 'success'); loadEconomy(); }
+    }
+
+    async function toggleCapsuleFeatured(capsuleId, currentStatus) {
+        const data = await api(`/capsules/${capsuleId}/featured`, {
+            method: 'POST',
+            body: JSON.stringify({ featured: !currentStatus })
+        });
+        if (data) { toast('Capsule featured toggled', 'success'); loadEconomy(); }
+    }
+
+
+
+
+
+    // --- Games ----------------------------------------------
+
+
+    async function loadGames() {
+
+
+        const data = await api('/games/settings');
+
+
+        if (!data) return;
+
+
+        const container = document.getElementById('gameSettingsPanel');
+
+
+        let html = '';
+
+
+        for (const [game, settings] of Object.entries(data.settings)) {
+
+
+            html += `<div style="border-bottom:1px solid rgba(255,255,255,.04);padding:10px 0;">
+
+
+                <strong style="color:var(--gold);">${game.toUpperCase()}</strong>
+
+
+                <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-top:8px;">`;
+
+
+            for (const [key, val] of Object.entries(settings)) {
+
+
+                const inputType = key === 'enabled' ? 'checkbox' : 'text';
+
+
+                const checked = val === 'true' ? 'checked' : '';
+
+
+                html += `<div>
+
+
+                    <div class="input-label">${key}</div>
+
+
+                    ${inputType === 'checkbox' 
+
+
+                        ? `<input type="checkbox" ${checked} onchange="updateGameSetting('${game}','${key}', this.checked)">`
+
+
+                        : `<input type="text" value="${val}" onchange="updateGameSetting('${game}','${key}', this.value)" style="padding:4px;">`
+
+
+                    }
+
+
+                </div>`;
+
+
+            }
+
+
+            html += `</div></div>`;
+
+
+        }
+
+
+        container.innerHTML = html;
+
+
+    }
+
+
+
+
+
+    async function updateGameSetting(game, key, value) {
+
+
+        const data = await api('/games/settings', {
+
+
+            method: 'POST',
+
+
+            body: JSON.stringify({ game_name: game, settings: { [key]: value } })
+
+
+        });
+
+
+        if (data) toast('✅ Setting updated', 'success');
+
+
+    }
+
+
+
+
+
+// --- Battle Admin -----------------------------------------
+
+
+async function loadBattleSettingsAdmin() {
+
+
+  const data = await api('/api/battles/admin/settings');
+
+
+  if (!data) return;
+
+
+
+
+
+  document.getElementById('battleEnabledAdmin').value = data.enabled ? 'true' : 'false';
+
+
+
+
+
+  const toggle = document.querySelector('#battleAdminPanel .toggle-switch');
+
+
+  if (toggle) {
+
+
+    if (data.enabled) {
+
+
+      toggle.classList.add('active');
+
+
+    } else {
+
+
+      toggle.classList.remove('active');
+
+
+    }
+
+
+  }
+
+
+
+
+
+  document.getElementById('battleFeeTiersAdmin').value = (data.fee_tiers || [1000]).join(',');
+
+
+  document.getElementById('battleRoundsAdmin').value = (data.round_options || [3, 5, 7]).join(',');
+
+
+}
+
+
+
+
+
+async function saveBattleSettingsAdmin() {
+
+
+  const enabled = document.getElementById('battleEnabledAdmin').value === 'true';
+
+
+  const fee_tiers = document.getElementById('battleFeeTiersAdmin').value
+
+
+    .split(',')
+
+
+    .map(Number)
+
+
+    .filter(n => n > 0);
+
+
+  const round_options = document.getElementById('battleRoundsAdmin').value
+
+
+    .split(',')
+
+
+    .map(Number)
+
+
+    .filter(n => n > 0);
+
+
+
+
+
+  const data = await api('/api/battles/admin/settings', {
+
+
+    method: 'POST',
+
+
+    body: JSON.stringify({ enabled, fee_tiers, round_options })
+
+
+  });
+
+
+
+
+
+  if (data) {
+
+
+    toast('✅ Battle settings saved!', 'success');
+
+
+  }
+
+
+}
+
+
+    // --- Giveaways ------------------------------------------
+
+
+    async function loadGiveaways() {
+
+
+        const data = await api('/giveaways');
+
+
+        if (!data) return;
+
+
+        const container = document.getElementById('giveawayList');
+
+
+        if (!data.giveaways.length) {
+
+
+            container.innerHTML = '<span class="text-muted">No giveaways</span>';
+
+
+            return;
+
+
+        }
+
+
+        container.innerHTML = data.giveaways.map(g => `
+
+
+            <div style="padding:10px 0;border-bottom:1px solid rgba(255,255,255,.04);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;">
+
+
+                <span><strong>$${g.prize_amount}</strong> | ${g.entries_count || 0} entries | ${g.status}</span>
+
+
+                <span>${new Date(g.end_time).toLocaleString()}</span>
+
+
+                ${g.status === 'active' ? `<button class="btn btn-gold btn-sm" onclick="drawGiveaway(${g.id})">Draw</button>` : ''}
+
+
+            </div>
+
+
+        `).join('');
+
+
+    }
+
+
+
+
+
+    async function createGiveaway() {
+
+
+        const prize = parseFloat(document.getElementById('gwPrize').value);
+
+
+        const winners = parseInt(document.getElementById('gwWinners').value);
+
+
+        const duration = parseInt(document.getElementById('gwDuration').value);
+
+
+        const level = parseInt(document.getElementById('gwLevel').value);
+
+
+        if (!prize) { toast('Enter a prize amount', 'error'); return; }
+
+
+        const data = await api('/giveaway/create', {
+
+
+            method: 'POST',
+
+
+            body: JSON.stringify({
+
+
+                prize_amount: prize,
+
+
+                winner_count: winners,
+
+
+                duration_minutes: duration,
+
+
+                required_level: level,
+
+
+                required_opens: 0
+
+
+            })
+
+
+        });
+
+
+        if (data) { toast(`🎁 Giveaway #${data.giveaway_id} created!`, 'success'); loadGiveaways(); }
+
+
+    }
+
+
+
+
+
+    async function drawGiveaway(id) {
+
+
+        const data = await api(`/giveaways/${id}/draw`, { method: 'POST' });
+
+
+        if (data) {
+
+
+            if (data.success === false) {
+
+
+                toast(`⚠️ ${data.error || 'Cannot draw yet'}`, 'error');
+
+
+            } else {
+
+
+                toast(`🎉  Winners drawn!`, 'success');
+
+
+                loadGiveaways();
+
+
+            }
+
+
+        }
+
+
+    }
+
+
+
+
+
+    // --- Secret Inventory Deposit ---------------------------
+
+
+    async function depositItem() {
+
+
+        const user_id = document.getElementById('depositUserId').value; // keep as string
+
+
+        const item_name = document.getElementById('depositItemName').value;
+
+
+        const rarity = document.getElementById('depositRarity').value;
+
+
+        const condition = document.getElementById('depositCondition').value;
+
+
+        const is_stattrak = document.getElementById('depositStattrak').value === 'true';
+
+
+        const custom_price = parseFloat(document.getElementById('depositPrice').value) || null;
+
+
+        const custom_message = document.getElementById('depositMessage').value || 'Thanks for playing CS2CaseBot! 🎉';
+
+
+        if (!user_id || !item_name) { toast('Enter User ID and Item Name', 'error'); return; }
+
+
+        const data = await api('/inventory/deposit', {
+
+
+            method: 'POST',
+
+
+            body: JSON.stringify({
+
+
+                user_id: String(user_id),
+
+
+                item_name, rarity, condition,
+
+
+                is_stattrak, custom_price, custom_message,
+
+
+                send_notification: true
+
+
+            })
+
+
+        });
+
+
+        if (data) {
+
+
+            toast(`✅ ${data.message}`, 'success');
+
+
+            document.getElementById('depositResult').innerHTML = `<span style="color:var(--green);">${esc(data.message)}</span>`;
+
+
+        }
+
+
+    }
+
+
+
+
+
+    // --- Announcements --------------------------------------
+
+
+    async function loadAnnouncements() {
+
+
+        const data = await api('/announcements');
+
+
+        if (!data) return;
+
+
+        document.getElementById('announcementList').innerHTML = data.announcements.map(a => `
+
+
+            <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04);">
+
+
+                <span><strong>${esc(a.title)}</strong> - ${esc(a.message)} <span style="color:#555;font-size:10px;">(${esc(a.type)})</span></span>
+
+
+                <button class="btn btn-ghost btn-sm" onclick="deleteAnnouncement(${a.id})">🗑️</button>
+
+
+            </div>
+
+
+        `).join('');
+
+
+    }
+
+
+    async function deleteAnnouncement(id) {
+
+
+        if (!confirm('Delete this announcement?')) return;
+
+
+        const data = await api(`/announcements/${id}`, { method: 'DELETE' });
+
+
+        if (data) { toast('Announcement deleted', 'success'); loadAnnouncements(); }
+
+
+    }
+
+
+
+
+
+    async function createAnnouncement() {
+
+
+        const title = document.getElementById('annTitle').value;
+
+
+        const message = document.getElementById('annMessage').value;
+
+
+        const type = document.getElementById('annType').value;
+
+
+        if (!title || !message) { toast('Fill in title and message', 'error'); return; }
+
+
+        const data = await api('/announcements', {
+
+
+            method: 'POST',
+
+
+            body: JSON.stringify({ title, message, type })
+
+
+        });
+
+
+        if (data) { toast('📢 Announcement posted!', 'success'); loadAnnouncements(); }
+
+
+    }
+
+
+
+
+
+    // --- Settings --------------------------------------------
+
+
+    async function loadSettings() {
+
+
+        const data = await api('/settings');
+
+
+        if (!data) return;
+
+
+        const s = data.settings;
+
+
+        document.getElementById('settingsPanel').innerHTML = `
+
+
+            <div class="input-row">
+
+
+                <div><div class="input-label">Site Name</div><input type="text" id="sSiteName" value="${esc(s.site_name || 'CS2CaseBot')}"></div>
+
+
+                <div><div class="input-label">Default Currency</div><input type="text" id="sCurrency" value="${esc(s.default_currency || '$')}"></div>
+
+
+                <div><div class="input-label">Support Discord Link</div><input type="text" id="sSupport" value="${esc(s.support_discord_link || 'https://discord.gg/mU33pc7TDE')}"></div>
+
+
+                <div><div class="input-label">Maintenance Message</div><input type="text" id="sMaintenanceMsg" value="${esc(s.maintenance_message || 'Under maintenance')}" style="flex:2;"></div>
+
+
+            </div>
+
+
+            <div style="display:flex;gap:20px;margin-top:15px;">
+
+
+                <label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+
+
+                    <span>Maintenance Mode</span>
+
+
+                    <span class="toggle-switch ${s.maintenance_mode === 'true' ? 'active' : ''}" 
+
+
+                          onclick="toggleSwitch(this, 'sMaintenance')">
+
+
+                        <span class="slider"></span>
+
+
+                    </span>
+
+
+                    <input type="hidden" id="sMaintenance" value="${s.maintenance_mode}">
+
+
+                </label>
+
+
+                <button class="btn btn-gold" onclick="saveSettings()">💾  Save Settings</button>
+
+
+            </div>
+
+
+        `;
+
+
+    }
+
+
+
+
+
+    function toggleSwitch(el, inputId) {
+
+
+        el.classList.toggle('active');
+
+
+        const hidden = document.getElementById(inputId);
+
+
+        if (hidden) hidden.value = el.classList.contains('active') ? 'true' : 'false';
+
+
+    }
+
+
+
+
+
+    async function saveSettings() {
+
+
+        const data = await api('/settings', {
+
+
+            method: 'POST',
+
+
+            body: JSON.stringify({
+
+
+                site_name: document.getElementById('sSiteName').value,
+
+
+                default_currency: document.getElementById('sCurrency').value,
+
+
+                support_discord_link: document.getElementById('sSupport').value,
+
+
+                maintenance_message: document.getElementById('sMaintenanceMsg').value,
+
+
+                maintenance_mode: document.getElementById('sMaintenance').value === 'true'
+
+
+            })
+
+
+        });
+
+
+        if (data) toast('✅ Settings saved!', 'success');
+
+
+    }
+
+
+
+
+
+    // --- Audit Log ------------------------------------------
+
+
+    async function loadAuditLog() {
+
+
+        const filter = document.getElementById('auditFilter').value;
+
+
+        const data = await api(`/audit-log?limit=${PAGE_SIZE}&offset=${auditPage*PAGE_SIZE}${filter ? '&action_type='+filter : ''}`);
+
+
+        if (!data) return;
+
+
+        document.getElementById('auditLogBody').innerHTML = data.logs.map(l => `
+
+
+            <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:11px;flex-wrap:wrap;">
+
+
+                <span><strong>${esc(l.admin_username || l.admin_id)}</strong> <span style="color:var(--gold);">${esc(l.action_type)}</span> ? ${esc(l.target_username || 'System')}</span>
+
+
+                <span style="color:#555;">${new Date(l.created_at).toLocaleString()}</span>
+
+
+            </div>
+
+
+        `).join('') || '<span class="text-muted">No logs found</span>';
+
+
+        document.getElementById('auditPagination').innerHTML = `
+
+
+            <button class="btn btn-ghost btn-sm" onclick="auditPage--;loadAuditLog()" ${auditPage===0?'disabled':''}>‹ Prev</button>
+
+
+            <span style="font-size:11px;color:#555;">Page ${auditPage+1}</span>
+
+
+            <button class="btn btn-ghost btn-sm" onclick="auditPage++;loadAuditLog()">Next ›</button>
+
+
+        `;
+
+
+    }
+
+
+
+
+
+    // --- Analytics ------------------------------------------
+
+
+    async function loadAnalytics() {
+
+
+        const data = await api('/analytics/economy');
+
+
+        if (!data) return;
+
+
+        document.getElementById('analyticsBody').innerHTML = `
+
+
+            <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:15px;">
+
+
+                <div><span class="text-muted">Total Economy Balance</span><br><span style="font-size:24px;color:var(--gold);">$${Number(data.total_balance).toFixed(2)}</span></div>
+
+
+                <div><span class="text-muted">Average Balance</span><br><span style="font-size:24px;color:var(--gold);">$${Number(data.avg_balance).toFixed(2)}</span></div>
+
+
+                <div><span class="text-muted">Inventory Value</span><br><span style="font-size:24px;color:var(--gold);">$${Number(data.total_inventory_value).toFixed(2)}</span></div>
+
+
+                <div><span class="text-muted">Total Cases Opened</span><br><span style="font-size:24px;color:var(--gold);">${data.total_cases_opened.toLocaleString()}</span></div>
+
+
+                <div><span class="text-muted">Total Golds Found</span><br><span style="font-size:24px;color:var(--gold);">${data.total_golds.toLocaleString()}</span></div>
+
+
+            </div>
+
+
+        `;
+
+
+    }
+
+
+
+
+
+    // --- Beta -----------------------------------------------
+
+
+    async function loadBeta() {
+
+
+        const data = await api('/beta/users');
+
+
+        if (!data) return;
+
+
+        const el = document.getElementById('betaResult');
+
+
+        if (!el) return;
+
+
+        if (!data.users || !data.users.length) {
+
+
+            el.innerHTML = '<span class="text-muted">No beta testers yet.</span>';
+
+
+            return;
+
+
+        }
+
+
+        el.innerHTML = `<table style="width:100%;border-collapse:collapse;font-size:12px;margin-top:10px;">
+
+
+            <tr style="color:#555;border-bottom:1px solid rgba(255,255,255,0.05);">
+
+
+                <th style="padding:6px;text-align:left;">User ID</th>
+
+
+                <th style="padding:6px;text-align:left;">Username</th>
+
+
+                <th style="padding:6px;text-align:left;">Added</th>
+
+
+                <th style="padding:6px;"></th>
+
+
+            </tr>
+
+
+            ${data.users.map(u => `<tr style="border-bottom:1px solid rgba(255,255,255,0.03);">
+
+
+                <td style="padding:6px;color:#555;font-size:10px;">${u.user_id}</td>
+
+
+                <td style="padding:6px;font-weight:700;">${esc(u.username || '—')}</td>
+
+
+                <td style="padding:6px;color:#555;">${u.added_at ? new Date(u.added_at).toLocaleDateString() : '—'}</td>
+
+
+                <td style="padding:6px;"><button class="btn btn-red btn-sm" onclick="removeBetaTester('${u.user_id}')">Remove</button></td>
+
+
+            </tr>`).join('')}
+
+
+        </table>`;
+
+
+    }
+
+
+
+
+
+    async function addBetaTester() {
+
+
+        const user_id = document.getElementById('betaUserId').value; // string
+
+
+        if (!user_id) { toast('Enter a User ID', 'error'); return; }
+
+
+        const data = await api('/beta/users', {
+
+
+            method: 'POST',
+
+
+            body: JSON.stringify({ user_id: String(user_id) })
+
+
+        });
+
+
+        if (data) { toast('✅ Beta tester added!', 'success'); loadBeta(); }
+
+
+    }
+
+
+
+
+
+    async function removeBetaTester(user_id) {
+
+
+        if (!confirm(`Remove user ${user_id} from beta?`)) return;
+
+
+        const res = await fetch(`/api/admin/beta/users/${user_id}`, {
+
+
+            method: 'DELETE', credentials: 'include'
+
+
+        });
+
+
+        if (res.ok) { toast('✅ Beta tester removed', 'success'); loadBeta(); }
+
+
+        else { toast('❌ Failed to remove', 'error'); }
+
+
+    }
+
+
+
+
+
+    // --- Live Feed ------------------------------------------
+
+
+    async function loadLiveFeed() {
+
+
+        const data = await api('/live-feed?limit=20');
+
+
+        if (!data) return;
+
+
+        document.getElementById('liveFeedBody').innerHTML = data.feed.map(f => `
+
+
+            <div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:11px;">
+
+
+                <span><strong>${esc(f.username)}</strong> unboxed <span style="color:var(--gold);">${esc(f.item_name)}</span> <span class="badge-rarity rarity-${esc(f.rarity)}">${esc(f.rarity)}</span></span>
+
+
+                <span style="color:#555;">${new Date(f.created_at).toLocaleTimeString()}</span>
+
+
+            </div>
+
+
+        `).join('') || '<span class="text-muted">No recent opens</span>';
+
+
+    }
+
+
+
+
+
+    // --- Quick Actions --------------------------------------
+
+
+    async function togglePremium() {
+
+
+        const data = await api('/premium/toggle', { method: 'POST' });
+
+
+        if (data) toast('🎟️  Premium toggled', 'success');
+
+
+    }
+
+
+
+
+
+    async function toggleMaintenance() {
+
+
+        const current = await api('/settings');
+
+
+        const currentMode = current && current.settings && current.settings.maintenance_mode === 'true';
+
+
+        const data = await api('/settings', {
+
+
+            method: 'POST',
+
+
+            body: JSON.stringify({ maintenance_mode: !currentMode })
+
+
+        });
+
+
+        if (data) toast(`🔧 Maintenance ${!currentMode ? 'enabled' : 'disabled'}`, 'success');
+
+
+    }
+
+
+
+
+
+    async function refreshAllData() {
+
+
+        toast('🔄  Refreshing...', 'info');
+
+
+        await Promise.all([
+
+
+            loadDashboard(), loadUsers(), loadEconomy(),
+
+
+            loadGames(), loadGiveaways(), loadAnnouncements(),
+
+
+            loadSettings(), loadAuditLog(), loadAnalytics(),
+
+
+            loadLiveFeed()
+
+
+        ]);
+
+
+        toast('✅ All data refreshed!', 'success');
+
+
+    }
+
+
+
+
+
+    // --- Backup ---------------------------------------------
+
+
+    async function createBackup() {
+
+
+        const data = await api('/backup/create');
+
+
+        if (data) {
+
+
+            document.getElementById('backupResult').innerHTML = `<span style="color:var(--green);">✅ Backup created: ${data.filename}</span>`;
+
+
+            toast('💾  Backup created!', 'success');
+
+
+        }
+
+
+    }
+
+
+
+
+
+    // --- Fire Sale ------------------------------------------
+
+
+    async function startFireSale() {
+
+
+        const discount = parseInt(document.getElementById('fireSaleDiscount').value);
+
+
+        const duration = parseInt(document.getElementById('fireSaleDuration').value);
+
+
+        const case_type = document.getElementById('fireSaleCase').value || null;
+
+
+        if (!discount) { toast('Enter discount %', 'error'); return; }
+
+
+        const data = await api('/fire-sale', {
+
+
+            method: 'POST',
+
+
+            body: JSON.stringify({
+
+
+                name: `Fire Sale ${new Date().toLocaleDateString()}`,
+
+
+                discount_percent: discount,
+
+
+                duration_hours: duration,
+
+
+                case_type: case_type
+
+
+            })
+
+
+        });
+
+
+        if (data) toast(`🔥 Fire Sale started! ${discount}% off`, 'success');
+
+
+    }
+
+
+
+
+
+    // --- Utilities ------------------------------------------
+
+
+    function closeModal(id) {
+
+
+        document.getElementById(id).classList.remove('show');
+
+
+    }
+
+
+
+
+
+    function confirmLogout() {
+
+
+        if (confirm('Log out of admin?')) window.location = '/auth/logout';
+
+
+    }
+
+
+
+
+
+    async function loadAll() {
+
+
+        await loadDashboard();
+
+
+        toast('✅ Dashboard refreshed!', 'success');
+
+
+    }
+
+
+
+
+
+    // --- Admin User Badge ------------------------------------
+
+
+    async function getMe() {
+
+
+        try {
+
+
+            const res = await fetch('/api/user/me', { credentials: 'include' });
+
+
+            if (res.ok) {
+
+
+                const data = await res.json();
+
+
+                document.getElementById('adminUserBadge').textContent = `👋 ${data.username}`;
+
+
+            }
+
+
+        } catch (e) {}
+
+
+    }
+
+
+
+
+
+    // --- Init ------------------------------------------------
+
+
+    getMe();
+
+
+    loadDashboard();
+
+
+</script>
+
+
+
+
+
+<script>if("serviceWorker"in navigator){navigator.serviceWorker.register("/static/sw.js").catch(function(){})}</script>
+
+
+
+<script src="/static/chat.js"></script>
+
+
+
+</body>
+
+
+</html>
+
+
+
+
+
+
+

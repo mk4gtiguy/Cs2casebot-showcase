@@ -1,0 +1,1228 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+    <meta charset="UTF-8">
+    <title>CS2CaseBot Dashboard</title>
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <meta name="theme-color" content="#ffd700">
+
+    <meta name="mobile-web-app-capable" content="yes">
+
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+    <meta name="apple-mobile-web-app-title" content="CS2CaseBot">
+
+    <link rel="manifest" href="/manifest.json">
+
+    <link rel="apple-touch-icon" href="/static/icons/icon-192.png">
+
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&display=swap" rel="stylesheet">
+
+    <script src="/static/sound.js"></script>
+
+    <!-- Auth functions defined early so onclick handlers never throw ReferenceError -->
+
+    <script>
+
+        function loginDiscord() { window.location.href = '/auth/discord'; }
+
+        function loginGoogle()  { window.location.href = '/auth/google';  }
+
+    </script>
+
+    <link rel="stylesheet" href="/static/dashboard.css">
+    <link rel="stylesheet" href="/static/css/site-notices.css">
+
+<script src="/static/js/csrf.js"></script>
+
+
+</head>
+
+<body>
+
+    <!-- ============================================
+
+    COOKIE CONSENT BANNER (unchanged)
+
+    ============================================ -->
+
+    <div id="cookieConsent" style="position:fixed;bottom:0;left:0;right:0;background:rgba(10,10,15,0.95);backdrop-filter:blur(10px);padding:20px;border-top:2px solid rgba(255,215,0,0.3);z-index:999999;display:none;text-align:center;font-family:'Orbitron',sans-serif;">
+
+        <div style="max-width:800px;margin:0 auto;">
+
+            <p style="color:#ddd;font-size:13px;margin-bottom:15px;">🍪 We use cookies to keep you logged in and personalize your experience. By using our site, you agree to our cookie policy.</p>
+
+            <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+
+                <button onclick="acceptCookies()" style="background:linear-gradient(135deg,#ffd700,#f0a500);color:#0a0a0f;border:none;padding:10px 30px;border-radius:8px;font-family:'Orbitron',sans-serif;font-weight:bold;cursor:pointer;font-size:12px;transition:all 0.3s;">✅ Accept All</button>
+
+                <button onclick="declineCookies()" style="background:transparent;color:#888;border:2px solid rgba(255,255,255,0.2);padding:10px 30px;border-radius:8px;font-family:'Orbitron',sans-serif;cursor:pointer;font-size:12px;transition:all 0.3s;">❌ Decline</button>
+
+                <a href="/privacy" style="color:#ffd700;font-size:12px;text-decoration:none;padding:10px 20px;align-self:center;">📖 Privacy Policy</a>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- ============================================
+
+    HTML - ALL YOUR ORIGINAL HTML (unchanged)
+
+    ============================================ -->
+
+    <div class="container">
+
+        <!-- HEADER -->
+
+        <div class="header">
+
+            <h1>🎮 <span>CS2CaseBot</span> Dashboard</h1>
+
+            <div id="userInfo" class="user-info hidden">
+
+                <img id="userAvatar" src="" alt="Avatar">
+
+                <span class="username" id="userName"></span>
+
+                <span id="authBadge" style="font-size:10px;color:#888;"></span>
+
+                <button class="btn btn-sm btn-outline" onclick="openSettings()" style="font-size:16px;padding:4px 10px;">⚙️</button>
+
+                <button class="btn-logout" onclick="logout()">Logout</button>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- LIVE FEED TICKER -->
+
+        <div class="live-ticker" id="liveTicker">
+
+            <div class="ticker-track" id="tickerTrack">
+
+                <span class="ticker-item" style="color:#555;">Loading recent drops…</span>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- LOGIN SECTION -->
+
+        <div id="loginSection" class="card login-card">
+
+            <h2>🔐 Sign In</h2>
+
+            <p style="color:#888;margin:15px 0;">Sign in with your Discord or Google account</p>
+
+            <div class="auth-buttons">
+
+                <button class="discord-btn" onclick="loginDiscord()">
+
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 127.14 96.36" width="30" height="30">
+
+                        <path fill="#fff" d="M107.7,8.07A105.15,105.15,0,0,0,81.47,0a72.06,72.06,0,0,0-3.36,6.83A97.68,97.68,0,0,0,49,6.83,72.37,72.37,0,0,0,45.64,0,105.89,105.89,0,0,0,19.39,8.09C2.79,32.65-1.71,56.6.54,80.21h0A105.73,105.73,0,0,0,32.71,96.36,77.7,77.7,0,0,0,39.6,85.25a68.42,68.42,0,0,1-10.85-5.18c.91-.66,1.8-1.34,2.66-2.05a75.57,75.57,0,0,0,58.74,0c.86.71,1.75,1.39,2.66,2.05a68.42,68.42,0,0,1-10.85,5.18,77.7,77.7,0,0,0,6.89,11.1A105.73,105.73,0,0,0,126.6,80.22h0C129.24,52.84,122.09,28.11,107.7,8.07ZM42.45,65.69C36.18,65.69,31,60,31,53s5-12.68,11.43-12.68S54,46,53.89,53,48.84,65.69,42.45,65.69Zm42.24,0C78.41,65.69,73.25,60,73.25,53s5-12.68,11.44-12.68S96.23,46,96.12,53,91.08,65.69,84.69,65.69Z"/>
+
+                    </svg>
+
+                    Discord
+
+                </button>
+
+                <button class="google-btn" onclick="loginGoogle()">
+
+                    <svg viewBox="0 0 48 48" width="24" height="24">
+
+                        <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+
+                        <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+
+                        <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+
+                        <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+
+                    </svg>
+
+                    Google
+
+                </button>
+
+            </div>
+
+            <p style="color:#666;font-size:12px;margin-top:15px;">By signing in, you agree to our <a href="/terms" style="color:#ffd700;">Terms of Service</a></p>
+
+            <div class="disclaimer">
+
+                ⚠️ <strong>Disclaimer:</strong> All virtual items, currency, and rewards on this platform have <strong>no real-world value</strong>. This is a simulation for entertainment purposes only. Items cannot be traded, sold, or exchanged for real money or anything of value.
+
+            </div>
+
+        </div>
+
+
+
+        <!-- DASHBOARD -->
+
+        <div id="dashboard" class="card hidden">
+
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;">
+
+                <div><h3>💰 Balance</h3><div class="balance" id="balance">$0.00</div></div>
+
+                <div style="display:flex;gap:8px;flex-wrap:wrap;">
+
+                    <button class="btn btn-sm btn-outline" onclick="refreshBalance()" title="Refresh Balance">🔄</button>
+
+                    <button class="btn btn-success" onclick="claimDaily()">🎁 Daily</button>
+
+                </div>
+
+            </div>
+
+            <div id="dailyResult" style="margin-top:10px;"></div>
+
+            <div style="margin-top:15px;border-top:1px solid rgba(255,215,0,0.1);padding-top:15px;">
+
+                <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+
+                    <div><div style="color:#888;font-size:11px;">🎟️ Arcade Tickets</div><div style="font-size:24px;font-weight:bold;color:#ffd700;" id="ticketBalance">0</div><div style="color:#888;font-size:10px;margin-top:2px;">Earn tickets by playing skill-based mini-games</div></div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+
+
+        <div class="card"><h3>⭐ Featured Cases</h3><div class="featured-carousel" id="featuredCarousel"></div></div>
+
+
+
+        <button class="tab-bar-toggle" id="dashTabBarToggle" onclick="toggleDashTabBar()">☰ Menu</button>
+
+        <div class="tab-bar-backdrop" id="dashTabBarBackdrop" onclick="toggleDashTabBar(false)"></div>
+
+        <div class="tab-bar" id="dashTabBar">
+
+            <button class="btn" onclick="switchTab('premium')">🎟️ Premium</button>
+
+            <button class="btn active" onclick="switchTab('cases')">📦 Cases</button>
+
+            <button class="btn" onclick="switchTab('capsules')">🫙 Capsules</button>
+
+            <button class="btn" onclick="location.href='/battle-setup'">⚔️ Battles</button>
+
+            <button class="btn" onclick="location.href='/games'">🎮 Games</button>
+
+            <button class="btn" onclick="location.href='/tournament'">🥊 Tournaments</button>
+
+            <button class="btn" onclick="location.href='/leaderboard'">🏆 Leaderboard</button>
+
+            <button class="btn" onclick="location.href='/ranked'">🎖️ Ranked</button>
+
+            <button class="btn" onclick="switchTab('quests')">📋 Quests</button>
+
+            <button class="btn" onclick="switchTab('inventory')">🎒 Inventory</button>
+
+            <button class="btn" onclick="switchTab('trade')">🔄 Trade</button>
+
+            <button class="btn" onclick="switchTab('stats')">📊 Stats</button>
+
+            <button class="btn" onclick="switchTab('leaderboard')">🏆 Leaderboard</button>
+
+            <button class="btn" onclick="switchTab('achievements')">🏅 Achievements</button>
+
+            <button class="btn" onclick="switchTab('profile')">👤 Profile</button>
+
+            <button class="btn" onclick="switchTab('friends')" id="friendsTabBtn">👥  Friends</button>
+
+            <button class="btn" onclick="location.href='/market'">🛒  Market</button>
+
+        </div>
+
+
+
+        <!-- TAB: CASES -->
+
+        <div id="tab-cases" class="tab-content active">
+
+            <div class="card">
+
+                <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;margin-bottom:15px;">
+
+                    <h3 style="margin-bottom:0;">📦 Open Cases</h3>
+
+                    <span style="color:#888;font-size:11px;">⭐ Click the star to favorite</span>
+
+                </div>
+
+                <div style="display:flex;gap:10px;margin-bottom:15px;flex-wrap:wrap;align-items:center;">
+
+                    <span style="color:#888;font-size:12px;">Quantity:</span>
+
+                    <button class="btn btn-sm btn-primary" onclick="setBulkQuantity(1)" id="qty1">1</button>
+
+                    <button class="btn btn-sm btn-outline" onclick="setBulkQuantity(5)" id="qty5">5</button>
+
+                    <button class="btn btn-sm btn-outline" onclick="setBulkQuantity(10)" id="qty10">10</button>
+
+                    <button class="btn btn-sm btn-outline" onclick="setBulkQuantity(15)" id="qty15">15</button>
+
+                    <button class="btn btn-sm btn-outline" onclick="setBulkQuantity(20)" id="qty20">20</button>
+
+                    <button class="btn btn-sm btn-outline" onclick="setBulkQuantity(25)" id="qty25">25</button>
+
+                    <button class="btn btn-sm btn-outline" onclick="toggleAutoAdvanceMain()" id="autoAdvanceBtn" style="margin-left:10px;" title="Auto-advance through bulk case openings without clicking Keep/Sell/Next">⏩ Auto: OFF</button>
+
+                    <span style="color:#888;font-size:11px;margin-left:10px;" id="bulkDiscount">(5% discount)</span>
+
+                </div>
+
+
+
+                <!-- FAVORITE CASES SECTION -->
+
+                <div id="favoriteSection" class="favorite-section hidden">
+
+                    <div class="favorite-title">⭐ Your Favorite Cases <span class="count" id="favCount">(0/5)</span></div>
+
+                    <div class="favorite-grid" id="favoriteGrid"></div>
+
+                </div>
+
+
+
+                <!-- ALL CASES -->
+
+                <div style="margin-top:10px;">
+
+                    <h4 style="color:#888;margin-bottom:6px;font-size:12px;">All Cases</h4>
+
+                    <div style="color:#888;font-size:11px;margin-bottom:10px;">Odds (same for every case): 🟦 Blue 87.4% · 🟪 Purple 5.0% · 💗 Pink 2.5% · 🔴 Red 2.5% · ⭐ Gold 2.6%</div>
+
+                    <div class="case-grid" id="caseGrid"></div>
+
+                </div>
+
+
+
+                <div id="caseResult" style="margin-top:15px;"></div>
+
+                <div class="disclaimer-inline">⚠️ <strong>Disclaimer:</strong> This is a virtual simulation. Items have no real-world value.</div>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- TAB: CAPSULES -->
+
+        <div id="tab-capsules" class="tab-content">
+
+            <div class="card">
+
+                <h3>🫙 Sticker Capsules</h3>
+
+                <p style="color:#888;font-size:13px;margin-bottom:15px;">Open sticker capsules to collect rare stickers!</p>
+
+                <div style="display:flex;gap:10px;margin-bottom:15px;flex-wrap:wrap;align-items:center;">
+
+                    <span style="color:#888;font-size:12px;">Quantity:</span>
+
+                    <button class="btn btn-sm btn-primary" onclick="setCapsuleBulkQuantity(1)" id="cqty1">1</button>
+
+                    <button class="btn btn-sm btn-outline" onclick="setCapsuleBulkQuantity(5)" id="cqty5">5</button>
+
+                    <button class="btn btn-sm btn-outline" onclick="setCapsuleBulkQuantity(10)" id="cqty10">10</button>
+
+                    <button class="btn btn-sm btn-outline" onclick="setCapsuleBulkQuantity(15)" id="cqty15">15</button>
+
+                    <button class="btn btn-sm btn-outline" onclick="setCapsuleBulkQuantity(20)" id="cqty20">20</button>
+
+                    <button class="btn btn-sm btn-outline" onclick="setCapsuleBulkQuantity(25)" id="cqty25">25</button>
+
+                    <span style="color:#888;font-size:11px;margin-left:10px;" id="capsuleBulkDiscount"></span>
+
+                </div>
+
+                <div class="capsule-grid" id="capsuleGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:15px;"></div>
+
+                <div id="capsuleResult" style="margin-top:15px;"></div>
+
+                <div class="disclaimer-inline">⚠️ <strong>Disclaimer:</strong> Stickers have no real-world value. This is for entertainment purposes only.</div>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- TAB: BATTLES — now a dedicated page -->
+
+        <div id="tab-battles" class="tab-content">
+
+            <div class="card" style="text-align:center;padding:40px 20px;">
+
+                <div style="font-size:64px;margin-bottom:16px;">⚔️</div>
+
+                <h3 style="margin-bottom:10px;">Case Battles</h3>
+
+                <p style="color:#888;font-size:13px;margin-bottom:24px;">Case Battles now has its own full arena experience.<br>Configure your battle and find opponents there.</p>
+
+                <button class="btn btn-primary" onclick="location.href='/battle-setup'" style="padding:14px 32px;font-size:13px;">⚔️ GO TO BATTLE ARENA</button>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- TAB: GAMES — now a dedicated hub -->
+
+        <div id="tab-games" class="tab-content">
+
+            <div class="card" style="text-align:center;padding:40px 20px;">
+
+                <div style="font-size:64px;margin-bottom:16px;">🎮</div>
+
+                <h3 style="margin-bottom:10px;">Games Hub</h3>
+
+                <p style="color:#888;font-size:13px;margin-bottom:8px;">22 games across 5 skill tiers — all with their own full-screen experience.</p>
+
+                <p style="color:#555;font-size:11px;margin-bottom:24px;">Slots · Crash · Mines · Roulette · Blackjack · Poker · Live Race · and more</p>
+
+                <button class="btn btn-primary" onclick="location.href='/games'" style="padding:14px 32px;font-size:13px;">🎮 BROWSE ALL GAMES</button>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- TAB: QUESTS -->
+
+        <div id="tab-quests" class="tab-content">
+
+            <div class="card">
+
+                <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;margin-bottom:10px;">
+
+                    <h3 style="margin-bottom:0;">📋 Daily Quests</h3>
+
+                    <button class="btn btn-sm btn-outline" onclick="refreshQuests()" title="Refresh Quests">🔄 Refresh</button>
+
+                </div>
+
+                <p style="color:#888;font-size:13px;margin-bottom:15px;">Complete quests to earn rewards!</p>
+
+                <div id="questsList"></div>
+
+                <button class="btn btn-success" onclick="claimQuests()" id="claimQuestsBtn" style="margin-top:15px;" disabled>🎁 Claim All</button>
+
+                <div id="questResult" style="margin-top:10px;"></div>
+
+                <div class="disclaimer-inline">⚠️ <strong>Disclaimer:</strong> Quest rewards are virtual and have no real-world value.</div>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- TAB: INVENTORY -->
+
+        <div id="tab-inventory" class="tab-content">
+
+            <!-- LOADOUT SHOWCASE -->
+
+            <div class="card" id="loadoutSection">
+
+                <div class="loadout-header-row">
+
+                    <div class="loadout-header">🎽  MY LOADOUT</div>
+
+                    <div class="loadout-controls">
+
+                        <select id="loadoutSelector" class="loadout-selector" onchange="switchLoadout(this.value)"></select>
+
+                        <button class="btn btn-sm btn-secondary" onclick="createLoadoutPrompt()" title="Create a new loadout">+ New</button>
+
+                        <button class="btn btn-sm btn-secondary" onclick="renameLoadoutPrompt()" title="Rename current loadout">✏️</button>
+
+                        <button class="btn btn-sm btn-secondary" onclick="deleteLoadoutPrompt()" title="Delete current loadout">🗑</button>
+
+                    </div>
+
+                </div>
+
+                <div class="loadout-grid" id="loadoutGrid">
+
+                    <div class="loadout-empty">No items in loadout — click ⭐ on any weapon to equip it.</div>
+
+                </div>
+
+            </div>
+
+            <div class="card">
+
+                <h3>🎒 Inventory</h3>
+
+                <div class="inv-filter-bar">
+
+                    <input type="text" id="searchInput" placeholder="Search items..." onkeyup="filterInventory()">
+
+                    <select id="rarityFilter" onchange="filterInventory()">
+
+                        <option value="all">All Rarities</option>
+
+                        <option value="Gold">⭐ Gold</option>
+
+                        <option value="Red">🔴 Red</option>
+
+                        <option value="Pink">💗 Pink</option>
+
+                        <option value="Purple">🟪 Purple</option>
+
+                        <option value="Blue">🟦 Blue</option>
+
+                    </select>
+
+                    <button class="btn btn-primary btn-sm" onclick="loadInventory()" title="Refresh">🔄 Refresh</button>
+
+                    <button class="btn btn-secondary btn-sm" id="sellModeBtn" onclick="toggleSellMode()" title="Select multiple items to sell at once">💰 Sell Mode</button>
+
+                </div>
+
+                <div class="inv-type-tabs" id="invTypeTabs">
+
+                    <div class="inv-type-tab active" onclick="setInvTypeFilter('all',this)">All</div>
+
+                    <div class="inv-type-tab" onclick="setInvTypeFilter('weapon',this)">🔫  Weapons</div>
+
+                    <div class="inv-type-tab" onclick="setInvTypeFilter('sticker',this)">🏷️  Stickers</div>
+
+                    <div class="inv-type-tab" onclick="setInvTypeFilter('gold',this)">⭐ Gold / Knives</div>
+
+                </div>
+
+                <div id="sellModeBar" style="display:none;margin-bottom:10px;padding:10px 12px;background:rgba(255,215,0,.08);border:1px solid rgba(255,215,0,.35);border-radius:8px;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;">
+
+                    <span id="sellModeCount" style="color:#ffd700;font-size:13px;">Selected: 0 items ($0.00)</span>
+
+                    <div style="display:flex;gap:8px;">
+
+                        <button class="btn btn-ghost btn-sm" onclick="clearSellSelection()">Clear</button>
+
+                        <button class="btn btn-primary btn-sm" id="confirmSellBtn" onclick="confirmBatchSell()" disabled>✅ Confirm Sell</button>
+
+                    </div>
+
+                </div>
+
+                <div style="font-size:10px;color:#666;letter-spacing:0.5px;margin-bottom:8px;">🔍 Click any item to inspect it up close, apply stickers, protect it, or add it to your loadout</div>
+
+                <div id="inventory"></div>
+
+                <div id="inventoryPagination" style="margin-top:12px;display:flex;gap:10px;justify-content:center;align-items:center;"></div>
+
+                <div class="disclaimer-inline" style="margin-top:12px;">⚠️ <strong>Disclaimer:</strong> All items are virtual with no real-world value.</div>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- TAB: TRADE -->
+
+        <div id="tab-trade" class="tab-content">
+
+            <div id="tradeContent"></div>
+
+            <div class="disclaimer-inline">⚠️ <strong>Disclaimer:</strong> Trade-ups are for in-game entertainment only. Items have no real-world value.</div>
+
+        </div>
+
+
+
+        <!-- TAB: STATS -->
+
+        <div id="tab-stats" class="tab-content">
+
+            <div class="card">
+
+                <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;margin-bottom:10px;">
+
+                    <h3 style="margin-bottom:0;">📊 Your Stats</h3>
+
+                    <button class="btn btn-sm btn-outline" onclick="refreshStats()" title="Refresh Stats">🔄 Refresh</button>
+
+                </div>
+
+                <div class="stats-grid" id="statsGrid"></div>
+
+                <div class="disclaimer-inline">⚠️ <strong>Disclaimer:</strong> Stats are for entertainment purposes only.</div>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- TAB: LEADERBOARD -->
+
+        <div id="tab-leaderboard" class="tab-content">
+
+            <div id="leaderboardContent"></div>
+
+            <div class="disclaimer-inline">⚠️ <strong>Disclaimer:</strong> Leaderboards are for entertainment purposes only.</div>
+
+        </div>
+
+
+
+        <!-- TAB: PREMIUM -->
+
+        <div id="tab-premium" class="tab-content">
+
+
+
+            <!-- VIP STATUS BANNER -->
+
+            <div id="vipStatusBanner" style="margin-bottom:16px;"></div>
+
+
+
+            <!-- SUBSCRIPTION TIERS -->
+
+            <div class="card" style="margin-bottom:16px;">
+
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;flex-wrap:wrap;gap:8px;">
+
+                    <h3 style="margin:0;">👑  VIP Subscription</h3>
+
+                    <button class="btn btn-sm btn-outline" onclick="loadVIPStatus()">🔄 Refresh</button>
+
+                </div>
+
+                <div id="vipTiersGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:14px;"></div>
+
+            </div>
+
+
+
+            <!-- TICKET ARCADE -->
+
+            <div class="card" style="margin-bottom:16px;">
+
+                <h3 style="margin-bottom:4px;">🕹️  Ticket Arcade</h3>
+
+                <p style="color:#888;font-size:12px;margin-bottom:16px;">Each game costs 1 ticket to play. Win based on your performance.</p>
+
+                <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;">
+
+                    <div style="background:rgba(255,107,0,0.08);border:1px solid rgba(255,107,0,0.3);border-radius:10px;padding:16px;text-align:center;">
+
+                        <div style="font-size:28px;margin-bottom:6px;">⚡</div>
+
+                        <div style="font-weight:700;margin-bottom:4px;">Reaction Time</div>
+
+                        <div style="color:#888;font-size:11px;margin-bottom:12px;">Click when it turns green<br>Up to 8 tickets</div>
+
+                        <button class="btn btn-primary btn-sm" onclick="location.href='/games/reaction.html'">Play (1 🎟️)</button>
+
+                    </div>
+
+                    <div style="background:rgba(76,175,80,0.08);border:1px solid rgba(76,175,80,0.3);border-radius:10px;padding:16px;text-align:center;">
+
+                        <div style="font-size:28px;margin-bottom:6px;">🎯</div>
+
+                        <div style="font-weight:700;margin-bottom:4px;">Aim Trainer</div>
+
+                        <div style="color:#888;font-size:11px;margin-bottom:12px;">Hit 20 moving targets in 15s<br>Up to 6 tickets</div>
+
+                        <button class="btn btn-primary btn-sm" onclick="location.href='/games/aim-trainer.html'">Play (1 🎟️)</button>
+
+                    </div>
+
+                    <div style="background:rgba(231,76,60,0.08);border:1px solid rgba(231,76,60,0.3);border-radius:10px;padding:16px;text-align:center;">
+
+                        <div style="font-size:28px;margin-bottom:6px;">💣</div>
+
+                        <div style="font-weight:700;margin-bottom:4px;">Bomb Defuse</div>
+
+                        <div style="color:#888;font-size:11px;margin-bottom:12px;">Cut the right wire<br>Win 3 tickets</div>
+
+                        <button class="btn btn-primary btn-sm" onclick="location.href='/games/bomb-defuse.html'">Play (1 🎟️)</button>
+
+                    </div>
+
+                    <div style="background:rgba(66,133,244,0.08);border:1px solid rgba(66,133,244,0.3);border-radius:10px;padding:16px;text-align:center;">
+
+                        <div style="font-size:28px;margin-bottom:6px;">🔬</div>
+
+                        <div style="font-weight:700;margin-bottom:4px;">Float Guesser</div>
+
+                        <div style="color:#888;font-size:11px;margin-bottom:12px;">Guess the skin float<br>Up to 8 tickets</div>
+
+                        <button class="btn btn-primary btn-sm" onclick="location.href='/games/float-guesser.html'">Play (1 🎟️)</button>
+
+                    </div>
+
+                    <div style="background:rgba(156,39,176,0.08);border:1px solid rgba(156,39,176,0.3);border-radius:10px;padding:16px;text-align:center;">
+
+                        <div style="font-size:28px;margin-bottom:6px;">🧠</div>
+
+                        <div style="font-weight:700;margin-bottom:4px;">Memory Sequence</div>
+
+                        <div style="color:#888;font-size:11px;margin-bottom:12px;">Repeat the flash pattern<br>Up to 6 tickets</div>
+
+                        <button class="btn btn-primary btn-sm" onclick="location.href='/games/memory-sequence.html'">Play (1 🎟️)</button>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- PREMIUM BATCH OPENER -->
+
+            <div class="card" style="margin-bottom:16px;">
+
+                <h3 style="margin-bottom:8px;">⚡ Premium Case Batch</h3>
+
+                <p style="color:#888;font-size:13px;margin-bottom:14px;">Spend <strong style="color:#ffd700;">1 Ticket</strong> to open the 5 most expensive cases simultaneously. All items go straight to your inventory.</p>
+
+                <div id="batchCaseList" style="color:#555;font-size:12px;margin-bottom:14px;"></div>
+
+                <button class="btn btn-gold" id="batchOpenBtn" onclick="openPremiumBatchNew()" style="width:100%;padding:14px;font-size:15px;">
+
+                    🎰 Use 1 Ticket — Open 5 Premium Cases
+
+                </button>
+
+                <div id="batchResult" style="margin-top:12px;"></div>
+
+            </div>
+
+
+
+            <!-- TICKET CASE -->
+
+            <div class="card" style="margin-bottom:16px;">
+
+                <h3 style="margin-bottom:8px;">🎫  Ticket Case</h3>
+
+                <p style="color:#888;font-size:13px;margin-bottom:14px;">Spend <strong style="color:#ffd700;">1 Ticket</strong> to open an exclusive case with <strong style="color:#aa00ff;">Purple</strong>, <strong style="color:#ff69b4;">Pink</strong>, <strong style="color:#ff4444;">Red</strong>, and <strong style="color:#ffd700;">Gold</strong> drops only — no Blues, ever.</p>
+
+                <div style="display:flex;gap:8px;margin-bottom:14px;font-size:12px;color:#888;flex-wrap:wrap;">
+
+                    <span style="background:rgba(170,0,255,0.12);border:1px solid rgba(170,0,255,0.3);border-radius:6px;padding:4px 10px;color:#aa00ff;">🟪  Purple 42%</span>
+
+                    <span style="background:rgba(255,105,180,0.12);border:1px solid rgba(255,105,180,0.3);border-radius:6px;padding:4px 10px;color:#ff69b4;">💗  Pink 35%</span>
+
+                    <span style="background:rgba(255,68,68,0.12);border:1px solid rgba(255,68,68,0.3);border-radius:6px;padding:4px 10px;color:#ff4444;">🔴  Red 18%</span>
+
+                    <span style="background:rgba(255,215,0,0.12);border:1px solid rgba(255,215,0,0.3);border-radius:6px;padding:4px 10px;color:#ffd700;">⭐ Gold 5%</span>
+
+                </div>
+
+                <button class="btn btn-gold" id="ticketCaseBtn" onclick="openTicketCase()" style="width:100%;padding:14px;font-size:15px;">
+
+                    🎫 Use 1 Ticket — Open Ticket Case
+
+                </button>
+
+                <div id="ticketCaseResult" style="margin-top:12px;"></div>
+
+            </div>
+
+
+
+            <!-- CASE POWER-UPS -->
+
+            <div class="card" style="margin-bottom:16px;">
+
+                <h3 style="margin-bottom:8px;">🛡️  Case Power-ups</h3>
+
+                <p style="color:#888;font-size:13px;margin-bottom:14px;">Toggle before opening any case. Tickets are deducted automatically when you open and power-ups reset after each open.</p>
+
+
+
+                <div id="guaranteeToggle" onclick="toggleGuarantee()" style="display:flex;align-items:center;justify-content:space-between;padding:14px;border:1px solid rgba(255,255,255,0.06);border-radius:10px;background:rgba(255,255,255,0.03);cursor:pointer;margin-bottom:10px;transition:all 0.2s;">
+
+                    <div>
+
+                        <div style="font-size:14px;font-weight:700;color:#e0d8f0;">⭐ Rarity Guarantee</div>
+
+                        <div style="font-size:12px;color:#888;margin-top:3px;">2 tickets per open — guaranteed Purple or better, Blues rerolled</div>
+
+                    </div>
+
+                    <div id="guaranteeStatus" style="font-size:12px;font-weight:700;color:#555;margin-left:16px;flex-shrink:0;">OFF</div>
+
+                </div>
+
+
+
+                <div id="insuranceToggle" onclick="toggleInsurance()" style="display:flex;align-items:center;justify-content:space-between;padding:14px;border:1px solid rgba(255,255,255,0.06);border-radius:10px;background:rgba(255,255,255,0.03);cursor:pointer;transition:all 0.2s;">
+
+                    <div>
+
+                        <div style="font-size:14px;font-weight:700;color:#e0d8f0;">🛡️  Unboxing Insurance</div>
+
+                        <div style="font-size:12px;color:#888;margin-top:3px;">1 ticket per open — any Blue result refunds your case cost</div>
+
+                    </div>
+
+                    <div id="insuranceStatus" style="font-size:12px;font-weight:700;color:#555;margin-left:16px;flex-shrink:0;">OFF</div>
+
+                </div>
+
+            </div>
+
+
+
+            <!-- REFERRAL PROGRAM -->
+
+            <div class="card" style="margin-bottom:16px;" id="referralCard">
+
+                <h3 style="margin-bottom:4px;">🔗  Referral Program</h3>
+
+                <p style="color:#888;font-size:13px;margin-bottom:14px;">Share your code — you both get <strong style="color:#ffd700;">$500</strong> + you earn <strong style="color:#ffd700;">1 Ticket</strong> per referral.</p>
+
+                <div id="referralContent" style="color:#888;font-size:13px;">Loading...</div>
+
+            </div>
+
+
+
+            <!-- HOW TO GET ARCADE TICKETS -->
+
+            <div class="card" style="margin-bottom:16px;">
+
+                <h3 style="margin-bottom:4px;">🎟️  Arcade Tickets</h3>
+
+                <p style="color:#888;font-size:13px;margin-bottom:0;">Tickets aren't sold — they're earned by playing skill-based mini-games (Aim Trainer, Reaction Time, Bomb Defuse, and more), completing quests, referring friends, or from your VIP tier's daily grant. Spend them on the Arcade's skill games.</p>
+
+            </div>
+
+
+
+            <!-- TRANSACTION HISTORY -->
+
+            <div class="card">
+
+                <h3 style="margin-bottom:12px;">📋  Ticket History</h3>
+
+                <div id="ticketHistory" style="color:#888;font-size:13px;">Loading...</div>
+
+            </div>
+
+
+
+            <div class="disclaimer-inline">⚠️ <strong>Disclaimer:</strong> VIP and Tickets are for entertainment purposes only. All in-platform currency has no real-world value.</div>
+
+        </div>
+
+
+
+        <!-- TAB: ACHIEVEMENTS -->
+
+        <div id="tab-achievements" class="tab-content">
+
+            <div class="card">
+
+                <h3>🏅 Achievements</h3>
+
+                <p style="color:#888;font-size:13px;margin-bottom:15px;">Unlock achievements by reaching milestones!</p>
+
+                <div id="achievementsGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:12px;"></div>
+
+                <div class="disclaimer-inline">⚠️ <strong>Disclaimer:</strong> Achievements are for entertainment purposes only.</div>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- TAB: PROFILE -->
+
+        <div id="tab-profile" class="tab-content">
+
+            <div class="card">
+
+                <h3>👤 Your Profile</h3>
+
+                <div id="profileContent" style="display:grid;grid-template-columns:auto 1fr;gap:20px;align-items:start;">
+
+                    <div style="text-align:center;"><img id="profileAvatar" src="" alt="Avatar" style="width:100px;height:100px;border-radius:50%;border:3px solid #ffd700;"><div style="font-size:20px;font-weight:bold;margin-top:10px;" id="profileName"></div><div style="color:#888;font-size:12px;" id="profileBadge"></div></div>
+
+                    <div>
+
+                        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+
+                            <div class="stat-box"><div class="value" id="profileLevel">1</div><div class="label">🎮 Level</div></div>
+
+                            <div class="stat-box"><div class="value" id="profilePrestige">0</div><div class="label">🌟 Prestige</div></div>
+
+                            <div class="stat-box"><div class="value" id="profileXP">0</div><div class="label">📊 XP</div></div>
+
+                            <div class="stat-box"><div class="value" id="profileXPNeeded">0</div><div class="label">🎯 XP Needed</div></div>
+
+                        </div>
+
+                        <div style="margin-top:15px;"><div style="color:#888;font-size:11px;">Progress to next level</div><div style="height:8px;background:rgba(255,255,255,0.05);border-radius:4px;overflow:hidden;"><div id="profileProgressBar" style="height:100%;background:linear-gradient(90deg,#ffd700,#ff6b00);border-radius:4px;transition:width 0.5s ease;width:0%;"></div></div></div>
+
+                        <div style="margin-top:15px;display:flex;gap:10px;flex-wrap:wrap;">
+
+                            <button class="btn btn-primary btn-sm" onclick="claimHourly()">🕐 Hourly</button>
+
+                            <button class="btn btn-gold btn-sm" onclick="claimWeekly()">📅 Weekly</button>
+
+                        </div>
+
+                        <div id="claimResult" style="margin-top:10px;"></div>
+
+                    </div>
+
+                </div>
+
+                <div id="profileLinkedAccounts"></div>
+
+            </div>
+
+            <!-- Inventory Value History -->
+
+            <div class="card" id="valueHistoryCard" style="display:none;">
+
+                <h3 style="margin-bottom:4px;">📈  Inventory Value History</h3>
+
+                <p style="color:#888;font-size:12px;margin-bottom:10px;">Daily snapshot of your total inventory value. Logged once per day on login.</p>
+
+                <div style="position:relative;height:90px;" id="valueChartWrap">
+
+                    <svg id="valueHistoryChart" viewBox="0 0 400 80" preserveAspectRatio="none" style="width:100%;height:80px;"></svg>
+
+                </div>
+
+                <div style="display:flex;justify-content:space-between;font-size:10px;color:#555;margin-top:4px;">
+
+                    <span id="valueChartMin"></span>
+
+                    <span id="valueChartMax"></span>
+
+                </div>
+
+                <div style="margin-top:8px;font-size:12px;color:#888;">Current: <strong style="color:#ffd700;" id="valueChartCurrent">$0</strong></div>
+
+            </div>
+
+        </div>
+
+
+
+        <!-- TAB: FRIENDS -->
+
+        <div id="tab-friends" class="tab-content">
+
+            <!-- Add Friend -->
+
+            <div class="card">
+
+                <h3>👥  Friends</h3>
+
+                <div style="display:flex;gap:10px;margin-bottom:12px;position:relative;">
+
+                    <input type="text" id="friendSearchInput" placeholder="Enter username or ID..." autocomplete="off" oninput="onFriendSearchInput()" style="flex:1;padding:10px 14px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,215,0,0.2);border-radius:8px;color:#fff;font-family:inherit;font-size:13px;">
+
+                    <button class="btn btn-primary" onclick="sendFriendRequest()">➕ Add</button>
+
+                    <div id="friendSearchDropdown" style="display:none;position:absolute;top:44px;left:0;right:78px;background:#1a1a28;border:1px solid rgba(255,215,0,0.25);border-radius:8px;z-index:20;max-height:260px;overflow-y:auto;"></div>
+
+                </div>
+
+                <div id="friendSearchResult" style="font-size:13px;"></div>
+
+            </div>
+
+
+
+            <!-- Incoming PvP Challenges -->
+
+            <div class="card" id="challengesCard" style="display:none;">
+
+                <h3>⚔️  PvP Challenges <span id="challengesBadge" style="background:#e74c3c;color:#fff;font-size:10px;padding:2px 7px;border-radius:10px;margin-left:6px;"></span></h3>
+
+                <div id="challengesList" style="display:flex;flex-direction:column;gap:8px;"></div>
+
+            </div>
+
+
+
+            <!-- Friend Requests -->
+
+            <div class="card" id="friendRequestsCard" style="display:none;">
+
+                <h3>📨  Friend Requests</h3>
+
+                <div id="incomingRequests" style="margin-bottom:12px;"></div>
+
+                <div id="outgoingRequests"></div>
+
+            </div>
+
+
+
+            <!-- Friends List -->
+
+            <div class="card">
+
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+
+                    <h3 style="margin:0;">🟢  Your Friends</h3>
+
+                    <span id="friendsOnlineCount" style="color:#888;font-size:12px;"></span>
+
+                </div>
+
+                <div id="friendsList" style="display:flex;flex-direction:column;gap:10px;"></div>
+
+            </div>
+
+        </div>
+
+
+
+    </div><!-- end #dashboard -->
+
+
+
+    <!-- FOOTER -->
+
+    <div class="footer">
+
+        💖 Support: <a href="https://ko-fi.com/mk4gtiguy" target="_blank">Ko-fi</a> |
+
+        🌐 Dashboard: <a href="/" target="_blank">Home</a> |
+
+        💬 <a href="https://discord.gg/mU33pc7TDE" target="_blank">Join our Discord</a>
+
+        <div class="legal-disclaimer">⚠️ <strong>Legal Disclaimer:</strong> All virtual items, currency, and rewards on CS2CaseBot have <strong>no real-world value</strong>. This is a simulation for entertainment purposes only. Items cannot be traded, sold, or exchanged for real money or anything of value.</div>
+
+        <div class="legal-disclaimer">CS2CaseBot is not affiliated with Valve Corporation. All CS2 trademarks belong to their respective owners.</div>
+
+    </div>
+
+
+
+    <!-- POPUP OVERLAY -->
+
+    <div class="popup-overlay" id="popupOverlay">
+
+        <div class="popup-content" id="popupContent">
+
+            <button class="close-btn" onclick="closePopup()">✕</button>
+
+            <div id="popupBody"></div>
+
+            <div class="disclaimer" style="margin-top:15px;">⚠️ This is a simulation. Items have no real-world value.</div>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- ITEM INSPECT MODAL (separate from popup-overlay above -- reopenable, unlike the one-shot case-opening reveal card) -->
+
+    <div class="item-inspect-overlay" id="itemInspectOverlay">
+
+        <div class="item-inspect-content" id="itemInspectContent">
+
+            <button class="close-btn" onclick="closeItemInspect()">✕</button>
+
+            <div id="itemInspectBody"></div>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- WELCOME MODAL (shown on a new user's first 2 logins) -->
+
+    <div class="welcome-modal-overlay" id="welcomeModalOverlay">
+
+        <div class="welcome-modal-content">
+
+            <button class="close-btn" onclick="closeWelcomeModal()">✕</button>
+
+            <h2>👋 Welcome to CS2CaseBot!</h2>
+
+            <p>Open cases, collect skins, and battle other players. Here's where to start:</p>
+
+            <div class="welcome-modal-links">
+
+                <a href="/static/games.html" class="btn btn-primary">🎮 Explore Games</a>
+
+                <a href="javascript:void(0)" onclick="switchTab('inventory');closeWelcomeModal();" class="btn btn-secondary">🎒 Your Inventory</a>
+
+                <a href="/static/market.html" class="btn btn-secondary">💰 Marketplace</a>
+
+                <a href="/static/tournament.html" class="btn btn-secondary">🏆 Tournaments</a>
+
+            </div>
+
+            <button class="btn btn-primary welcome-modal-go" onclick="closeWelcomeModal()">Let's go!</button>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- SETTINGS MODAL -->
+
+    <div class="settings-modal" id="settingsModal" style="display:none;" role="dialog" aria-modal="true" aria-label="Settings">
+
+
+        <div class="settings-content">
+
+
+            <button class="close-btn" onclick="closeSettings()" aria-label="Close settings">✕</button>
+
+            <h2>⚙️ Settings</h2>
+
+            <label>Theme</label><select id="themeSelect" onchange="saveSettings()"><option value="casino">🎰 Casino Gold</option><option value="neon">💎 Cyberpunk Neon</option><option value="dark">🌙 Dark Void</option><option value="crystal">💠 Crystal Clear</option><option value="inferno">🔥 Inferno</option></select>
+
+            <label>Spin Speed</label><select id="speedSelect" onchange="saveSettings()"><option value="chill">🐢 Chill (4s)</option><option value="normal">⚡ Normal (3s)</option><option value="fast">🚀 Fast (2s)</option></select>
+
+            <label>Confetti</label><select id="confettiSelect" onchange="saveSettings()"><option value="always">🎉 Always</option><option value="gold">⭐ Gold Only</option><option value="never">🚫 Never</option></select>
+
+            <div class="checkbox-row"><input type="checkbox" id="soundToggle" onchange="saveSettings()"><label for="soundToggle">🔊 Sound Effects</label></div>
+
+            <div class="checkbox-row"><input type="checkbox" id="installPromptToggle" onchange="toggleInstallPromptSetting(this.checked)"><label for="installPromptToggle">📲  Show "Add to Home Screen" tip</label></div>
+
+            <button class="btn btn-primary" onclick="closeSettings()">Save & Close</button>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- TICKET ARCADE MODALS -->
+
+    <div id="arcadeOverlay" style="position:fixed;inset:0;background:rgba(0,0,0,0.85);z-index:2000;align-items:center;justify-content:center;padding:20px;">
+
+        <div id="arcadeModal" style="background:#12121e;border:2px solid #ffd700;border-radius:16px;max-width:520px;width:100%;max-height:90vh;overflow-y:auto;position:relative;padding:28px;">
+
+            <button onclick="closeArcade()" style="position:absolute;top:12px;right:14px;background:none;border:none;color:#888;font-size:20px;cursor:pointer;">✕</button>
+
+            <div id="arcadeBody"></div>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- PWA INSTALL BANNER -->
+
+    <div id="pwaInstallBanner" style="display:none;position:fixed;bottom:0;left:0;right:0;z-index:9999;background:#16161f;border-top:2px solid #ffd700;padding:16px 16px 20px;box-shadow:0 -4px 24px rgba(255,215,0,0.12);">
+
+        <button onclick="dismissPwaBanner()" style="position:absolute;top:10px;right:12px;background:none;border:none;color:#666;font-size:20px;cursor:pointer;line-height:1;">✕</button>
+
+        <div style="display:flex;align-items:center;gap:14px;max-width:480px;margin:0 auto;">
+
+            <img src="/static/icons/icon-192.png" style="width:50px;height:50px;border-radius:12px;flex-shrink:0;image-rendering:pixelated;">
+
+            <div style="flex:1;min-width:0;">
+
+                <div style="font-family:'Orbitron',sans-serif;font-size:13px;font-weight:700;color:#ffd700;margin-bottom:5px;">Add CS2CaseBot to your home screen</div>
+
+                <div id="pwaBannerMsg" style="font-size:12px;color:#aaa;line-height:1.6;"></div>
+
+            </div>
+
+        </div>
+
+        <div id="pwaBannerActions" style="margin-top:12px;text-align:center;max-width:480px;margin-left:auto;margin-right:auto;"></div>
+
+    </div>
+
+
+
+    <!-- CONFETTI & PARTICLES -->
+
+    <div class="confetti-container" id="confettiContainer"></div>
+
+    <div class="particle-container" id="particleContainer"></div>
+
+    <div class="coin-shower" id="coinShower"></div>
+
+    <div class="big-win-overlay" id="bigWinOverlay">
+
+        <div class="big-win-label" id="bigWinLabel"></div>
+
+        <div class="big-win-number" id="bigWinNumber"></div>
+
+    </div>
+
+    <div class="big-win-coin-container" id="bigWinCoinContainer"></div>
+
+
+
+    <!-- ============================================
+
+    JAVASCRIPT - FULL INTEGRATED VERSION (ALL WORKING)
+
+    ============================================ -->
+
+    <script src="/static/balance-animation.js"></script>
+
+    <script src="/static/page-transitions.js"></script>
+
+    <script src="/static/sticker-render.js"></script>
+    <script src="/static/dashboard.js"></script>
+
+<script>if("serviceWorker"in navigator){navigator.serviceWorker.register("/static/sw.js").catch(function(){})}</script>
+
+
+<script src="/static/chat.js"></script>
+<script src="/static/js/site-notices.js"></script>
+
+<script src="/static/js/agent-egg.js"></script>
+
+</body>
+
+</html>
+
+
+
+
+
+
+
+
+
+
+

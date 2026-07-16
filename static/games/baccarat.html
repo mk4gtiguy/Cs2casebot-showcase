@@ -1,0 +1,665 @@
+﻿<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+
+<title>🃏  Baccarat — CS2CaseBot</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&family=Noto+Serif:wght@700&display=swap" rel="stylesheet">
+
+<style>
+
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+
+:root{--bg:#060408;--player:#3b82f6;--banker:#dc2626;--tie:#22c55e;--gold:#ffd700;--font:'Orbitron',monospace;}
+
+html,body{min-height:100vh;background:var(--bg);font-family:var(--font);overflow-x:hidden;color:#e0d8f0;}
+
+body{background-image:radial-gradient(ellipse 80% 40% at 30% 50%,rgba(59,130,246,0.04) 0%,transparent 60%),radial-gradient(ellipse 80% 40% at 70% 50%,rgba(220,38,38,0.04) 0%,transparent 60%);}
+
+.hdr{display:flex;align-items:center;gap:12px;padding:12px 16px;background:rgba(6,4,8,0.98);border-bottom:1px solid rgba(255,215,0,0.1);position:sticky;top:0;z-index:50;}
+
+.back{display:flex;align-items:center;gap:5px;color:#2a2040;font-size:10px;letter-spacing:1px;text-decoration:none;transition:color .2s;}
+
+.back:hover{color:var(--gold);}
+
+.back svg{width:14px;height:14px;}
+
+.title{flex:1;font-size:14px;font-weight:900;letter-spacing:3px;background:linear-gradient(90deg,var(--player),var(--banker));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+
+.bal{font-size:13px;font-weight:700;color:var(--gold);font-family:monospace;}
+
+.page{max-width:440px;margin:0 auto;padding:16px 14px 80px;}
+
+
+
+/* TABLE */
+
+.bac-table{background:rgba(4,2,6,0.99);border:1px solid rgba(255,215,0,0.08);border-radius:20px;padding:18px 14px;margin-bottom:14px;position:relative;overflow:hidden;}
+
+.bac-table::before{content:'';position:absolute;top:0;left:10%;right:10%;height:1px;background:linear-gradient(90deg,transparent,rgba(255,215,0,0.2),transparent);}
+
+
+
+/* HANDS */
+
+.hands-row{display:grid;grid-template-columns:1fr 60px 1fr;gap:0;margin-bottom:14px;}
+
+.hand-col{padding:12px 8px;text-align:center;}
+
+.hand-label{font-size:9px;letter-spacing:2px;font-weight:700;margin-bottom:10px;}
+
+.player-col .hand-label{color:var(--player);}
+
+.banker-col .hand-label{color:var(--banker);}
+
+.hand-val-big{font-size:clamp(28px,8vw,40px);font-weight:900;font-family:monospace;line-height:1;margin-bottom:4px;}
+
+.player-col .hand-val-big{color:var(--player);}
+
+.banker-col .hand-val-big{color:var(--banker);}
+
+.natural-badge{font-size:8px;letter-spacing:1px;padding:2px 6px;border-radius:8px;display:inline-block;}
+
+.natural-badge.show{background:rgba(255,215,0,0.15);border:1px solid rgba(255,215,0,0.3);color:var(--gold);}
+
+.vs-mid{display:flex;align-items:center;justify-content:center;flex-direction:column;gap:4px;}
+
+.vs-pipe{width:1px;height:16px;background:rgba(255,255,255,0.06);}
+
+.vs-word{font-size:9px;color:#2a2040;font-weight:900;letter-spacing:1px;}
+
+
+
+/* Cards in hand */
+
+.cards-area{display:flex;justify-content:center;gap:5px;min-height:64px;align-items:center;flex-wrap:wrap;}
+
+.bac-card{width:44px;height:60px;border-radius:7px;box-shadow:0 4px 12px rgba(0,0,0,0.5);display:flex;flex-direction:column;align-items:center;justify-content:center;flex-shrink:0;}
+
+.bac-card.face{background:linear-gradient(135deg,#fff,#f0f0f0);color:#111;}
+
+.bac-card.face-red{background:linear-gradient(135deg,#fff,#f0f0f0);color:#cc0000;}
+
+.bac-card.back-card{background:linear-gradient(135deg,#1a0a2a,#0d0516);border:1px solid rgba(255,215,0,0.15);}
+
+.bac-card .bc-rank{font-size:16px;font-weight:700;font-family:'Noto Serif',serif;line-height:1;}
+
+.bac-card .bc-suit{font-size:12px;line-height:1;}
+
+.bac-card.flip-anim{animation:bac-flip .3s ease;}
+
+@keyframes bac-flip{0%{transform:rotateY(90deg);opacity:0;}100%{transform:rotateY(0);opacity:1;}}
+
+
+
+/* Winner highlight */
+
+.hand-col.is-winner{animation:hand-win .6s ease;}
+
+@keyframes hand-win{0%,100%{background:transparent;}40%{background:rgba(255,215,0,0.06);}}
+
+
+
+/* RESULT */
+
+.bac-result{text-align:center;min-height:36px;font-size:12px;font-weight:900;letter-spacing:2px;margin-bottom:12px;display:flex;align-items:center;justify-content:center;}
+
+.bac-result.player-win{color:var(--player);}
+
+.bac-result.banker-win{color:var(--banker);}
+
+.bac-result.tie-res{color:var(--tie);}
+
+.bac-result.idle{color:#2a2040;}
+
+
+
+/* BET BUTTONS */
+
+.bet-btns{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:12px;}
+
+.bbb{padding:14px 6px;border-radius:12px;border:2px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.02);cursor:pointer;text-align:center;transition:all .2s;}
+
+.bbb .bb-icon{font-size:20px;margin-bottom:4px;}
+
+.bbb .bb-name{font-size:9px;font-weight:700;letter-spacing:1px;margin-bottom:2px;}
+
+.bbb .bb-odds{font-size:8px;color:#2a2040;}
+
+.bbb.player-btn{border-color:rgba(59,130,246,0.2);}
+
+.bbb.player-btn:hover,.bbb.player-btn.sel{border-color:var(--player);background:rgba(59,130,246,0.12);}
+
+.bbb.player-btn .bb-name{color:var(--player);}
+
+.bbb.banker-btn{border-color:rgba(220,38,38,0.2);}
+
+.bbb.banker-btn:hover,.bbb.banker-btn.sel{border-color:var(--banker);background:rgba(220,38,38,0.1);}
+
+.bbb.banker-btn .bb-name{color:var(--banker);}
+
+.bbb.tie-btn{border-color:rgba(34,197,94,0.2);}
+
+.bbb.tie-btn:hover,.bbb.tie-btn.sel{border-color:var(--tie);background:rgba(34,197,94,0.08);}
+
+.bbb.tie-btn .bb-name{color:var(--tie);}
+
+
+
+/* Pair side bets */
+
+.pair-row{display:flex;gap:8px;margin-bottom:12px;}
+
+.pair-toggle{flex:1;padding:9px 6px;border-radius:10px;border:1px solid rgba(255,255,255,0.05);background:rgba(255,255,255,0.02);cursor:pointer;text-align:center;font-size:9px;color:#2a2040;transition:all .15s;letter-spacing:1px;}
+
+.pair-toggle.active{border-color:var(--gold);color:var(--gold);background:rgba(255,215,0,0.06);}
+
+
+
+/* BET CONTROLS */
+
+.bet-ctrl{background:rgba(0,0,0,0.4);border:1px solid rgba(255,215,0,0.06);border-radius:14px;padding:14px;}
+
+.bl{font-size:8px;color:#2a2040;letter-spacing:2px;margin-bottom:8px;}
+
+.bet-row{display:flex;gap:8px;margin-bottom:8px;}
+
+.bet-inp{flex:1;background:rgba(0,0,0,0.5);border:1px solid rgba(255,215,0,0.1);border-radius:8px;padding:10px 12px;color:#e0d8f0;font-family:var(--font);font-size:13px;font-weight:700;outline:none;text-align:center;}
+
+.bet-inp:focus{border-color:rgba(255,215,0,0.3);}
+
+.adj{padding:10px 14px;background:rgba(255,215,0,0.04);border:1px solid rgba(255,215,0,0.08);border-radius:8px;color:#2a2040;font-family:var(--font);font-size:11px;cursor:pointer;transition:all .15s;}
+
+.adj:hover{color:var(--gold);}
+
+.qrow{display:flex;gap:5px;margin-bottom:10px;}
+
+.qb{flex:1;padding:7px 3px;background:rgba(255,215,0,0.04);border:1px solid rgba(255,215,0,0.08);border-radius:6px;color:#2a2040;font-size:8px;letter-spacing:1px;cursor:pointer;text-align:center;transition:all .15s;}
+
+.qb:hover{border-color:var(--gold);color:var(--gold);}
+
+.btn-deal{width:100%;padding:15px;border:none;border-radius:10px;font-family:var(--font);font-size:13px;font-weight:900;letter-spacing:3px;cursor:pointer;transition:all .2s;background:linear-gradient(135deg,#3a1500,var(--gold));color:#060408;box-shadow:0 4px 20px rgba(255,215,0,0.3);}
+
+.btn-deal:not(:disabled):hover{transform:translateY(-2px);box-shadow:0 6px 32px rgba(255,215,0,0.5);}
+
+.btn-deal:disabled{opacity:.4;cursor:not-allowed;transform:none!important;}
+
+
+
+/* STATS */
+
+.stats-bac{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-top:12px;}
+
+.sb{background:rgba(255,215,0,0.03);border:1px solid rgba(255,215,0,0.05);border-radius:8px;padding:7px 4px;text-align:center;}
+
+.sb .sv{font-size:11px;font-weight:700;color:var(--gold);font-family:monospace;}
+
+.sb .sl{font-size:7px;color:#2a2040;letter-spacing:1px;margin-top:2px;}
+
+
+
+#flash{position:fixed;inset:0;pointer-events:none;opacity:0;z-index:200;}
+
+#flash.g{background:radial-gradient(ellipse at 50% 30%,rgba(255,215,0,0.2),transparent 70%);}
+
+#flash.show{animation:fl .5s ease;}
+
+@keyframes fl{0%,100%{opacity:0;}30%{opacity:1;}}
+
+</style>
+
+    <script src="/static/sound.js"></script>
+
+    <script src="/static/big-win.js"></script>
+
+
+    <script src="/static/balance-animation.js"></script>
+
+
+    <script src="/static/page-transitions.js"></script>
+
+
+    <script src="/static/autoplay.js"></script>
+
+
+<link rel="stylesheet" href="/static/games-shared.css"><script src="/static/js/csrf.js"></script>
+
+
+</head>
+
+<body>
+
+<div id="flash"></div>
+
+<header class="hdr">
+
+  <a class="back" href="/games"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>GAMES</a>
+
+  <span class="title">🃏  BACCARAT</span>
+
+  <span class="bal" id="balDisplay">$—</span>
+
+</header>
+
+<div class="page">
+
+  <div class="bac-table">
+
+    <div class="hands-row">
+
+      <div class="hand-col player-col" id="playerCol">
+
+        <div class="hand-label">PLAYER</div>
+
+        <div class="hand-val-big" id="playerVal">—</div>
+
+        <div class="natural-badge" id="playerNat"></div>
+
+        <div class="cards-area" id="playerCards"><span style="font-size:24px;opacity:.15;">🂠</span></div>
+
+      </div>
+
+      <div class="vs-mid"><div class="vs-pipe"></div><div class="vs-word">VS</div><div class="vs-pipe"></div></div>
+
+      <div class="hand-col banker-col" id="bankerCol">
+
+        <div class="hand-label">BANKER</div>
+
+        <div class="hand-val-big" id="bankerVal">—</div>
+
+        <div class="natural-badge" id="bankerNat"></div>
+
+        <div class="cards-area" id="bankerCards"><span style="font-size:24px;opacity:.15;">🂠</span></div>
+
+      </div>
+
+    </div>
+
+    <div class="bac-result idle" id="bacResult">BET ON PLAYER, BANKER, OR TIE</div>
+
+  </div>
+
+
+
+  <div id="roadMapRow" style="display:flex;gap:4px;flex-wrap:wrap;padding:10px 4px 4px;min-height:28px;"></div>
+
+
+
+  <div class="bet-btns">
+
+    <div class="bbb player-btn" onclick="setBetOn('player')">
+
+      <div class="bb-icon">🔵</div><div class="bb-name">PLAYER</div><div class="bb-odds">1:1 PAYOUT</div>
+
+    </div>
+
+    <div class="bbb tie-btn" onclick="setBetOn('tie')">
+
+      <div class="bb-icon">⚖️</div><div class="bb-name">TIE</div><div class="bb-odds">8:1 PAYOUT</div>
+
+    </div>
+
+    <div class="bbb banker-btn" onclick="setBetOn('banker')">
+
+      <div class="bb-icon">🔴</div><div class="bb-name">BANKER</div><div class="bb-odds">0.95:1 PAYOUT</div>
+
+    </div>
+
+  </div>
+
+
+
+  <div class="pair-row">
+
+    <div class="pair-toggle" id="ppToggle" onclick="togglePair('player')">🎴 PLAYER PAIR · 11:1</div>
+
+    <div class="pair-toggle" id="bpToggle" onclick="togglePair('banker')">🎴 BANKER PAIR · 11:1</div>
+
+  </div>
+
+  <div style="display:flex;align-items:center;gap:8px;margin-bottom:12px;padding:0 2px;">
+
+    <span style="font-size:8px;color:#2a2040;letter-spacing:1px;flex-shrink:0;">SIDE BET $</span>
+
+    <input id="sideBetInp" type="number" value="100" min="50" max="5000" step="50"
+
+      style="flex:1;background:rgba(0,0,0,0.4);border:1px solid rgba(255,215,0,0.1);border-radius:8px;
+
+             padding:6px 10px;color:#e0d8f0;font-family:Orbitron,monospace;font-size:11px;
+
+             font-weight:700;outline:none;text-align:center;"
+
+      placeholder="SIDE BET AMOUNT">
+
+  </div>
+
+
+
+  <div class="bet-ctrl">
+
+    <div class="bl">BET AMOUNT</div>
+
+    <div class="bet-row">
+
+      <button class="adj" onclick="halveBet()">½</button>
+
+      <input class="bet-inp" id="betInp" type="number" value="500" min="50">
+
+      <button class="adj" onclick="doubleBet()">2×</button>
+
+    </div>
+
+    <div class="qrow">
+
+      <div class="qb" onclick="qb(100)">$100</div><div class="qb" onclick="qb(500)">$500</div>
+
+      <div class="qb" onclick="qb(1000)">$1K</div><div class="qb" onclick="qb(5000)">$5K</div><div class="qb" onclick="qb(10000)">$10K</div>
+
+    </div>
+
+    <button class="btn-deal" id="dealBtn" onclick="deal()" disabled>SELECT A BET FIRST</button>
+
+  </div>
+
+
+
+  <div class="stats-bac">
+
+    <div class="sb"><div class="sv" id="stW">0</div><div class="sl">WINS</div></div>
+
+    <div class="sb"><div class="sv" id="stL">0</div><div class="sl">LOSSES</div></div>
+
+    <div class="sb"><div class="sv" id="stT">0</div><div class="sl">TIES</div></div>
+
+    <div class="sb"><div class="sv" id="stP">$0</div><div class="sl">PROFIT</div></div>
+
+  </div>
+
+</div>
+
+<script>
+
+const RED=['♥','♦'];
+
+let betOn=null,pPair=false,bPair=false,balance=0,dealing=false,wins=0,losses=0,ties=0,profit=0,hrConfirmed=false;
+
+let roadMap=[];
+
+async function init(){try{const d=await api('/api/user/me');balance=d.balance;updateBal();}catch(e){}}
+
+function showHighRollerConfirm(){
+
+  api('/api/tickets/balance').then(d=>{document.getElementById('hrTicketCount').textContent=d.tickets??'?';}).catch(()=>{});
+
+  document.getElementById('hrConfirm').style.display='flex';
+
+}
+
+function cancelHighRoller(){document.getElementById('hrConfirm').style.display='none';hrConfirmed=false;}
+
+function confirmHighRoller(){document.getElementById('hrConfirm').style.display='none';hrConfirmed=true;deal();}
+
+function updateBal(){var e=document.getElementById('balDisplay'),c=e.textContent||'',n='$'+balance.toLocaleString(undefined,{maximumFractionDigits:0});if(c&&c!=='$—'&&c!==n){var p=parseFloat(c.replace(/[,$]/g,''));if(!isNaN(p)&&p!==balance){animateBalance(e,'$'+p.toLocaleString(undefined,{maximumFractionDigits:0}),n,balance>=p);return}}e.textContent=n}
+
+function setBetOn(side){
+
+
+  Sound.click();Sound.chip();
+
+
+  betOn=side;
+
+
+  document.querySelectorAll('.bbb').forEach(b=>{
+
+
+    b.classList.toggle('sel', b.getAttribute('onclick').includes("'"+side+"'"));
+
+
+  });
+
+
+  const btn=document.getElementById('dealBtn');btn.disabled=false;btn.textContent='🎴  DEAL — '+side.toUpperCase();
+
+
+}
+
+function togglePair(side){
+
+
+  Sound.click();
+
+
+  if(side==='player'){pPair=!pPair;document.getElementById('ppToggle').classList.toggle('active',pPair);}
+
+
+  else{bPair=!bPair;document.getElementById('bpToggle').classList.toggle('active',bPair);}
+
+
+}
+
+
+function qb(v){Sound.click();document.getElementById('betInp').value=v;}
+
+
+function halveBet(){Sound.click();document.getElementById('betInp').value=Math.max(50,Math.floor(parseInt(document.getElementById('betInp').value||500)/2));}
+
+
+function doubleBet(){Sound.click();document.getElementById('betInp').value=Math.min(balance,parseInt(document.getElementById('betInp').value||500)*2);}
+
+async function deal(){
+
+
+  if(!betOn||dealing) return;
+
+
+  Sound.click();Sound.chip();
+
+
+  const bet=parseInt(document.getElementById('betInp').value)||500;
+
+  if(bet>balance){setResult('❌ INSUFFICIENT BALANCE','idle');Sound.error();return;}
+
+  if(bet>=25000&&!hrConfirmed){showHighRollerConfirm();return;}
+
+  hrConfirmed=false;
+
+  dealing=true;document.getElementById('dealBtn').disabled=true;
+
+  resetHands();setResult('DEALING…','idle');
+
+  try{
+
+    const d=await api('/api/games/hard/baccarat',{method:'POST',body:JSON.stringify({amount:bet,bet_on:betOn,player_pair:pPair,banker_pair:bPair,side_bet:pPair||bPair?parseInt(document.getElementById("sideBetInp")?.value||100):0})});
+
+    // Animate cards
+
+    await delay(200);
+
+
+    for(const c of d.player_hand){Sound.card();renderCard('playerCards',c,true);await delay(150);}
+
+
+    for(const c of d.banker_hand){Sound.card();renderCard('bankerCards',c,true);await delay(150);}
+
+    await delay(400);
+
+    document.getElementById('playerVal').textContent=d.player_value;
+
+    document.getElementById('bankerVal').textContent=d.banker_value;
+
+    if(d.natural){document.getElementById(d.outcome==='player'?'playerNat':'bankerNat').className='natural-badge show';document.getElementById(d.outcome==='player'?'playerNat':'bankerNat').textContent='NATURAL';}
+
+    balance=await refreshBal();updateBal();
+
+    const won=d.win>d.total_bet;
+
+    if(d.outcome==='tie'){
+
+
+      if(betOn==='tie'){Sound.win();setResult('⚖️ TIE — YOU WIN 8× · +$'+d.win.toLocaleString(undefined,{maximumFractionDigits:0}),'tie-res');ties++;profit+=d.win-d.total_bet;flashGold();if(window.maybeBigWin)maybeBigWin(d.total_bet,d.win);}
+
+
+      else{setResult('⚖️ TIE — BET RETURNED (PUSH)','tie-res');ties++;}
+
+
+    }else if(d.outcome===betOn){
+
+
+      Sound.win();setResult('✅ '+d.outcome.toUpperCase()+' WINS · +$'+(d.win-d.total_bet).toLocaleString(undefined,{maximumFractionDigits:0}),d.outcome+'-win');
+
+
+      document.getElementById(d.outcome+'Col').classList.add('is-winner');
+
+
+      wins++;profit+=d.win-d.total_bet;flashGold();if(window.maybeBigWin)maybeBigWin(d.total_bet,d.win);
+
+
+    }else{
+
+
+      Sound.loss();setResult('❌ '+d.outcome.toUpperCase()+' WINS — LOST $'+bet.toLocaleString(),d.outcome+'-win');
+
+
+      losses++;profit-=bet;
+
+
+    }
+
+    pushRoadMap(d.outcome);
+
+    document.getElementById('stW').textContent=wins;document.getElementById('stL').textContent=losses;
+
+    document.getElementById('stT').textContent=ties;document.getElementById('stP').textContent=(profit>=0?'+':'')+profit.toLocaleString(undefined,{maximumFractionDigits:0});
+
+  }catch(e){setResult('ERROR: '+e.message,'idle');}
+
+  finally{dealing=false;document.getElementById('dealBtn').disabled=false;}
+
+}
+
+function renderCard(areaId,card,animate){
+
+  const area=document.getElementById(areaId);
+
+  const isRed=RED.includes(card.suit);
+
+  if(area.querySelector('span')) area.innerHTML='';
+
+  const c=document.createElement('div');c.className='bac-card face'+(isRed?' face-red':'')+(animate?' flip-anim':'');
+
+  const rankEl=document.createElement('div');rankEl.className='bc-rank';rankEl.textContent=card.rank;
+
+  const suitEl=document.createElement('div');suitEl.className='bc-suit';suitEl.textContent=card.suit;
+
+  c.appendChild(rankEl);c.appendChild(suitEl);
+
+  area.appendChild(c);
+
+}
+
+function resetHands(){
+
+  ['playerCards','bankerCards'].forEach(id=>{document.getElementById(id).innerHTML='<span style="font-size:24px;opacity:.15;">🂠</span>';});
+
+  ['playerVal','bankerVal'].forEach(id=>{document.getElementById(id).textContent='—';});
+
+  ['playerNat','bankerNat'].forEach(id=>{document.getElementById(id).className='natural-badge';document.getElementById(id).textContent='';});
+
+  ['playerCol','bankerCol'].forEach(id=>{document.getElementById(id).classList.remove('is-winner');});
+
+}
+
+function setResult(t,c){const el=document.getElementById('bacResult');el.className='bac-result '+c;el.textContent=t;}
+
+function flashGold(){const el=document.getElementById('flash');el.className='g';void el.offsetWidth;el.classList.add('show');}
+
+async function refreshBal(){try{const d=await api('/api/user/me');return d.balance;}catch(e){return balance;}}
+
+async function api(url,opts={}){const r=await fetch(url,{credentials:'include',headers:{'Content-Type':'application/json'},...opts});if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.detail||'Error');}return r.json();}
+
+function delay(ms){return new Promise(r=>setTimeout(r,ms));}
+
+function pushRoadMap(outcome){
+
+  roadMap.push(outcome);if(roadMap.length>40) roadMap.shift();
+
+  const el=document.getElementById('roadMapRow');if(!el) return;
+
+  const colors={player:'#3b82f6',banker:'#dc2626',tie:'#22c55e'};
+
+  const labels={player:'P',banker:'B',tie:'T'};
+
+  el.innerHTML=roadMap.map(o=>`<span title="${o}" style="width:18px;height:18px;border-radius:50%;background:${colors[o]||'#444'};display:inline-flex;align-items:center;justify-content:center;font-size:7px;font-weight:900;color:#fff;flex-shrink:0;">${labels[o]||'?'}</span>`).join('');
+
+}
+
+init();
+
+</script>
+
+
+
+<!-- High Roller ticket confirmation modal -->
+
+<div id="hrConfirm" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.88);z-index:200;align-items:center;justify-content:center;padding:20px;">
+
+  <div style="background:#0d0816;border:2px solid #ffd700;border-radius:16px;padding:28px 24px;max-width:320px;width:100%;text-align:center;box-shadow:0 0 60px rgba(255,215,0,0.2);">
+
+    <div style="font-size:36px;margin-bottom:10px;">💎</div>
+
+    <div style="font-size:13px;font-weight:900;letter-spacing:3px;color:#ffd700;margin-bottom:10px;">HIGH ROLLER BET</div>
+
+    <div style="font-size:12px;color:#e0d8f0;line-height:1.6;margin-bottom:12px;">Bets of <strong style="color:#ffd700;">$25,000+</strong> require spending <strong style="color:#ffd700;">1 Ticket</strong> to enter the High Roller tier.</div>
+
+    <div style="font-size:11px;color:#888;margin-bottom:22px;">You have <strong id="hrTicketCount" style="color:#ffd700;">?</strong> tickets remaining.</div>
+
+    <div style="display:flex;gap:10px;justify-content:center;">
+
+      <button onclick="cancelHighRoller()" style="flex:1;padding:11px 0;border:1px solid #444;border-radius:8px;background:transparent;color:#aaa;font-size:11px;cursor:pointer;font-family:var(--font);font-weight:700;letter-spacing:1px;">CANCEL</button>
+
+      <button onclick="confirmHighRoller()" style="flex:1;padding:11px 0;border:none;border-radius:8px;background:linear-gradient(135deg,#b8860b,#ffd700);color:#060408;font-size:11px;cursor:pointer;font-family:var(--font);font-weight:900;letter-spacing:1px;">🎟️ USE TICKET</button>
+
+    </div>
+
+  </div>
+
+</div>
+
+<script>if("serviceWorker"in navigator){navigator.serviceWorker.register("/static/sw.js").catch(function(){})}</script>
+
+
+<script src="/static/chat.js"></script>
+
+
+</body>
+
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

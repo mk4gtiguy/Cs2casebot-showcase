@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>💎  Skin Spin — CS2CaseBot</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@700;900&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box;}
+:root{--bg:#0a0812;--steel:#9988aa;--gold:#ffd700;--blue:#4488ff;--purple:#aa44ff;--pink:#ff69b4;--red:#ff3333;--font:'Orbitron',monospace;}
+html,body{min-height:100vh;background:var(--bg);font-family:var(--font);overflow-x:hidden;color:#ccc0d8;}
+body{background-image:linear-gradient(180deg,rgba(170,68,255,0.05) 0%,transparent 50%),
+  radial-gradient(ellipse 80% 30% at 50% 0%,rgba(255,105,180,0.04) 0%,transparent 70%);}
+
+.hdr{display:flex;align-items:center;gap:12px;padding:12px 16px;
+  background:rgba(10,8,18,0.98);border-bottom:1px solid rgba(170,68,255,0.12);
+  position:sticky;top:0;z-index:50;}
+.back{display:flex;align-items:center;gap:5px;color:#4a3a5a;font-size:10px;letter-spacing:1px;text-decoration:none;transition:color .2s;}
+.back:hover{color:var(--purple);}
+.back svg{width:14px;height:14px;}
+.title{flex:1;font-size:13px;font-weight:900;letter-spacing:3px;color:var(--steel);}
+.bal{font-size:13px;font-weight:700;color:var(--gold);font-family:monospace;}
+.tkts{font-size:13px;font-weight:700;color:var(--gold);font-family:monospace;}
+
+.hud-frame{max-width:460px;margin:20px auto;padding:0 14px 80px;}
+
+.scan-overlay{position:fixed;inset:0;pointer-events:none;z-index:0;
+  background:repeating-linear-gradient(0deg,transparent,transparent 3px,rgba(170,68,255,0.015) 3px,rgba(170,68,255,0.015) 4px);}
+
+.case-display{position:relative;z-index:1;background:rgba(8,4,14,0.98);
+  border:1px solid rgba(170,68,255,0.18);border-radius:16px;padding:20px 14px;margin-bottom:16px;
+  box-shadow:inset 0 0 40px rgba(0,0,0,0.5);}
+.case-display::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(170,68,255,0.5),transparent);}
+
+.premise{font-size:9px;color:#6a5a7a;letter-spacing:1px;text-align:center;margin-bottom:14px;}
+.premise b{color:var(--pink);}
+
+.rarity-row{display:flex;gap:3px;margin-bottom:14px;}
+.rar-pip{flex:1;height:3px;border-radius:1px;opacity:0.3;transition:opacity .3s,box-shadow .3s;}
+.rar-pip.active{opacity:1;box-shadow:0 0 6px currentColor;}
+.rar-pip.blue{background:var(--blue);color:var(--blue);}
+.rar-pip.purple{background:var(--purple);color:var(--purple);}
+.rar-pip.pink{background:var(--pink);color:var(--pink);}
+.rar-pip.red{background:var(--red);color:var(--red);}
+.rar-pip.gold{background:var(--gold);color:var(--gold);}
+
+.reels{display:flex;gap:5px;margin-bottom:14px;}
+.reel-win{flex:1;height:88px;overflow:hidden;background:rgba(0,0,0,0.6);
+  border:1px solid rgba(170,68,255,0.12);border-radius:10px;position:relative;}
+.reel-win::after{content:'';position:absolute;top:50%;left:0;right:0;height:1px;
+  background:rgba(170,68,255,0.3);transform:translateY(-50%);pointer-events:none;z-index:2;}
+.reel-strip-ss{display:flex;flex-direction:column;align-items:center;will-change:transform;}
+.reel-cell-ss{height:88px;width:100%;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:3px;flex-shrink:0;}
+.reel-cell-ss .r-emoji{font-size:28px;line-height:1;}
+.reel-cell-ss .r-rar{font-size:6.5px;letter-spacing:1px;}
+.reel-win.glow-Blue{border-color:var(--blue);box-shadow:0 0 14px rgba(68,136,255,0.4);}
+.reel-win.glow-Purple{border-color:var(--purple);box-shadow:0 0 14px rgba(170,68,255,0.4);}
+.reel-win.glow-Pink{border-color:var(--pink);box-shadow:0 0 18px rgba(255,105,180,0.5);}
+.reel-win.glow-Red{border-color:var(--red);box-shadow:0 0 22px rgba(255,51,51,0.55);}
+.reel-win.glow-Gold{border-color:var(--gold);box-shadow:0 0 28px rgba(255,215,0,0.7);}
+
+.result-display{min-height:42px;text-align:center;margin-bottom:14px;display:flex;flex-direction:column;gap:4px;align-items:center;justify-content:center;}
+.res-label{font-size:13px;font-weight:900;letter-spacing:2px;}
+.res-label.miss{color:#4a3a5a;}
+.res-label.blue{color:var(--blue);}
+.res-label.purple{color:var(--purple);}
+.res-label.pink{color:var(--pink);}
+.res-label.red{color:var(--red);}
+.res-label.gold{color:var(--gold);text-shadow:0 0 20px rgba(255,215,0,0.5);font-size:16px;}
+.res-sub{font-size:9px;color:#5a4a6a;letter-spacing:1px;}
+
+.controls{background:rgba(0,0,0,0.4);border:1px solid rgba(170,68,255,0.08);border-radius:14px;padding:14px;position:relative;z-index:1;}
+.bet-label{font-size:8px;color:#5a4a6a;letter-spacing:2px;margin-bottom:8px;}
+.bet-disp{font-size:20px;font-weight:900;color:var(--gold);font-family:monospace;text-align:center;margin-bottom:8px;}
+.qrow{display:flex;gap:5px;margin-bottom:8px;}
+.qb{flex:1;padding:7px 4px;background:rgba(170,68,255,0.05);border:1px solid rgba(170,68,255,0.12);
+  border-radius:6px;color:#5a4a6a;font-size:8px;letter-spacing:1px;cursor:pointer;text-align:center;transition:all .15s;}
+.qb:hover{border-color:var(--purple);color:var(--purple);}
+.qb.active{border-color:var(--purple);color:var(--purple);background:rgba(170,68,255,0.1);}
+.adj-row{display:flex;gap:6px;margin-bottom:10px;}
+.adj{flex:1;padding:8px;background:rgba(170,68,255,0.04);border:1px solid rgba(170,68,255,0.1);
+  border-radius:8px;color:#5a4a6a;font-family:var(--font);font-size:10px;cursor:pointer;text-align:center;transition:all .15s;}
+.adj:hover{color:var(--purple);border-color:rgba(170,68,255,0.25);}
+
+.btn-spin{width:100%;padding:15px;border:none;border-radius:10px;font-family:var(--font);font-size:13px;font-weight:900;letter-spacing:3px;cursor:pointer;transition:all .2s;background:linear-gradient(135deg,#3a1a5a,var(--purple));color:#fff;box-shadow:0 4px 20px rgba(170,68,255,0.35);}
+.btn-spin:not(:disabled):hover{transform:translateY(-2px);box-shadow:0 6px 32px rgba(170,68,255,0.55);}
+.btn-spin:disabled{opacity:.4;cursor:not-allowed;transform:none!important;}
+
+.pt{display:grid;grid-template-columns:repeat(1,1fr);gap:4px;margin-top:14px;position:relative;z-index:1;}
+.pt-row{display:flex;justify-content:space-between;align-items:center;padding:6px 8px;background:rgba(170,68,255,0.03);border:1px solid rgba(170,68,255,0.08);border-radius:8px;}
+.pt-combo{font-size:11px;letter-spacing:1px;}
+.pt-name{font-size:8px;flex:1;margin-left:6px;}
+.pt-mult{font-size:9px;font-weight:700;font-family:monospace;color:#5a4a6a;}
+.pt-row.blue .pt-name{color:var(--blue);}
+.pt-row.purple .pt-name{color:var(--purple);}
+.pt-row.pink .pt-name{color:var(--pink);}
+.pt-row.red .pt-name{color:var(--red);}
+.pt-row.gold .pt-name{color:var(--gold);}
+
+.hist-row{display:flex;gap:4px;flex-wrap:wrap;align-items:center;min-height:14px;margin-top:10px;}
+.hist-lbl{font-size:8px;color:#5a4a6a;letter-spacing:1px;flex-shrink:0;margin-right:2px;}
+.hist-dot{width:12px;height:12px;border-radius:50%;}
+.cstats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:12px;position:relative;z-index:1;}
+.cstat{background:rgba(170,68,255,0.05);border:1px solid rgba(170,68,255,0.12);border-radius:8px;padding:8px;text-align:center;}
+.cstat .sv{font-size:14px;font-weight:900;font-family:monospace;color:var(--purple);}
+.cstat .sl{font-size:8px;color:#5a4a6a;letter-spacing:1px;margin-top:2px;}
+
+#rarFlash{position:fixed;inset:0;pointer-events:none;opacity:0;z-index:200;}
+#rarFlash.show{animation:rf .5s ease;}
+@keyframes rf{0%,100%{opacity:0;}30%{opacity:1;}}
+
+#itemWonOv{position:fixed;inset:0;z-index:300;background:rgba(0,0,0,0.85);display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;}
+#itemWonOv.show{display:flex;animation:fadeInPopup .3s ease;}
+@keyframes fadeInPopup{from{opacity:0;}to{opacity:1;}}
+.iw-title{font-size:clamp(16px,4.5vw,26px);font-weight:900;letter-spacing:3px;text-shadow:0 0 24px currentColor;}
+.iw-img{width:120px;height:120px;object-fit:contain;filter:drop-shadow(0 8px 30px rgba(0,0,0,0.6));}
+.iw-name{font-size:clamp(12px,3.2vw,16px);color:#fff;max-width:85%;text-align:center;}
+.iw-price{font-size:clamp(14px,4vw,20px);font-weight:900;color:var(--gold);font-family:monospace;}
+.iw-close{padding:12px 28px;background:var(--gold);color:#0a0812;border:none;border-radius:24px;font-family:var(--font);font-size:10px;font-weight:700;letter-spacing:2px;cursor:pointer;margin-top:6px;}
+
+.autoplay-slot{margin-top:10px;}
+</style>
+    <script src="/static/sound.js"></script>
+    <script src="/static/big-win.js"></script>
+    <script src="/static/balance-animation.js"></script>
+    <script src="/static/page-transitions.js"></script>
+    <script src="/static/autoplay.js"></script>
+<link rel="stylesheet" href="/static/games-shared.css"><script src="/static/js/csrf.js"></script>
+</head>
+<body>
+<div id="rarFlash"></div>
+
+<div id="itemWonOv">
+  <div class="iw-title" id="iwTitle">WEAPON WON!</div>
+  <img class="iw-img" id="iwImg" src="" alt="" onerror="this.style.display='none'">
+  <div class="iw-name" id="iwName">—</div>
+  <div class="iw-price" id="iwPrice">—</div>
+  <button class="iw-close" onclick="closeItemWon()">CLAIM</button>
+</div>
+
+<div class="scan-overlay"></div>
+
+<header class="hdr">
+  <a class="back" href="/games"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><polyline points="15 18 9 12 15 6"/></svg>GAMES</a>
+  <span class="title">💎  SKIN SPIN</span>
+  <span class="bal" id="balDisplay">$—</span>
+</header>
+
+<div class="hud-frame">
+  <div class="case-display">
+    <div class="premise">5 reels, real skins only. Match <b>3+ of 5</b> and keep the weapon.</div>
+    <div class="rarity-row">
+      <div class="rar-pip blue" id="pip0"></div>
+      <div class="rar-pip purple" id="pip1"></div>
+      <div class="rar-pip pink" id="pip2"></div>
+      <div class="rar-pip red" id="pip3"></div>
+      <div class="rar-pip gold" id="pip4"></div>
+    </div>
+    <div class="reels" id="reelsRow">
+      <div class="reel-win" id="rw0"><div class="reel-strip-ss" id="rs0"></div></div>
+      <div class="reel-win" id="rw1"><div class="reel-strip-ss" id="rs1"></div></div>
+      <div class="reel-win" id="rw2"><div class="reel-strip-ss" id="rs2"></div></div>
+      <div class="reel-win" id="rw3"><div class="reel-strip-ss" id="rs3"></div></div>
+      <div class="reel-win" id="rw4"><div class="reel-strip-ss" id="rs4"></div></div>
+    </div>
+    <div class="result-display">
+      <div class="res-label miss" id="resLabel">READY TO SPIN</div>
+      <div class="res-sub" id="resSub"></div>
+    </div>
+  </div>
+
+  <div class="cstats">
+    <div class="cstat"><div class="sv" id="ssWins">0</div><div class="sl">SKINS WON</div></div>
+    <div class="cstat"><div class="sv" id="ssSpins">0</div><div class="sl">SPINS</div></div>
+    <div class="cstat"><div class="sv" id="ssStreak">0</div><div class="sl">STREAK</div></div>
+  </div>
+
+  <div class="controls">
+    <div class="bet-label">COST PER SPIN</div>
+    <div class="bet-disp" id="betDisp">💰 500 GAME MONEY</div>
+    <button class="btn-spin" id="spinBtn" onclick="spin()">💎  SPIN FOR SKINS</button>
+    <div style="display:flex;gap:6px;margin-top:8px;align-items:center;">
+      <span style="font-size:8px;color:#5a4a6a;letter-spacing:1px;flex-shrink:0;">AUTO</span>
+      <button class="adj" onclick="toggleAdv()">⚙️ AUTOPLAY</button>
+    </div>
+    <div class="autoplay-slot" id="ssAutoPanel"></div>
+    <div class="hist-row" id="ssHistRow"><span class="hist-lbl">SESSION:</span></div>
+  </div>
+
+  <div class="pt">
+    <div class="pt-row gold"><span class="pt-combo">⭐⭐⭐+</span><span class="pt-name">GOLD MATCH (3+/5)</span><span class="pt-mult">RARE SKIN</span></div>
+    <div class="pt-row red"><span class="pt-combo">🔴🔴🔴+</span><span class="pt-name">RED MATCH (3+/5)</span><span class="pt-mult">SKIN</span></div>
+    <div class="pt-row pink"><span class="pt-combo">💗💗💗+</span><span class="pt-name">PINK MATCH (3+/5)</span><span class="pt-mult">SKIN</span></div>
+    <div class="pt-row purple"><span class="pt-combo">🟪🟪🟪+</span><span class="pt-name">PURPLE MATCH (3+/5)</span><span class="pt-mult">SKIN</span></div>
+    <div class="pt-row blue"><span class="pt-combo">🟦🟦🟦+</span><span class="pt-name">BLUE MATCH (3+/5)</span><span class="pt-mult">SKIN</span></div>
+  </div>
+</div>
+
+<script>
+const RARITY_EMOJIS={Blue:'🟦',Purple:'🟪',Pink:'💗',Red:'🔴',Gold:'⭐',Bonus:'🎁'};
+const RARITY_ORDER=['Blue','Purple','Pink','Red','Gold'];
+const RARITY_COLORS={Blue:'var(--blue)',Purple:'var(--purple)',Pink:'var(--pink)',Red:'var(--red)',Gold:'var(--gold)',Bonus:'#ff69b4'};
+const RARITY_DOT_COLS={Blue:'#4488ff',Purple:'#aa44ff',Pink:'#ff69b4',Red:'#ff3333',Gold:'#ffd700',Bonus:'#ff69b4'};
+const REEL_COUNT=5;
+const SKIN_SPIN_COST=500;
+let balance=0,spinning=false,ssWins=0,ssSpins=0,ssStreak=0,ssHistory=[];
+let ssAP=null;
+
+async function init(){
+  await loadBal();
+  buildReels();
+}
+
+async function loadBal(){try{const d=await api('/api/user/me');balance=d.balance??0;document.getElementById('balDisplay').textContent='$'+balance.toLocaleString(undefined,{maximumFractionDigits:0});if(ssAP)ssAP.setBalance(balance);}catch(e){}}
+
+function buildReels(){
+  for(let i=0;i<REEL_COUNT;i++){
+    const strip=document.getElementById('rs'+i);
+    strip.innerHTML='';
+    for(let j=0;j<25;j++){
+      const rar=RARITY_ORDER[Math.floor(Math.random()*RARITY_ORDER.length)];
+      const cell=document.createElement('div');
+      cell.className='reel-cell-ss';
+      const emojiEl=document.createElement('div');emojiEl.className='r-emoji';emojiEl.textContent=RARITY_EMOJIS[rar]||'';
+      const rarEl=document.createElement('div');rarEl.className='r-rar';rarEl.style.color=RARITY_COLORS[rar]||'';rarEl.textContent=rar.toUpperCase();
+      cell.appendChild(emojiEl);cell.appendChild(rarEl);
+      strip.appendChild(cell);
+    }
+    strip.style.transform=`translateY(-${12*88}px)`;
+  }
+}
+
+async function spin(){
+  if(spinning||balance<SKIN_SPIN_COST){setResult('❌ INSUFFICIENT BALANCE','miss');Sound.error();return {win:false,multiplier:0,winAmount:0};}
+  spinning=true;
+  Sound.spin();
+  document.getElementById('spinBtn').disabled=true;
+  setResult('SPINNING…','miss');
+  document.getElementById('resSub').textContent='';
+  for(let i=0;i<REEL_COUNT;i++) document.getElementById('rw'+i).className='reel-win';
+  RARITY_ORDER.forEach((_,i)=>document.getElementById('pip'+i).classList.remove('active'));
+
+  for(let i=0;i<REEL_COUNT;i++){
+    const strip=document.getElementById('rs'+i);
+    const targetY=(12+Math.floor(Math.random()*8))*88;
+    strip.style.transition='none';
+    strip.style.transform=`translateY(-${12*88}px)`;
+    setTimeout(()=>{
+      strip.style.transition=`transform ${1.0+i*0.1}s cubic-bezier(.25,.46,.45,.94)`;
+      strip.style.transform=`translateY(-${targetY}px)`;
+    },20+i*25);
+  }
+
+  let roundResult={win:false,multiplier:0,winAmount:0};
+  try{
+    const d=await api('/api/games/easy/slots/skinspin/spin',{method:'POST',body:JSON.stringify({})});
+    await delay(1250);
+
+    for(let i=0;i<REEL_COUNT;i++){
+      const rar=d.rarities[i];
+      const strip=document.getElementById('rs'+i);
+      strip.innerHTML='';
+      for(let j=0;j<20;j++){
+        const r2=j===15?rar:RARITY_ORDER[Math.floor(Math.random()*RARITY_ORDER.length)];
+        const cell=document.createElement('div');
+        cell.className='reel-cell-ss';
+        const emojiEl2=document.createElement('div');emojiEl2.className='r-emoji';emojiEl2.textContent=RARITY_EMOJIS[r2]||'';
+        const rarEl2=document.createElement('div');rarEl2.className='r-rar';rarEl2.style.color=RARITY_COLORS[r2]||'';rarEl2.textContent=r2.toUpperCase();
+        cell.appendChild(emojiEl2);cell.appendChild(rarEl2);
+        strip.appendChild(cell);
+      }
+      strip.style.transition='none';strip.style.transform=`translateY(-${14*88}px)`;
+      setTimeout(()=>{strip.style.transition='transform .25s cubic-bezier(.34,1.56,.64,1)';strip.style.transform=`translateY(-${15*88}px)`;},20);
+      if(d.item_won) document.getElementById('rw'+i).className=`reel-win glow-${rar}`;
+    }
+
+    await delay(300);
+    Sound.reelStop();
+    await loadBal();
+
+    ssSpins++;document.getElementById('ssSpins').textContent=ssSpins;
+
+    if(d.item_won){
+      const rar=d.item_won.rarity||'Blue';
+      const pipIdx=RARITY_ORDER.indexOf(rar);
+      for(let i=0;i<=pipIdx;i++) document.getElementById('pip'+i).classList.add('active');
+      ssWins++;ssStreak++;document.getElementById('ssWins').textContent=ssWins;document.getElementById('ssStreak').textContent=ssStreak;
+      pushSSHist(rar);
+      Sound.win();
+      setResult((rar.toUpperCase())+' SKIN MATCH!',rar.toLowerCase());
+      document.getElementById('resSub').textContent='Weapon granted to your inventory';
+      doFlash(rar);
+      await showItemWon(d.item_won);
+      roundResult={win:true,multiplier:+((d.item_won.price||0)/SKIN_SPIN_COST).toFixed(2),winAmount:d.item_won.price||0};
+    }else{
+      Sound.loss();
+      ssStreak=0;document.getElementById('ssStreak').textContent=0;
+      pushSSHist(null);
+      setResult('NO MATCH','miss');
+      document.getElementById('resSub').textContent='';
+      roundResult={win:false,multiplier:0,winAmount:0};
+    }
+  }catch(e){
+    setResult('ERROR','miss');
+  }finally{
+    spinning=false;document.getElementById('spinBtn').disabled=false;
+  }
+  return roundResult;
+}
+
+let _itemWonResolve=null;
+
+// Returns a Promise that resolves only when the user clicks CLAIM -- no
+// auto-timeout, so autoplay genuinely pauses until the skin is acknowledged.
+function showItemWon(item){
+  const rar=item.rarity||'Blue';
+  const color=RARITY_COLORS[rar]||RARITY_COLORS.Blue;
+  const titleEl=document.getElementById('iwTitle');
+  titleEl.textContent=(item.is_stattrak?'STATTRAK™ ':'')+rar.toUpperCase()+' SKIN WON!';
+  titleEl.style.color=color;
+  document.getElementById('iwImg').src=item.image_url||'';
+  document.getElementById('iwName').textContent=item.name;
+  document.getElementById('iwPrice').textContent='$'+Number(item.price).toLocaleString(undefined,{maximumFractionDigits:2});
+  document.getElementById('itemWonOv').classList.add('show');
+  return new Promise(resolve=>{_itemWonResolve=resolve;});
+}
+function closeItemWon(){
+  document.getElementById('itemWonOv').classList.remove('show');
+  if(_itemWonResolve){const r=_itemWonResolve;_itemWonResolve=null;r();}
+}
+
+function pushSSHist(rar){ssHistory.push(rar);if(ssHistory.length>20)ssHistory.shift();const el=document.getElementById('ssHistRow');if(!el)return;el.innerHTML='<span class="hist-lbl">SESSION:</span>';ssHistory.forEach(r=>{const d=document.createElement('div');d.className='hist-dot';d.style.background=r?RARITY_DOT_COLS[r]||'#4488ff':'#3a2a4a';el.appendChild(d);});}
+
+function toggleAdv(){
+  if(!ssAP){
+    ssAP=new AutoPlay({
+      onRound: async()=>{ return await spin(); },
+      onStop: (reason)=>{},
+      roundDelay: 900,
+    });
+    ssAP.setBalance(balance);
+  }
+  const panel=document.getElementById('ssAutoPanel');
+  if(panel.querySelector('.autoplay-panel')){ panel.innerHTML=''; return; }
+  ssAP.bindUI(panel,{defaultRounds:10,getBalance:()=>balance});
+}
+
+function setResult(text,cls){
+  const el=document.getElementById('resLabel');
+  el.className='res-label '+cls;el.textContent=text;
+}
+
+function doFlash(rar){
+  const el=document.getElementById('rarFlash');
+  const colors={Blue:'rgba(68,136,255,0.2)',Purple:'rgba(170,68,255,0.2)',Pink:'rgba(255,105,180,0.25)',Red:'rgba(255,51,51,0.25)',Gold:'rgba(255,215,0,0.3)'};
+  el.style.background=`radial-gradient(ellipse at 50% 40%,${colors[rar]||colors.Blue},transparent 70%)`;
+  el.classList.remove('show');void el.offsetWidth;el.classList.add('show');
+}
+
+async function api(url,opts={}){const r=await fetch(url,{credentials:'include',headers:{'Content-Type':'application/json'},...opts});if(!r.ok){const e=await r.json().catch(()=>({}));throw new Error(e.detail||'Error');}return r.json();}
+function delay(ms){return new Promise(r=>setTimeout(r,ms));}
+init();
+</script>
+<script>if("serviceWorker"in navigator){navigator.serviceWorker.register("/static/sw.js").catch(function(){})}</script>
+<script src="/static/chat.js"></script>
+</body>
+</html>
