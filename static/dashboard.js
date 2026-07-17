@@ -4720,65 +4720,8 @@ window.switchTab = function(tab) {
         }
     })();
 
-    // ── Live lobby ticker ─────────────────────────────────────────
-    // Formats each event into an engaging marquee item
-    function formatTickerItem(event) {
-        const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-        const name = esc(event.username || 'Player');
-
-        switch (event.type) {
-            case 'crash': {
-                const mult = parseFloat(event.multiplier || 0).toFixed(1);
-                const win  = parseFloat(event.win_amount || 0).toFixed(2);
-                const color = mult >= 10 ? '#ff4444' : mult >= 5 ? '#ff69b4' : '#ffd700';
-                return `<span class="ticker-item">🔥 <strong>${name}</strong> cashed out <strong style="color:${color};">${mult}×</strong> on Crash &nbsp;<span style="color:#555;">(+$${win})</span></span>`;
-            }
-            case 'slots': {
-                const win = parseFloat(event.win_amount || 0).toFixed(2);
-                const emoji = win >= 10000 ? '💎' : win >= 2000 ? '💰' : '🎰';
-                return `<span class="ticker-item">${emoji} <strong>${name}</strong> hit <strong style="color:#4caf50;">$${win}</strong> jackpot on Slots</span>`;
-            }
-            case 'mines': {
-                const tiles = event.tiles_cleared || 0;
-                const mult  = parseFloat(event.multiplier || 0).toFixed(1);
-                return `<span class="ticker-item">🏆 <strong>${name}</strong> cleared <strong style="color:#4caf50;">${tiles}</strong> safe tiles on Mines &nbsp;<span style="color:#555;">${mult}×</span></span>`;
-            }
-            case 'case_open': {
-                const emoji = event.rarity_emoji || '📦';
-                const color = event.rarity === 'Gold' ? '#ffd700' : event.rarity === 'Red' ? '#ff4444' : '#ff69b4';
-                return `<span class="ticker-item">${emoji} <strong>${name}</strong> unboxed <strong style="color:${color};">${esc(event.item_name || 'item')}</strong></span>`;
-            }
-            case 'coinflip_win':
-            case 'dice_win': {
-                const win  = parseFloat(event.win_amount || 0).toFixed(2);
-                const game = event.type === 'coinflip_win' ? 'Coinflip' : 'Dice';
-                return `<span class="ticker-item">🎲 <strong>${name}</strong> won <strong style="color:#4caf50;">$${win}</strong> on ${game}</span>`;
-            }
-            default:
-                return `<span class="ticker-item">⚡ <strong>${name}</strong> won big</span>`;
-        }
-    }
-
-    async function loadLiveTicker() {
-        try {
-            const data = await fetch('/api/lobby-ticker?limit=20').then(r => r.json());
-            const track = document.getElementById('tickerTrack');
-            if (!track || !Array.isArray(data) || !data.length) {
-                track.innerHTML = '<span class="ticker-item" style="color:#555;">Waiting for players…</span>';
-                return;
-            }
-            const items = data.map(formatTickerItem);
-            // Add a separator item at the end for visual spacing
-            const sep = '<span class="ticker-item" style="color:#333;border:none;">✦</span>';
-            const html = [...items, sep, ...items, sep, ...items].join('');
-            track.innerHTML = html;
-            track.style.animationDuration = (items.length * 5) + 's';
-        } catch(e) { /* silently ignore ticker errors */ }
-    }
-
-    // Poll ticker every 20 seconds
-    loadLiveTicker();
-    setInterval(loadLiveTicker, 20000);
+    // Live lobby ticker moved to static/js/live-ticker.js (self-contained,
+    // shared across every page that includes it, not just the dashboard).
 
     // ============================================
     // SECTION 99: FRIENDS SYSTEM

@@ -3,6 +3,7 @@ import secrets
 from fastapi import APIRouter, HTTPException, Request
 from shared import get_db, require_auth, logger, SKINS_DATA, ITEM_ID_TO_DISPLAY_NAME
 from shared import secure_randint, secure_choice, secure_random, require_game_enabled
+from shared import get_user_id_from_session
 
 router = APIRouter()
 
@@ -256,7 +257,10 @@ async def memory_submit(request: Request):
 
 @router.get("/api/ticket-games/{game_type}/leaderboard")
 async def arcade_leaderboard(game_type: str, request: Request):
-    user_id = await require_auth(request)
+    # Public board -- viewing doesn't require a session, matching every other
+    # leaderboard tab on static/leaderboard.html. A session (if present) is
+    # only used to fill in "your_best"; logged-out visitors just get None.
+    user_id = await get_user_id_from_session(request)
     direction = LEADERBOARD_DIRECTION.get(game_type)
     if not direction:
         raise HTTPException(404, "No leaderboard for this game")
@@ -273,11 +277,13 @@ async def arcade_leaderboard(game_type: str, request: Request):
             ORDER BY t.user_id, t.score {order}
         """, game_type)
         ranked = sorted(bests, key=lambda r: r["score"], reverse=(direction == "desc"))[:10]
-        my_best = await conn.fetchval(f"""
-            SELECT score FROM ticket_games
-            WHERE user_id=$1 AND game_type=$2 AND status='completed'
-            ORDER BY score {order} LIMIT 1
-        """, user_id, game_type)
+        my_best = None
+        if user_id:
+            my_best = await conn.fetchval(f"""
+                SELECT score FROM ticket_games
+                WHERE user_id=$1 AND game_type=$2 AND status='completed'
+                ORDER BY score {order} LIMIT 1
+            """, user_id, game_type)
     return {
         "leaderboard": [
             {"user_id": str(r["user_id"]), "username": r["username"], "score": float(r["score"])}

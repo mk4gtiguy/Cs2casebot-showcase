@@ -50,6 +50,13 @@
   </div>
 </div>
 
+<div class="live-ticker" id="liveTicker">
+  <div class="ticker-track" id="tickerTrack">
+    <span class="ticker-item" style="color:#555;">Loading recent drops…</span>
+  </div>
+</div>
+<script src="/static/js/live-ticker.js"></script>
+
 <div class="container">
   <div class="tabs" id="lbTabs">
     <button class="tab active" onclick="switchBoard('money')">💰 Money</button>
@@ -62,6 +69,10 @@
     <button class="tab" onclick="switchBoard('profit')">📈 Profit</button>
     <button class="tab" onclick="switchBoard('ticket_wins')">🎉 Ticket Wins</button>
     <button class="tab" onclick="switchBoard('game-wins')">🏅 Game Wins</button>
+    <button class="tab" onclick="switchBoard('arcade_reaction')">⚡ Reaction Time</button>
+    <button class="tab" onclick="switchBoard('arcade_aim')">🎯 Aim Trainer</button>
+    <button class="tab" onclick="switchBoard('arcade_float')">🔬 Float Guesser</button>
+    <button class="tab" onclick="switchBoard('arcade_memory')">🧠 Memory Sequence</button>
   </div>
 
   <select class="game-select" id="gameSelect" onchange="loadLeaderboard()">
@@ -90,6 +101,8 @@
     <option value="coinflip">Coinflip</option>
   </select>
 
+  <div id="yourBest" style="display:none;color:var(--muted);font-size:12px;margin-bottom:8px;"></div>
+
   <div class="card">
     <div id="lbList"><div class="lb-empty">Loading…</div></div>
   </div>
@@ -105,11 +118,14 @@ async function api(url) {
   return r.json();
 }
 
+const ARCADE_GAME_NAMES = { reaction: 'Reaction Time', aim: 'Aim Trainer', float: 'Float Guesser', memory: 'Memory Sequence' };
+
 function switchBoard(board) {
   currentBoard = board;
   document.querySelectorAll('#lbTabs .tab').forEach(t => t.classList.remove('active'));
   event.target.classList.add('active');
   document.getElementById('gameSelect').style.display = board === 'game-wins' ? 'block' : 'none';
+  document.getElementById('yourBest').style.display = 'none';
   loadLeaderboard();
 }
 
@@ -123,18 +139,32 @@ function medalRank(i) {
 function formatValue(board, value) {
   const n = Number(value) || 0;
   if (board === 'money' || board === 'profit') return '$' + n.toLocaleString(undefined, {maximumFractionDigits: 2});
+  if (board === 'arcade_reaction') return Math.round(n) + ' ms';
+  if (board === 'arcade_aim') return n.toLocaleString() + ' hits';
+  if (board === 'arcade_float') return n.toFixed(4);
+  if (board === 'arcade_memory') return n.toLocaleString() + ' correct';
   return n.toLocaleString();
 }
 
 async function loadLeaderboard() {
   const listEl = document.getElementById('lbList');
+  const bestEl = document.getElementById('yourBest');
   listEl.innerHTML = '<div class="lb-empty">Loading…</div>';
+  bestEl.style.display = 'none';
   try {
     let data;
     if (currentBoard === 'game-wins') {
       const game = document.getElementById('gameSelect').value;
       data = await api(`/api/leaderboard/game-wins?game=${encodeURIComponent(game)}&limit=25`);
       renderList(data.users || [], 'wins', 'game-wins');
+    } else if (currentBoard.startsWith('arcade_')) {
+      const gameType = currentBoard.slice('arcade_'.length);
+      data = await api(`/api/ticket-games/${gameType}/leaderboard`);
+      renderList(data.leaderboard || [], 'score', currentBoard);
+      if (data.your_best != null) {
+        bestEl.textContent = `Your best at ${ARCADE_GAME_NAMES[gameType] || gameType}: ${formatValue(currentBoard, data.your_best)}`;
+        bestEl.style.display = 'block';
+      }
     } else {
       data = await api(`/api/leaderboard/${currentBoard}?limit=25`);
       renderList(data.users || [], 'value', currentBoard);

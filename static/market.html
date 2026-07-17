@@ -577,6 +577,12 @@
   </div>
 </header>
 
+<div class="live-ticker" id="liveTicker">
+  <div class="ticker-track" id="tickerTrack">
+    <span class="ticker-item" style="color:#555;">Loading recent drops…</span>
+  </div>
+</div>
+
 <!-- Main -->
 <div class="page-wrap">
   <div class="market-title-row">
@@ -1063,6 +1069,7 @@ loadBalance();
 <script>if("serviceWorker"in navigator){navigator.serviceWorker.register("/static/sw.js").catch(function(){})}</script>
 <script src="/static/chat.js"></script>
 <script src="/static/js/site-notices.js"></script>
+<script src="/static/js/live-ticker.js"></script>
 <script src="/static/js/agent-egg.js"></script>
 </body>
 </html>
