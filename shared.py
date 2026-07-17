@@ -1113,6 +1113,111 @@ STICKER_VALUES = {
 }
 
 # ============================================================
+# EXTRA STICKER CAPSULES — auto-generated from containers.json
+# ============================================================
+# The 20 capsules above were hand-curated, but containers.json actually has
+# 228 real STICKER_CAPSULE-type entries with a matching sticker pool in
+# sticker_contents.json -- meaning ~208 real capsules (and the ~1,800+
+# sticker images only they use) were sitting completely unreachable in the
+# shop. Rather than hand-writing hundreds more dict entries, build them
+# programmatically at startup. containers.json has no price field, so price
+# is derived from the pool's average per-sticker value (STICKER_VALUES,
+# keyed by the same rarity-tier emoji the 20 hand-curated capsules use)
+# at ~2.5% of that average -- calibrated to land close to what those 20
+# already charge for a similar pool, then clamped/rounded for clean pricing.
+STICKER_CONTENTS_JSON_PATH = os.path.join(os.path.dirname(__file__), "sticker_contents.json")
+STICKERS_JSON_PATH = os.path.join(os.path.dirname(__file__), "stickers.json")
+
+# stickers.json's own `rarity` field (HIGH_GRADE/REMARKABLE/EXOTIC/
+# EXTRAORDINARY/CONTRABAND) maps 1:1 onto the emoji tiers already used by
+# the 20 hand-curated capsules -- confirmed by cross-referencing specific
+# sticker IDs (e.g. id 9431-9434, the Austin 2025 apEX autograph set).
+STICKER_RARITY_TO_EMOJI = {
+    "HIGH_GRADE":    "💫",
+    "REMARKABLE":    "👑 Rare",
+    "EXOTIC":        "🔥",
+    "EXTRAORDINARY": "👑 Legendary",
+    "CONTRABAND":    "👑 Legendary",   # only 1 sticker total has this rarity
+    "DEFAULT":       "💫",             # legacy 2013-era stickers, no tier
+}
+
+def _capsule_category(name: str) -> str:
+    """Buckets a capsule by its own containers.json name -- no separate
+    taxonomy needed, the naming conventions already say what it is."""
+    if "Autograph Capsule |" in name:
+        return "team_autograph"
+    if any(k in name for k in ("Legends", "Challengers", "Champions", "Contenders", "Finalists")):
+        return "major_autograph"
+    return "retail_community"
+
+def _build_extra_sticker_capsules() -> Dict[str, dict]:
+    if not (os.path.exists(CONTAINERS_JSON_PATH) and os.path.exists(STICKER_CONTENTS_JSON_PATH)
+            and os.path.exists(STICKERS_JSON_PATH)):
+        logger.warning("⚠️ containers.json/sticker_contents.json/stickers.json missing "
+                        "— only the 20 hand-curated sticker capsules will be available")
+        return {}
+
+    with open(CONTAINERS_JSON_PATH, "r", encoding="utf-8") as f:
+        _containers = json.load(f)
+    with open(STICKER_CONTENTS_JSON_PATH, "r", encoding="utf-8") as f:
+        _contents = json.load(f)
+    with open(STICKERS_JSON_PATH, "r", encoding="utf-8") as f:
+        _stickers = json.load(f)
+
+    _stickers_by_id = {s["id"]: s for s in _stickers}
+    _pool_by_container_id = {c["containerId"]: c.get("stickerIds", []) for c in _contents}
+    _existing_images = {c["image"] for c in STICKER_CAPSULES.values()}
+
+    result: Dict[str, dict] = {}
+    for c in _containers:
+        if c.get("type") != "STICKER_CAPSULE":
+            continue
+        container_id = c["id"]
+        pool_ids = _pool_by_container_id.get(container_id)
+        if not pool_ids:
+            continue
+        image = c.get("containerImage")
+        if image in _existing_images:
+            continue  # already one of the 20 hand-curated capsules above
+
+        stickers = []
+        for sid in pool_ids:
+            s = _stickers_by_id.get(sid)
+            if not s:
+                continue
+            rarity_emoji = STICKER_RARITY_TO_EMOJI.get(s.get("rarity", "DEFAULT"), "💫")
+            stickers.append({"name": s["name"], "rarity": rarity_emoji, "image": s["stickerImage"]})
+        if not stickers:
+            continue
+
+        avg_val = sum(STICKER_VALUES.get(s["rarity"], 0.25) for s in stickers) / len(stickers)
+        raw_price = min(max(avg_val * 0.025, 0.50), 6.00)
+        price = round(raw_price * 4) / 4  # nearest $0.25
+
+        name = c["name"]
+        result[f"capsule_{container_id}"] = {
+            "name": name,
+            "emoji": "🎟️",
+            "price": price,
+            "image": image,
+            "category": _capsule_category(name),
+            "stickers": stickers,
+        }
+    return result
+
+# Tag the 20 hand-curated capsules with a category too, same inference rule,
+# so the frontend can treat all sticker capsules uniformly.
+for _cid, _cdata in STICKER_CAPSULES.items():
+    _cdata.setdefault("category", _capsule_category(_cdata["name"]))
+
+_EXTRA_STICKER_CAPSULES = _build_extra_sticker_capsules()
+STICKER_CAPSULES.update(_EXTRA_STICKER_CAPSULES)
+logger.info(
+    f"✅ Built {len(_EXTRA_STICKER_CAPSULES)} additional sticker capsules from containers.json "
+    f"({len(STICKER_CAPSULES)} total sticker capsules available)"
+)
+
+# ============================================================
 # BOT-SPECIFIC STICKER CAPSULES (simplified for Discord commands)
 # ============================================================
 

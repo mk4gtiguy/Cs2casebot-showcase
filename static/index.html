@@ -395,7 +395,28 @@
 
                 </div>
 
+                <div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap;align-items:center;">
+
+                    <input type="text" id="capsuleSearch" placeholder="🔍 Search capsules…" oninput="filterCapsules()"
+                           style="flex:1;min-width:180px;padding:8px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.03);color:#fff;font-size:13px;">
+
+                </div>
+
+                <div style="display:flex;gap:6px;margin-bottom:15px;flex-wrap:wrap;" id="capsuleCategoryTabs">
+
+                    <button class="btn btn-sm btn-primary" onclick="setCapsuleCategory('all')" id="capcat-all">All <span id="capcat-count-all"></span></button>
+
+                    <button class="btn btn-sm btn-outline" onclick="setCapsuleCategory('retail_community')" id="capcat-retail_community">🎨 Retail &amp; Community <span id="capcat-count-retail_community"></span></button>
+
+                    <button class="btn btn-sm btn-outline" onclick="setCapsuleCategory('team_autograph')" id="capcat-team_autograph">✍️ Team Autographs <span id="capcat-count-team_autograph"></span></button>
+
+                    <button class="btn btn-sm btn-outline" onclick="setCapsuleCategory('major_autograph')" id="capcat-major_autograph">🏆 Major Tournament Autographs <span id="capcat-count-major_autograph"></span></button>
+
+                </div>
+
                 <div class="capsule-grid" id="capsuleGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:15px;"></div>
+
+                <div id="capsuleEmpty" class="lb-empty" style="display:none;text-align:center;color:#888;font-size:13px;padding:24px;">No capsules match your search.</div>
 
                 <div id="capsuleResult" style="margin-top:15px;"></div>
 

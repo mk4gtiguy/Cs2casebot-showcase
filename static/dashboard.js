@@ -1387,6 +1387,13 @@
         document.head.appendChild(s);
     })();
 
+    let _capsuleCategory = 'all';
+    let _capsuleSearchTerm = '';
+    const CAPSULE_CATEGORY_LABELS = {
+        all: 'All', retail_community: 'Retail & Community',
+        team_autograph: 'Team Autographs', major_autograph: 'Major Tournament Autographs',
+    };
+
     async function loadCapsules() {
         try {
             const live = await apiCall('/api/capsules');
@@ -1396,11 +1403,50 @@
             }
         } catch (e) { console.warn('Live capsule prices unavailable, using cached list:', e); }
 
+        Object.keys(CAPSULE_CATEGORY_LABELS).forEach(cat => {
+            const el = document.getElementById('capcat-count-' + cat);
+            if (!el) return;
+            const n = cat === 'all' ? STICKER_CAPSULES.length : STICKER_CAPSULES.filter(c => (c.category || 'retail_community') === cat).length;
+            el.textContent = `(${n})`;
+        });
+
+        renderCapsuleGrid();
+    }
+
+    function setCapsuleCategory(cat) {
+        _capsuleCategory = cat;
+        document.querySelectorAll('#capsuleCategoryTabs .btn').forEach(b => b.classList.remove('btn-primary', 'active'));
+        const btn = document.getElementById('capcat-' + cat);
+        if (btn) { btn.classList.add('btn-primary', 'active'); btn.classList.remove('btn-outline'); }
+        document.querySelectorAll('#capsuleCategoryTabs .btn').forEach(b => { if (b !== btn) b.classList.add('btn-outline'); });
+        renderCapsuleGrid();
+    }
+
+    function filterCapsules() {
+        _capsuleSearchTerm = (document.getElementById('capsuleSearch').value || '').trim().toLowerCase();
+        renderCapsuleGrid();
+    }
+
+    function renderCapsuleGrid() {
         const grid = document.getElementById('capsuleGrid');
-        grid.innerHTML = STICKER_CAPSULES.map(c => {
+        const emptyEl = document.getElementById('capsuleEmpty');
+        const filtered = STICKER_CAPSULES.filter(c => {
+            const matchesCategory = _capsuleCategory === 'all' || (c.category || 'retail_community') === _capsuleCategory;
+            const matchesSearch = !_capsuleSearchTerm || c.name.toLowerCase().includes(_capsuleSearchTerm);
+            return matchesCategory && matchesSearch;
+        });
+
+        if (!filtered.length) {
+            grid.innerHTML = '';
+            emptyEl.style.display = 'block';
+            return;
+        }
+        emptyEl.style.display = 'none';
+
+        grid.innerHTML = filtered.map(c => {
             const imgSrc = c.image ? `/static/images/containers/${c.image.replace('assets/containers/','')}` : null;
             const imgHtml = imgSrc
-                ? `<img src="${imgSrc}" alt="${c.name}" style="width:100px;height:80px;object-fit:contain;margin:8px 0;filter:drop-shadow(0 0 10px rgba(255,200,50,0.3));transition:filter 0.3s;">`
+                ? `<img src="${imgSrc}" alt="${esc(c.name)}" style="width:100px;height:80px;object-fit:contain;margin:8px 0;filter:drop-shadow(0 0 10px rgba(255,200,50,0.3));transition:filter 0.3s;">`
                 : `<div style="font-size:40px;margin:10px 0;">${c.emoji}</div>`;
             return `
                 <div class="capsule-card" data-capsule-id="${c.id}" onclick="openStickerCapsule('${c.id}', state.capsuleBulkQuantity)"
@@ -1409,7 +1455,7 @@
                      onmouseenter="this.style.borderColor='rgba(255,215,0,0.6)';this.style.transform='translateY(-3px)';this.style.boxShadow='0 8px 30px rgba(255,215,0,0.15)'"
                      onmouseleave="this.style.borderColor='rgba(255,215,0,0.25)';this.style.transform='';this.style.boxShadow=''">
                     ${imgHtml}
-                    <div style="font-weight:bold;color:#fff;font-size:12px;margin-top:4px;">${c.name}</div>
+                    <div style="font-weight:bold;color:#fff;font-size:12px;margin-top:4px;">${esc(c.name)}</div>
                     <div style="color:#ffd700;font-size:13px;font-weight:700;margin-top:3px;">$${c.price.toFixed(2)}</div>
                     <button class="btn btn-primary btn-sm" style="margin-top:8px;font-size:9px;padding:4px 10px;">Open${state.capsuleBulkQuantity > 1 ? ' ' + state.capsuleBulkQuantity : ''}</button>
                 </div>

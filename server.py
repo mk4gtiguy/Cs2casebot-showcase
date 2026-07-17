@@ -3022,6 +3022,7 @@ async def list_capsules():
             "id": cid, "name": c["name"], "emoji": fix_surrogate_emoji(c.get("emoji", "🧷")),
             "image": c.get("image", ""),
             "sticker_count": len(c.get("stickers", [])),
+            "category": c.get("category", "retail_community"),
             "price": eff["price"], "featured": eff["featured"],
         })
     return {"capsules": capsules}
