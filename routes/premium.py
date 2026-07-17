@@ -667,7 +667,8 @@ def _get_ticket_case_item() -> Optional[dict]:
     float_value = fmin + secure_random() * (fmax - fmin)
 
     condition   = get_skin_condition(float_value)
-    is_stattrak = secure_random() < 0.1
+    # Real CS2 gloves never have StatTrak -- only weapons and knives do.
+    is_stattrak = (not skin.get('is_glove')) and secure_random() < 0.1
     price       = calculate_item_value(chosen_rarity, condition, None, is_stattrak)
 
     full_name    = f"{skin['weapon_type']} | {skin['skin_name']}"

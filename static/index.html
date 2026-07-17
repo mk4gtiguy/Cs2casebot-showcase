@@ -347,9 +347,28 @@
 
                     <h4 style="color:#888;margin-bottom:6px;font-size:12px;">All Cases</h4>
 
-                    <div style="color:#888;font-size:11px;margin-bottom:10px;">Odds (same for every case): 🟦 Blue 87.4% · 🟪 Purple 5.0% · 💗 Pink 2.5% · 🔴 Red 2.5% · ⭐ Gold 2.6%</div>
+                    <div style="color:#888;font-size:11px;margin-bottom:10px;">Odds (regular cases): 🟦 Blue 87.4% · 🟪 Purple 5.0% · 💗 Pink 2.5% · 🔴 Red 2.5% · ⭐ Gold 2.6% — Souvenir Packages roll the same tiers but never include Gold (knives/gloves), matching real CS2 souvenir drops.</div>
+
+                    <div style="display:flex;gap:10px;margin-bottom:12px;flex-wrap:wrap;align-items:center;">
+
+                        <input type="text" id="caseSearch" placeholder="🔍 Search cases…" oninput="filterCases()"
+                               style="flex:1;min-width:180px;padding:8px 12px;border-radius:8px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.03);color:#fff;font-size:13px;">
+
+                    </div>
+
+                    <div style="display:flex;gap:6px;margin-bottom:15px;flex-wrap:wrap;" id="caseCategoryTabs">
+
+                        <button class="btn btn-sm btn-primary" onclick="setCaseCategory('all')" id="casecat-all">All <span id="casecat-count-all"></span></button>
+
+                        <button class="btn btn-sm btn-outline" onclick="setCaseCategory('case')" id="casecat-case">📦 Cases <span id="casecat-count-case"></span></button>
+
+                        <button class="btn btn-sm btn-outline" onclick="setCaseCategory('souvenir')" id="casecat-souvenir">🏆 Souvenir Packages <span id="casecat-count-souvenir"></span></button>
+
+                    </div>
 
                     <div class="case-grid" id="caseGrid"></div>
+
+                    <div id="caseEmpty" class="lb-empty" style="display:none;text-align:center;color:#888;font-size:13px;padding:24px;">No cases match your search.</div>
 
                 </div>
 

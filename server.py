@@ -201,6 +201,13 @@ async def lifespan(app: FastAPI):
     except Exception as e:
         logger.warning(f"Item House Jackpot table init skipped: {e}")
 
+    # ── Terminal (offer-based case) table ──
+    try:
+        from routes.terminal import init_terminal_tables
+        await init_terminal_tables()
+    except Exception as e:
+        logger.warning(f"Terminal table init skipped: {e}")
+
     # ── Item Wager Duel tables ──
     try:
         from routes.item_wager_duel import init_duel_tables, recover_stale_duels, expire_stale_item_duels_loop
@@ -586,6 +593,7 @@ def _safe_include(module_path: str, attr: str = "router"):
 _safe_include("routes.case_battles")
 _safe_include("routes.item_jackpot")
 _safe_include("routes.item_house_jackpot")
+_safe_include("routes.terminal")
 _safe_include("routes.item_wager_duel")
 _safe_include("routes.item_trade_up_duel")
 _safe_include("routes.dice_duel")
@@ -2853,6 +2861,7 @@ async def list_cases():
         eff = await get_effective_case(k, v["price"], k in FEATURED_CASES)
         cases.append({
             "id": k, "name": v["name"], "emoji": v["emoji"],
+            "category": v.get("category", "case"),
             "price": eff["price"], "original_price": eff["original_price"],
             "on_sale": eff["on_sale"],
         })

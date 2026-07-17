@@ -471,7 +471,7 @@
                         <img src="/api/case-image/${c.id}" alt="${esc(c.name)}" onerror="this.style.display='none'">
                         <div class="name">${esc(c.name)}</div>
                         <div class="price">$${c.price.toFixed(2)}</div>
-                        <button class="btn btn-primary btn-sm" style="margin-top:8px;font-size:9px;padding:4px 10px;">Open ${state.bulkQuantity > 1 ? state.bulkQuantity : ''}</button>
+                        <button class="btn btn-primary btn-sm" style="margin-top:8px;font-size:9px;padding:4px 10px;">Open ${(!TERMINAL_THEMED_CASES.has(c.id) && state.bulkQuantity > 1) ? state.bulkQuantity : ''}</button>
                     </div>
                 `).join('');
             } else {
@@ -524,25 +524,71 @@
             }
         });
     }
+    let _allCasesData = [];
+    let _caseCategory = 'all';
+    let _caseSearchTerm = '';
+    const CASE_CATEGORY_LABELS = { all: 'All', case: '📦 Cases', souvenir: '🏆 Souvenir Packages' };
+
     async function loadCases() {
         try {
             const data = await apiCall('/api/cases');
             data.cases.forEach(c => { casesMap[c.id] = { name: c.name, price: c.price }; });
-            const grid = document.getElementById('caseGrid');
-            grid.innerHTML = data.cases.map(c => {
-                const isFav = favoriteIds.includes(c.id);
-                return `
-                    <div class="case-btn" data-case-id="${c.id}" onclick="openCasePopup('${c.id}', ${state.bulkQuantity})">
-                        <span class="fav-star ${isFav ? 'active' : 'inactive'}" data-case-id="${c.id}" onclick="event.stopPropagation(); toggleFavorite('${c.id}')">${isFav ? '⭐' : '☆'}</span>
-                        <img src="/api/case-image/${c.id}" alt="${esc(c.name)}" onerror="this.style.display='none'">
-                        <div class="name">${esc(c.name)}</div>
-                        <div class="price">$${c.price.toFixed(2)}</div>
-                        <button class="btn btn-primary btn-sm" style="margin-top:8px;font-size:9px;padding:4px 10px;">Open ${state.bulkQuantity > 1 ? state.bulkQuantity : ''}</button>
-                    </div>
-                `;
-            }).join('');
+            _allCasesData = data.cases;
+
+            Object.keys(CASE_CATEGORY_LABELS).forEach(cat => {
+                const el = document.getElementById('casecat-count-' + cat);
+                if (!el) return;
+                const n = cat === 'all' ? _allCasesData.length : _allCasesData.filter(c => (c.category || 'case') === cat).length;
+                el.textContent = `(${n})`;
+            });
+
+            renderCaseGrid();
             updateAutoAdvanceButton();
         } catch (e) { console.error('Load cases error:', e); }
+    }
+
+    function setCaseCategory(cat) {
+        _caseCategory = cat;
+        document.querySelectorAll('#caseCategoryTabs .btn').forEach(b => b.classList.remove('btn-primary', 'active'));
+        const btn = document.getElementById('casecat-' + cat);
+        if (btn) { btn.classList.add('btn-primary', 'active'); btn.classList.remove('btn-outline'); }
+        document.querySelectorAll('#caseCategoryTabs .btn').forEach(b => { if (b !== btn) b.classList.add('btn-outline'); });
+        renderCaseGrid();
+    }
+
+    function filterCases() {
+        _caseSearchTerm = (document.getElementById('caseSearch').value || '').trim().toLowerCase();
+        renderCaseGrid();
+    }
+
+    function renderCaseGrid() {
+        const grid = document.getElementById('caseGrid');
+        const emptyEl = document.getElementById('caseEmpty');
+        const filtered = _allCasesData.filter(c => {
+            const matchesCategory = _caseCategory === 'all' || (c.category || 'case') === _caseCategory;
+            const matchesSearch = !_caseSearchTerm || c.name.toLowerCase().includes(_caseSearchTerm);
+            return matchesCategory && matchesSearch;
+        });
+
+        if (!filtered.length) {
+            grid.innerHTML = '';
+            emptyEl.style.display = 'block';
+            return;
+        }
+        emptyEl.style.display = 'none';
+
+        grid.innerHTML = filtered.map(c => {
+            const isFav = favoriteIds.includes(c.id);
+            return `
+                <div class="case-btn" data-case-id="${c.id}" onclick="openCasePopup('${c.id}', ${state.bulkQuantity})">
+                    <span class="fav-star ${isFav ? 'active' : 'inactive'}" data-case-id="${c.id}" onclick="event.stopPropagation(); toggleFavorite('${c.id}')">${isFav ? '⭐' : '☆'}</span>
+                    <img src="/api/case-image/${c.id}" alt="${esc(c.name)}" onerror="this.style.display='none'">
+                    <div class="name">${esc(c.name)}</div>
+                    <div class="price">$${c.price.toFixed(2)}</div>
+                    <button class="btn btn-primary btn-sm" style="margin-top:8px;font-size:9px;padding:4px 10px;">Open ${(!TERMINAL_THEMED_CASES.has(c.id) && state.bulkQuantity > 1) ? state.bulkQuantity : ''}</button>
+                </div>
+            `;
+        }).join('');
     }
     function setBulkQuantity(qty) {
         state.bulkQuantity = qty;
@@ -562,8 +608,17 @@
     // ============================================
     // SECTION 7: NEW CS2-STYLE REEL FUNCTIONS (FIXED IMAGE MAPPING)
     // ============================================
+    // Cases that use the offer-based terminal flow (buy/skip a sequence of
+    // specific priced items) instead of the standard random-reel case-opening
+    // flow -- matches how real CS2 terminals like the Dead Hand Terminal work.
+    const TERMINAL_THEMED_CASES = new Set(['dead_hand_terminal']);
+
     function openCasePopup(caseId, quantity = 1) {
         if (isOpening) return;
+        if (TERMINAL_THEMED_CASES.has(caseId)) {
+            openTerminalPopup(caseId);
+            return;
+        }
         isOpening = true;
         state.popupMode = 'case';
         state.popupCaseId = caseId;
@@ -572,8 +627,103 @@
         state.popupItems = [];
         const overlay = document.getElementById('popupOverlay');
         overlay.classList.add('show');
+        document.getElementById('popupContent').classList.remove('terminal-theme');
         document.getElementById('popupBody').innerHTML = `<div class="loading" style="font-size:18px;padding:40px;">Opening case${quantity > 1 ? 'es' : ''}...</div>`;
         openCaseBatch(caseId, quantity).finally(() => { isOpening = false; });
+    }
+
+    // ============================================
+    // TERMINAL OFFER FLOW (Dead Hand Terminal etc.)
+    // Free to "insert"; the terminal price is paid once on /terminal/open.
+    // It then shows 5 offers one at a time -- BUY (pay that offer's price,
+    // item goes to inventory) or SKIP (free, move to the next offer). After
+    // the 5th offer is resolved the terminal is spent.
+    // ============================================
+    const TERMINAL_BOOT_LINES = [
+        '> ACCESSING TERMINAL...',
+        '> AUTHENTICATING UPLINK...',
+        '> DECRYPTING PAYLOAD...',
+        '> READY.'
+    ];
+
+    async function openTerminalPopup(caseId) {
+        if (isOpening) return;
+        isOpening = true;
+        state.popupMode = 'terminal';
+        state.popupCaseId = caseId;
+        const overlay = document.getElementById('popupOverlay');
+        overlay.classList.add('show');
+        document.getElementById('popupContent').classList.add('terminal-theme');
+        document.getElementById('popupBody').innerHTML = `<div class="terminal-boot" id="terminalBoot">
+            ${TERMINAL_BOOT_LINES.map((line, i) => `<div class="terminal-boot-line" style="animation-delay:${i * 320}ms">${esc(line)}</div>`).join('')}
+        </div>`;
+        try {
+            // Resume an already-active terminal (e.g. user closed the popup mid-run)
+            // instead of erroring, so a paid-for terminal is never stranded.
+            const existing = await apiCall('/api/terminal/session', { method: 'GET' });
+            const data = (existing.session && existing.session.case_id === caseId)
+                ? existing.session
+                : await apiCall('/api/terminal/open', { method: 'POST', body: JSON.stringify({ case_id: caseId }) });
+            await loadBalance();
+            setTimeout(() => renderTerminalOffer(data), TERMINAL_BOOT_LINES.length * 320 + 250);
+        } catch (e) {
+            document.getElementById('popupBody').innerHTML = `<div class="error" style="font-size:18px;padding:20px;">❌ ${e.message || 'Failed to open terminal'}<br><br><button class="btn btn-primary" onclick="closePopup()">Close</button></div>`;
+        } finally {
+            isOpening = false;
+        }
+    }
+
+    function renderTerminalOffer(session) {
+        state.currentTerminalSession = session;
+        if (session.status === 'completed' || !session.current_offer) {
+            document.getElementById('popupBody').innerHTML = `
+                <div class="terminal-boot" style="padding:30px 20px;">
+                    <div class="terminal-boot-line" style="animation-delay:0ms">> TERMINAL DEPLETED.</div>
+                    <div class="terminal-boot-line" style="animation-delay:250ms">> ${session.items_bought} item(s) acquired, $${Number(session.total_spent).toFixed(2)} spent.</div>
+                </div>
+                <button class="btn btn-primary" onclick="closePopup()" style="margin-top:10px;">Close</button>
+            `;
+            return;
+        }
+        const offer = session.current_offer;
+        const rarityClass = (offer.rarity || 'blue').toLowerCase();
+        const imgSrc = offer.image_filename ? `/static/images/skins/${offer.image_filename}` : `/api/skin-image?name=${encodeURIComponent(offer.name)}`;
+        document.getElementById('popupBody').innerHTML = `
+            <div style="margin-bottom:6px;color:#00ff41;font-family:'Courier New',monospace;font-size:12px;">&gt; OFFER ${offer.index + 1} OF ${session.total_offers}</div>
+            <div class="terminal-offer-card rarity-${rarityClass}" id="terminalOfferCard">
+                <img class="terminal-offer-img" src="${imgSrc}" alt="${esc(offer.display_name)}" onerror="this.src='/static/images/Default CS2 Weapons/weapon_ak47.png'">
+                <div class="terminal-offer-name">${esc(offer.display_name)}</div>
+                <div class="terminal-offer-meta">${esc(offer.condition || '')}${offer.is_stattrak ? ' · StatTrak™' : ''}</div>
+                <div class="terminal-offer-price">$${Number(offer.price).toFixed(2)}</div>
+            </div>
+            <div style="display:flex;gap:10px;margin-top:16px;justify-content:center;">
+                <button class="btn btn-primary" onclick="terminalDecide('buy')">💰 BUY — $${Number(offer.price).toFixed(2)}</button>
+                <button class="btn" onclick="terminalDecide('skip')">SKIP ▶</button>
+            </div>
+        `;
+    }
+
+    async function terminalDecide(action) {
+        if (isOpening) return;
+        const session = state.currentTerminalSession;
+        if (!session) return;
+        isOpening = true;
+        try {
+            const data = await apiCall('/api/terminal/decide', {
+                method: 'POST',
+                body: JSON.stringify({ session_id: session.session_id, action })
+            });
+            if (action === 'buy') {
+                await loadBalance();
+                await loadInventory(state.currentPage);
+                await loadStats();
+            }
+            renderTerminalOffer(data);
+        } catch (e) {
+            document.getElementById('popupBody').innerHTML = `<div class="error" style="font-size:18px;padding:20px;">❌ ${e.message || 'Something went wrong'}<br><br><button class="btn btn-primary" onclick="closePopup()">Close</button></div>`;
+        } finally {
+            isOpening = false;
+        }
     }
 
     async function openCaseBatch(caseId, quantity) {
@@ -1235,6 +1385,7 @@
     function closePopup() {
         clearTimeout(_autoAdvanceTimer);
         document.getElementById('popupOverlay').classList.remove('show');
+        document.getElementById('popupContent').classList.remove('terminal-theme');
         document.getElementById('popupBody').innerHTML = '';
         const bigOverlay = document.getElementById('bigWinOverlay');
         bigOverlay.classList.remove('active', 'fade-out');
@@ -1246,6 +1397,7 @@
         state.popupCaseId = null;
         state.popupCasePrice = 0;
         state.currentMinesGame = null;
+        state.currentTerminalSession = null;
     }
 
     // ============================================

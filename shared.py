@@ -467,6 +467,36 @@ CASES = {
         "price": 2.0,
         "collection": 'The eSports 2013 Collection'
     },
+    "operation_bravo_case": {
+        "name": "Operation Bravo Case",
+        "emoji": "🎖️",
+        "price": 2.0,
+        "collection": 'The Bravo Collection'
+    },
+    "cs:go_weapon_case_2": {
+        "name": "CS:GO Weapon Case 2",
+        "emoji": "🗡️",
+        "price": 2.0,
+        "collection": 'The Arms Deal 2 Collection'
+    },
+    "winter_offensive_case": {
+        "name": "Winter Offensive Weapon Case",
+        "emoji": "❄️",
+        "price": 2.0,
+        "collection": 'The Winter Offensive Collection'
+    },
+    "esports_2013_winter_case": {
+        "name": "eSports 2013 Winter Case",
+        "emoji": "🎿",
+        "price": 2.0,
+        "collection": 'The eSports 2013 Winter Collection'
+    },
+    "cs:go_weapon_case_3": {
+        "name": "CS:GO Weapon Case 3",
+        "emoji": "⚔️",
+        "price": 2.0,
+        "collection": 'The Arms Deal 3 Collection'
+    },
     "operation_phoenix_weapon_case": {
         "name": "Operation Phoenix Weapon Case",
         "emoji": "⚡",
@@ -677,6 +707,12 @@ CASES = {
         "price": 4.0,
         "collection": 'The Fever Collection'
     },
+    "dead_hand_terminal": {
+        "name": "Sealed Dead Hand Terminal",
+        "emoji": "🖥️",
+        "price": 2.5,
+        "collection": 'The Dead Hand Collection'
+    },
 }
 
 
@@ -721,8 +757,9 @@ def build_container_image_map() -> Dict[str, str]:
 
     return mapping
 
-# Build the global map
-CONTAINER_IMAGE_MAP = build_container_image_map()
+# NOTE: CONTAINER_IMAGE_MAP is built further down (after souvenir packages
+# are merged into CASES) so it covers every case, not just the static ones
+# defined above -- see the end of the SOUVENIR PACKAGES section.
 
 # ============================================================
 # SKINS DATA LOADER
@@ -896,6 +933,9 @@ def _make_gold_entry(_gskin: dict) -> dict:
         'skin_name':   _gskin['name'],
         'item_id':     _gskin.get('itemId'),
         'skin_image':  _gskin.get('skinImage'),
+        # Real CS2 gloves never have StatTrak (only weapons and knives do) --
+        # callers must skip the StatTrak roll when this is True.
+        'is_glove':    _gskin.get('weaponType') == 'GLOVES' or _gskin.get('itemKind') == 'GLOVES',
     }
 
 # ─── Build Gold pool: gloves/knives have collection=None so they're excluded
@@ -955,6 +995,25 @@ def _build_case_gold_items() -> Dict[str, list]:
     return result
 
 CASE_GOLD_ITEMS: Dict[str, list] = _build_case_gold_items()
+
+# ─── Dead Hand Terminal is containers.json type=='TERMINAL', not 'CASE', so
+#     _build_case_gold_items()'s name-match skips it — wire its 22 real
+#     glove finishes in directly from container_contents.json's containerId
+#     '348' entry (the terminal's 17 weapon skins are already covered via
+#     COLLECTION_ITEMS['The Dead Hand Collection'], built generically above). ──
+if 'dead_hand_terminal' in CASES and os.path.exists(CONTAINER_CONTENTS_JSON_PATH):
+    with open(CONTAINER_CONTENTS_JSON_PATH, "r", encoding="utf-8") as f:
+        _dh_contents = json.load(f)
+    _dh_skin_ids = next((c.get('skinIds', []) for c in _dh_contents if c.get('containerId') == '348'), [])
+    _dh_skins_by_id = {s['id']: s for s in SKINS_DATA}
+    _dh_gold_items = [
+        _make_gold_entry(_dh_skins_by_id[sid])
+        for sid in _dh_skin_ids
+        if sid in _dh_skins_by_id and _dh_skins_by_id[sid].get('weaponType') in ('KNIFE', 'GLOVES')
+    ]
+    if _dh_gold_items:
+        CASE_GOLD_ITEMS['dead_hand_terminal'] = _dh_gold_items
+
 logger.info(
     f"✅ Built CASE_GOLD_ITEMS for {len(CASE_GOLD_ITEMS)}/{len(CASES)} cases "
     f"({len(CASES) - len(CASE_GOLD_ITEMS)} fall back to the shared global gold pool)"
@@ -1150,6 +1209,14 @@ def _capsule_category(name: str) -> str:
         return "major_autograph"
     return "retail_community"
 
+# Verified real Valve store prices, keyed by container id, for capsules
+# where we actually know the real number instead of relying on the
+# avg-pool-value formula below. Extend this as new capsules with a known
+# real price get added.
+STICKER_CAPSULE_PRICE_OVERRIDES = {
+    "30004": 0.99,   # Jackass Sticker Capsule, released 2026-07-03
+}
+
 def _build_extra_sticker_capsules() -> Dict[str, dict]:
     if not (os.path.exists(CONTAINERS_JSON_PATH) and os.path.exists(STICKER_CONTENTS_JSON_PATH)
             and os.path.exists(STICKERS_JSON_PATH)):
@@ -1190,9 +1257,12 @@ def _build_extra_sticker_capsules() -> Dict[str, dict]:
         if not stickers:
             continue
 
-        avg_val = sum(STICKER_VALUES.get(s["rarity"], 0.25) for s in stickers) / len(stickers)
-        raw_price = min(max(avg_val * 0.025, 0.50), 6.00)
-        price = round(raw_price * 4) / 4  # nearest $0.25
+        if container_id in STICKER_CAPSULE_PRICE_OVERRIDES:
+            price = STICKER_CAPSULE_PRICE_OVERRIDES[container_id]
+        else:
+            avg_val = sum(STICKER_VALUES.get(s["rarity"], 0.25) for s in stickers) / len(stickers)
+            raw_price = min(max(avg_val * 0.025, 0.50), 6.00)
+            price = round(raw_price * 4) / 4  # nearest $0.25
 
         name = c["name"]
         result[f"capsule_{container_id}"] = {
@@ -1415,6 +1485,101 @@ def calculate_item_value(
     except Exception:
         return 0.25
 
+# ============================================================
+# SOUVENIR PACKAGES -> additional openable cases
+# containers.json has 150 real SOUVENIR_PACKAGE entries (tournament/map
+# weapon-skin packages) that were never wired into CASES at all -- same
+# "real data sitting unused" pattern as the sticker capsule overhaul.
+# Unlike normal cases, a souvenir package's item pool is a *narrow, map-
+# specific subset* of its parent collection (e.g. just 13 skins from The
+# Cache Collection), so it can't reuse the generic "collection" field the
+# way hand-curated cases do -- it needs its own pool built directly from
+# container_contents.json, registered under a synthetic collection key.
+# Real souvenir drops never include knives/gloves, which this preserves
+# for free: these pools are built purely from weapon skins.
+# ============================================================
+
+def _build_souvenir_packages() -> Dict[str, dict]:
+    """Programmatically build a CASES entry (+ matching synthetic
+    COLLECTION_ITEMS pool) for every SOUVENIR_PACKAGE container that has a
+    resolvable item pool. Returns the new CASES entries; also mutates the
+    global COLLECTION_ITEMS in place to register each pool."""
+    if not (os.path.exists(CONTAINERS_JSON_PATH) and os.path.exists(CONTAINER_CONTENTS_JSON_PATH)):
+        logger.warning("⚠️ containers.json/container_contents.json missing — souvenir packages skipped")
+        return {}
+
+    with open(CONTAINERS_JSON_PATH, "r", encoding="utf-8") as f:
+        _containers = json.load(f)
+    with open(CONTAINER_CONTENTS_JSON_PATH, "r", encoding="utf-8") as f:
+        _contents = json.load(f)
+
+    _skins_by_id = {s['id']: s for s in SKINS_DATA}
+    _skin_ids_by_container_id = {c['containerId']: c.get('skinIds', []) for c in _contents}
+    _souvenirs = [c for c in _containers if c.get('type') == 'SOUVENIR_PACKAGE']
+
+    new_cases: Dict[str, dict] = {}
+    for container in _souvenirs:
+        container_id = container['id']
+        name = container.get('name')
+        if not name:
+            continue
+        skin_ids = _skin_ids_by_container_id.get(container_id, [])
+
+        pool = []
+        values = []
+        for sid in skin_ids:
+            skin = _skins_by_id.get(sid)
+            if not skin:
+                continue
+            rarity = SKIN_RARITY_MAP.get(skin.get('rarity'), 'Blue')
+            proper_weapon = ITEM_ID_TO_DISPLAY_NAME.get(skin.get('itemId', ''), skin.get('weaponType', ''))
+            entry = {
+                'name': f"{proper_weapon} | {skin['name']}",
+                'rarity': rarity,
+                'float_min': skin.get('floatTop', 0.0),
+                'float_max': skin.get('floatBottom', 1.0),
+                'weapon_type': proper_weapon,
+                'skin_name': skin['name'],
+                'item_id': skin.get('itemId'),
+                'skin_image': skin.get('skinImage'),
+            }
+            pool.append(entry)
+            values.append(calculate_item_value(rarity, 'Field-Tested', None, False))
+        if not pool:
+            continue
+
+        collection_key = f"__souvenir_{container_id}"
+        COLLECTION_ITEMS[collection_key] = pool
+
+        # No direct price data in containers.json -- derive from the pool's
+        # average item value (same approach as sticker capsule pricing),
+        # clamped well below normal cases since souvenirs never drop golds.
+        avg_val = sum(values) / len(values)
+        price = round(min(max(avg_val * 1.5, 0.50), 3.00), 2)
+
+        case_id = f"souvenir_{container_id}"
+        new_cases[case_id] = {
+            "name": name,
+            "emoji": "🏆",
+            "price": price,
+            "collection": collection_key,
+            "category": "souvenir",
+        }
+        # Explicit empty entry (not just "no entry") so get_random_item()'s
+        # Gold-tier fallback knows this case is deliberately gold-less
+        # rather than falling back to the shared global knife/glove pool.
+        CASE_GOLD_ITEMS[case_id] = []
+
+    return new_cases
+
+_EXTRA_SOUVENIR_CASES = _build_souvenir_packages()
+CASES.update(_EXTRA_SOUVENIR_CASES)
+logger.info(f"✅ Built {len(_EXTRA_SOUVENIR_CASES)} souvenir package cases from containers.json ({len(CASES)} total cases available)")
+
+# Built here (not right after the CASES literal above) so it covers the
+# souvenir packages just merged in, not just the statically-defined cases.
+CONTAINER_IMAGE_MAP = build_container_image_map()
+
 
 # ============================================================
 # ITEM GENERATION
@@ -1448,7 +1613,14 @@ def get_random_item(case_id: str) -> Optional[Dict]:
             # Gold (gloves/knives) never belong to a collection — use this
             # case's own real knife/glove set (from container_contents.json)
             # if we have one, else the shared global pool as a last resort.
-            case_gold = CASE_GOLD_ITEMS.get(case_id) or GOLD_ITEMS_POOL
+            # A case explicitly registered with an EMPTY list (e.g. souvenir
+            # packages, which never drop golds in real CS2) must stay gold-
+            # less rather than silently inheriting the global pool -- only
+            # a case with no entry at all falls back to it.
+            if case_id in CASE_GOLD_ITEMS:
+                case_gold = CASE_GOLD_ITEMS[case_id]
+            else:
+                case_gold = GOLD_ITEMS_POOL
             if chosen_rarity == 'Gold' and case_gold:
                 by_rarity['Gold'] = case_gold
             else:
@@ -1469,7 +1641,8 @@ def get_random_item(case_id: str) -> Optional[Dict]:
         float_value = float_min + secure_random() * (float_max - float_min)
 
         condition = get_skin_condition(float_value)
-        is_stattrak = secure_random() < 0.1
+        # Real CS2 gloves never have StatTrak -- only weapons and knives do.
+        is_stattrak = (not skin_template.get('is_glove')) and secure_random() < 0.1
         price = calculate_item_value(chosen_rarity, condition, None, is_stattrak)
 
         # Full name includes weapon type so image lookup and card display are correct
@@ -1523,7 +1696,13 @@ def get_random_item_by_rarity(case_id: str, target_rarity: str) -> Optional[Dict
 
     chosen_rarity = target_rarity
     if chosen_rarity not in by_rarity or not by_rarity[chosen_rarity]:
-        case_gold = CASE_GOLD_ITEMS.get(case_id) or GOLD_ITEMS_POOL
+        # See get_random_item()'s matching comment: an explicit empty entry
+        # (e.g. souvenir packages) must stay gold-less, not inherit the
+        # global pool -- only a missing entry falls back to it.
+        if case_id in CASE_GOLD_ITEMS:
+            case_gold = CASE_GOLD_ITEMS[case_id]
+        else:
+            case_gold = GOLD_ITEMS_POOL
         if chosen_rarity == 'Gold' and case_gold:
             by_rarity['Gold'] = case_gold
         else:
@@ -1538,7 +1717,8 @@ def get_random_item_by_rarity(case_id: str, target_rarity: str) -> Optional[Dict
     float_value = float_min + secure_random() * (float_max - float_min)
 
     condition = get_skin_condition(float_value)
-    is_stattrak = secure_random() < 0.1
+    # Real CS2 gloves never have StatTrak -- only weapons and knives do.
+    is_stattrak = (not skin_template.get('is_glove')) and secure_random() < 0.1
     price = calculate_item_value(chosen_rarity, condition, None, is_stattrak)
 
     full_name = f"{skin_template['weapon_type']} | {skin_template['skin_name']}"

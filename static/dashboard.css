@@ -1,4 +1,4 @@
-﻿
+
         /* ============================================
            ALL YOUR ORIGINAL STYLES (unchanged)
            ============================================ */
@@ -1578,7 +1578,110 @@
         .reel-item.reveal-gold .reel-name { color: #ffd700; }
         .reel-item.reveal-gold .reel-rarity-label { color: #ffd700; }
         @keyframes goldPulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.04); box-shadow: 0 0 140px rgba(255,215,0,0.7); } }
-        .inspect-screen { padding: 20px 0; animation: inspectFadeIn 0.6s ease; }
+        /* ============================================
+           DEAD HAND TERMINAL THEME
+           ============================================ */
+        .popup-content.terminal-theme {
+            background: #050806;
+            border: 1px solid rgba(0, 255, 65, 0.35);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 60px rgba(0, 255, 65, 0.15), inset 0 0 80px rgba(0, 255, 65, 0.04);
+        }
+        .popup-content.terminal-theme::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background: repeating-linear-gradient(0deg, rgba(0,255,65,0.05) 0px, rgba(0,255,65,0.05) 1px, transparent 1px, transparent 3px);
+            border-radius: inherit;
+            z-index: 1;
+        }
+        .terminal-theme .reel-wrapper {
+            background: #030503;
+            border: 1px solid rgba(0, 255, 65, 0.25);
+            box-shadow: inset 0 0 60px rgba(0, 255, 65, 0.08);
+        }
+        .terminal-theme .reel-overlay-left { background: linear-gradient(to right, #030503 10%, transparent 100%); }
+        .terminal-theme .reel-overlay-right { background: linear-gradient(to left, #030503 10%, transparent 100%); }
+        .terminal-theme .reel-item {
+            background: linear-gradient(180deg, #0a140a, #050a05);
+            border-color: rgba(0, 255, 65, 0.15);
+        }
+        .terminal-theme .reel-name,
+        .terminal-theme .reel-rarity-label,
+        .terminal-theme #reelStatus {
+            font-family: 'Courier New', monospace;
+        }
+        .terminal-theme .center-marker { background: rgba(0, 255, 65, 0.25); box-shadow: 0 0 30px rgba(0, 255, 65, 0.15); }
+        .terminal-theme .center-marker::before { color: #00ff41; text-shadow: 0 0 20px rgba(0,255,65,0.6); }
+        .terminal-theme .center-marker::after { border-bottom-color: rgba(0, 255, 65, 0.25); }
+        .terminal-theme .center-marker.active { background: rgba(0, 255, 65, 0.6); box-shadow: 0 0 60px rgba(0, 255, 65, 0.4); }
+        .terminal-boot {
+            position: relative;
+            z-index: 2;
+            text-align: left;
+            max-width: 420px;
+            margin: 0 auto;
+            font-family: 'Courier New', monospace;
+            color: #00ff41;
+            padding: 40px 20px;
+            font-size: 15px;
+            line-height: 1.9;
+            text-shadow: 0 0 8px rgba(0,255,65,0.5);
+        }
+        .terminal-boot-line {
+            opacity: 0;
+            animation: terminalLineIn 0.25s ease forwards;
+        }
+        @keyframes terminalLineIn { from { opacity: 0; transform: translateX(-6px); } to { opacity: 1; transform: translateX(0); } }
+        .terminal-offer-card {
+            position: relative;
+            z-index: 2;
+            max-width: 280px;
+            margin: 10px auto 0;
+            padding: 20px;
+            background: linear-gradient(180deg, #0a140a, #050a05);
+            border: 2px solid rgba(0, 255, 65, 0.25);
+            border-radius: 14px;
+            box-shadow: 0 0 40px rgba(0, 255, 65, 0.1);
+            animation: terminalOfferIn 0.35s ease;
+        }
+        @keyframes terminalOfferIn { from { opacity: 0; transform: scale(0.92); } to { opacity: 1; transform: scale(1); } }
+        .terminal-offer-img {
+            width: 140px;
+            height: 140px;
+            object-fit: contain;
+            display: block;
+            margin: 0 auto 10px;
+        }
+        .terminal-offer-name {
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            text-align: center;
+            margin-bottom: 4px;
+        }
+        .terminal-offer-meta {
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            color: #4a9c5a;
+            text-align: center;
+            margin-bottom: 10px;
+        }
+        .terminal-offer-price {
+            font-family: 'Courier New', monospace;
+            font-size: 22px;
+            font-weight: bold;
+            text-align: center;
+        }
+        .terminal-offer-card.rarity-blue { border-color: #4488ff; box-shadow: 0 0 40px rgba(68,136,255,0.2); }
+        .terminal-offer-card.rarity-blue .terminal-offer-name, .terminal-offer-card.rarity-blue .terminal-offer-price { color: #4488ff; }
+        .terminal-offer-card.rarity-purple { border-color: #aa00ff; box-shadow: 0 0 40px rgba(170,0,255,0.25); }
+        .terminal-offer-card.rarity-purple .terminal-offer-name, .terminal-offer-card.rarity-purple .terminal-offer-price { color: #aa00ff; }
+        .terminal-offer-card.rarity-pink { border-color: #ff69b4; box-shadow: 0 0 40px rgba(255,105,180,0.3); }
+        .terminal-offer-card.rarity-pink .terminal-offer-name, .terminal-offer-card.rarity-pink .terminal-offer-price { color: #ff69b4; }
+        .terminal-offer-card.rarity-red { border-color: #ff4444; box-shadow: 0 0 40px rgba(255,68,68,0.35); }
+        .terminal-offer-card.rarity-red .terminal-offer-name, .terminal-offer-card.rarity-red .terminal-offer-price { color: #ff4444; }
+        .terminal-offer-card.rarity-gold { border-color: #ffd700; box-shadow: 0 0 50px rgba(255,215,0,0.4); }
+        .terminal-offer-card.rarity-gold .terminal-offer-name, .terminal-offer-card.rarity-gold .terminal-offer-price { color: #ffd700; }        .inspect-screen { padding: 20px 0; animation: inspectFadeIn 0.6s ease; }
         @keyframes inspectFadeIn { from { opacity: 0; transform: scale(0.95) translateY(20px); } to { opacity: 1; transform: scale(1) translateY(0); } }
         .inspect-screen .inspect-card {
             background: linear-gradient(180deg, #1a1a30, #0a0a18);
