@@ -241,8 +241,6 @@
 
             <button class="btn" onclick="switchTab('stats')">📊 Stats</button>
 
-            <button class="btn" onclick="switchTab('leaderboard')">🏆 Leaderboard</button>
-
             <button class="btn" onclick="switchTab('achievements')">🏅 Achievements</button>
 
             <button class="btn" onclick="switchTab('profile')">👤 Profile</button>
@@ -295,6 +293,14 @@
 
                 <!-- CASE POWER-UPS -->
 
+                <div style="display:flex;align-items:baseline;gap:8px;margin-bottom:8px;">
+
+                    <span style="color:#e0d8f0;font-size:13px;font-weight:700;">⚡ Power-Ups</span>
+
+                    <span style="color:#888;font-size:11px;">Optional, ticket-funded case boosts. Stay ON across opens (incl. bulk &amp; Open Again) until you toggle them off.</span>
+
+                </div>
+
                 <div style="display:flex;gap:10px;margin-bottom:15px;flex-wrap:wrap;">
 
                     <div id="guaranteeToggle" onclick="toggleGuarantee()" style="flex:1;min-width:220px;display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border:1px solid rgba(255,255,255,0.06);border-radius:10px;background:rgba(255,255,255,0.03);cursor:pointer;transition:all 0.2s;">
@@ -303,7 +309,7 @@
 
                             <div style="font-size:13px;font-weight:700;color:#e0d8f0;">⭐ Rarity Guarantee</div>
 
-                            <div style="font-size:11px;color:#888;margin-top:2px;">2 tickets — guaranteed Purple+, Blues rerolled</div>
+                            <div style="font-size:11px;color:#888;margin-top:2px;">2 tickets per case — guaranteed Purple+, Blues rerolled</div>
 
                         </div>
 
@@ -317,7 +323,7 @@
 
                             <div style="font-size:13px;font-weight:700;color:#e0d8f0;">🛡️  Unboxing Insurance</div>
 
-                            <div style="font-size:11px;color:#888;margin-top:2px;">1 ticket — any Blue result refunds case cost</div>
+                            <div style="font-size:11px;color:#888;margin-top:2px;">1 ticket per case — any Blue result refunds case cost</div>
 
                         </div>
 
@@ -658,16 +664,6 @@
         </div>
 
 
-
-        <!-- TAB: LEADERBOARD -->
-
-        <div id="tab-leaderboard" class="tab-content">
-
-            <div id="leaderboardContent"></div>
-
-            <div class="disclaimer-inline">⚠️ <strong>Disclaimer:</strong> Leaderboards are for entertainment purposes only.</div>
-
-        </div>
 
 
 

@@ -1,10 +1,10 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <link rel="stylesheet" href="/static/css/site-notices.css">
-<title>CS2 Market — CS2CaseBot</title>
+<title>CS2 Market â€” CS2CaseBot</title>
 <style>
   /* -- Reset & base -- */
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -541,7 +541,7 @@
 
     .listings-grid { grid-template-columns: repeat(auto-fill, minmax(135px, 1fr)); gap: 8px; }
 
-    /* Buy button has no hover affordance on touch — keep it always visible and in-flow */
+    /* Buy button has no hover affordance on touch â€” keep it always visible and in-flow */
     .card-buy-btn { position: static; transform: none; }
     .listing-card:hover .card-buy-btn { transform: none; }
 
@@ -573,13 +573,14 @@
   </nav>
   <div class="header-right">
     <div class="balance-badge" id="headerBalance">$0.00</div>
+    <div class="balance-badge" id="headerTickets" title="Arcade Tickets">🎟️ 0</div>
     <a class="btn-back" href="/">&#8592; Back</a>
   </div>
 </header>
 
 <div class="live-ticker" id="liveTicker">
   <div class="ticker-track" id="tickerTrack">
-    <span class="ticker-item" style="color:#555;">Loading recent drops…</span>
+    <span class="ticker-item" style="color:#555;">Loading recent dropsâ€¦</span>
   </div>
 </div>
 
@@ -782,13 +783,13 @@ async function loadListings(reset) {
 
 function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
 
-// Strips the leading "StatTrak™ "/"★ " markers baked into stored item_names --
-// every card here already renders its own separate StatTrak badge (stBadge/"ST™"),
-// so leaving those markers in the name itself showed "StatTrak™ StatTrak™ ..."
+// Strips the leading "StatTrakâ„¢ "/"â˜… " markers baked into stored item_names --
+// every card here already renders its own separate StatTrak badge (stBadge/"STâ„¢"),
+// so leaving those markers in the name itself showed "StatTrakâ„¢ StatTrakâ„¢ ..."
 // on StatTrak weapons/knives (mirrors dashboard.js's cleanItemName fix).
 function cleanItemName(raw) {
-  var name = String(raw == null ? '' : raw).replace(/^StatTrak™\s*/i, '').trim();
-  name = name.replace(/^★\s*/, '').trim();
+  var name = String(raw == null ? '' : raw).replace(/^StatTrakâ„¢\s*/i, '').trim();
+  name = name.replace(/^â˜…\s*/, '').trim();
   return name || raw;
 }
 
@@ -893,7 +894,7 @@ function closeModal() {
 async function confirmBuy() {
   if (!activeListing) return;
   const btn = document.getElementById('confirmBuyBtn');
-  btn.disabled = true; btn.textContent = 'Processing…';
+  btn.disabled = true; btn.textContent = 'Processingâ€¦';
   try {
     const res  = await fetch('/api/market/buy/'+activeListing.id, { method: 'POST' });
     const data = await res.json();
@@ -913,7 +914,7 @@ async function confirmBuy() {
 let invItems = [];
 async function loadInventory() {
   const grid = document.getElementById('invGrid');
-  grid.innerHTML = '<div style="color:var(--text-dim);font-size:13px;padding:20px;grid-column:1/-1;text-align:center">Loading…</div>';
+  grid.innerHTML = '<div style="color:var(--text-dim);font-size:13px;padding:20px;grid-column:1/-1;text-align:center">Loadingâ€¦</div>';
   try {
     const res  = await fetch('/api/user/me/inventory?limit=200');
     if (res.status===401) { grid.innerHTML = '<div style="color:var(--text-dim);font-size:13px;padding:30px;grid-column:1/-1;text-align:center">Please log in to see your inventory.</div>'; return; }
@@ -971,7 +972,7 @@ async function submitListing() {
   const price = parseFloat(document.getElementById('listPrice').value);
   if (!price||price<0.01) return;
   const btn = document.getElementById('listBtn');
-  btn.disabled=true; btn.textContent='Listing…';
+  btn.disabled=true; btn.textContent='Listingâ€¦';
   try {
     const res  = await fetch('/api/market/list', {
       method: 'POST',
@@ -995,7 +996,7 @@ async function submitListing() {
 // My listings
 async function loadMyListings() {
   const tbody = document.getElementById('myListingsBody');
-  tbody.innerHTML = '<tr><td colspan="6" style="color:var(--text-dim);text-align:center;padding:30px">Loading…</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="6" style="color:var(--text-dim);text-align:center;padding:30px">Loadingâ€¦</td></tr>';
   try {
     const res  = await fetch('/api/market/my-listings');
     if (res.status===401) { tbody.innerHTML='<tr><td colspan="6" style="color:var(--text-dim);text-align:center;padding:30px">Please log in to see your listings.</td></tr>'; return; }
@@ -1005,7 +1006,7 @@ async function loadMyListings() {
     const pillMap = {active:'pill-active', sold:'pill-sold', cancelled:'pill-cancelled'};
     tbody.innerHTML = data.map(l => {
       const condKey = COND_MAP[l.condition]||['',''];
-      const cancelBtn = l.status==='active' ? '<button class="cancel-btn" onclick="cancelListing('+l.id+',this)">Cancel</button>' : '—';
+      const cancelBtn = l.status==='active' ? '<button class="cancel-btn" onclick="cancelListing('+l.id+',this)">Cancel</button>' : 'â€”';
       return '<tr>'
         + '<td><strong style="color:var(--text-light)">'+(l.is_stattrak?'<span style="color:#cf6a32">ST&#8482;</span> ':'')+esc(cleanItemName(l.item_name))+'</strong></td>'
         + '<td>'+(condKey[0]?'<span class="cond-badge cond-'+condKey[0]+'">'+condKey[1]+'</span>':(l.condition||''))+'</td>'
@@ -1021,7 +1022,7 @@ async function loadMyListings() {
 }
 
 async function cancelListing(id, btn) {
-  btn.disabled=true; btn.textContent='…';
+  btn.disabled=true; btn.textContent='â€¦';
   try {
     const res  = await fetch('/api/market/cancel/'+id, {method:'DELETE'});
     const data = await res.json();
@@ -1039,7 +1040,9 @@ async function loadBalance() {
     const res  = await fetch('/api/user/me');
     const data = await res.json();
     if (data.balance == null) return;
-    var el=document.getElementById('headerBalance'),cur=el.textContent||'',nxt='$'+parseFloat(data.balance).toFixed(2);
+    var el=document.getElementById('headerBalance'),cur=el.textContent||'',nxt='$'+parseFloat(data.balance).toFixed(2);
+    const ticketsEl = document.getElementById('headerTickets');
+    if (ticketsEl) ticketsEl.textContent = '🎟️ ' + (data.tickets || 0);
     if(cur&&cur!=='$0.00'&&cur!==nxt){
       var pv=parseFloat(cur.replace(/[,$]/g,''));
       if(!isNaN(pv)&&pv!==data.balance){

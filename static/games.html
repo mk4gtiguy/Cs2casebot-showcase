@@ -105,6 +105,9 @@ body{background-image:radial-gradient(ellipse 100% 35% at 50% 0%,rgba(255,215,0,
 .header-balance{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--gold);flex-shrink:0;}
 
 
+.header-tickets{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--gold);flex-shrink:0;}
+
+
 
 
 
@@ -446,6 +449,8 @@ body{background-image:radial-gradient(ellipse 100% 35% at 50% 0%,rgba(255,215,0,
 
 
   <span class="header-balance" id="balanceDisplay">$—</span>
+
+  <span class="header-tickets" id="ticketsDisplay" title="Arcade Tickets">🎟️ —</span>
 
 
 </header>
@@ -1902,6 +1907,7 @@ async function loadUser(){
 
 
         document.getElementById('statBal').textContent=nxt;
+        document.getElementById('ticketsDisplay').textContent='🎟️ '+(d.tickets||0);
 
 
 
@@ -1922,6 +1928,7 @@ async function loadUser(){
 
 
     document.getElementById('statBal').textContent=nxt;
+    document.getElementById('ticketsDisplay').textContent='🎟️ '+(d.tickets||0);
 
 
 
@@ -1934,6 +1941,7 @@ async function loadUser(){
 
 
     document.getElementById('statBal').textContent='ERR';
+    document.getElementById('ticketsDisplay').textContent='🎟️ —';
 
 
 

@@ -35,6 +35,17 @@ router = APIRouter(prefix="/api/battles", tags=["battles"])
 ROUND_DURATION_SECONDS = 15   # how long each player has to open
 BETWEEN_ROUND_SECONDS  = 3    # pause between rounds
 
+# Terminal cases (offer-based buy/skip a sequence of priced items -- not a
+# single random roll) and souvenir packages (can't drop Golds, novelty
+# items) aren't valid case-battle cases -- mirrors the same exclusion
+# static/battle-setup.html applies to its case picker. Enforced here too
+# since case_id comes straight off the client's websocket message.
+BATTLE_EXCLUDED_CASE_IDS = {
+    cid for cid, c in CASES.items()
+    if cid == 'dead_hand_terminal' or c.get('category') == 'souvenir'
+}
+BATTLE_ELIGIBLE_CASE_IDS = [cid for cid in CASES.keys() if cid not in BATTLE_EXCLUDED_CASE_IDS]
+
 # ============================================================
 # PYDANTIC MODELS
 # ============================================================
@@ -376,7 +387,7 @@ class BattleManager:
 
     def _get_bot_item(self, difficulty: str) -> dict:
         """Roll a case item with difficulty-adjusted drop rates."""
-        case_id = secure_choice(list(CASES.keys()))
+        case_id = secure_choice(BATTLE_ELIGIBLE_CASE_IDS)
         rates = DROP_RATES.copy()
 
         if difficulty == 'hard':
@@ -875,8 +886,8 @@ async def _handle_open(battle_id: int, user_id: int, case_id: Optional[str]):
             if exists:
                 return
 
-            if not case_id or case_id not in CASES:
-                case_id = secure_choice(list(CASES.keys()))
+            if not case_id or case_id not in CASES or case_id in BATTLE_EXCLUDED_CASE_IDS:
+                case_id = secure_choice(BATTLE_ELIGIBLE_CASE_IDS)
 
             item = get_random_item(case_id)
             if not item:

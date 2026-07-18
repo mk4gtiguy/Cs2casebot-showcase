@@ -250,6 +250,13 @@ body {
 
 }
 
+.header-tickets {
+  font-size: 13px;
+  color: var(--gold);
+  font-weight: 700;
+  font-family: var(--mono);
+}
+
 
 
 
@@ -1944,6 +1951,8 @@ body {
 
   <span class="header-balance" id="balanceDisplay">$—</span>
 
+  <span class="header-tickets" id="ticketsDisplay" title="Arcade Tickets">🎟️ —</span>
+
 
 </header>
 
@@ -2206,6 +2215,8 @@ body {
 
   <div class="card" style="padding: 14px;">
 
+    <input type="text" id="caseSearchInput" placeholder="🔍 Search cases…" oninput="filterBattleCases()"
+      style="width:100%;margin-bottom:10px;padding:8px 10px;background:rgba(0,0,0,0.35);border:1px solid rgba(255,255,255,0.08);border-radius:8px;color:var(--text);font-size:12px;">
 
     <div class="case-select-grid" id="caseGrid">
 
@@ -2649,13 +2660,14 @@ async function loadUser() {
       var pv=parseFloat(cur.replace(/[,$]/g,''));
 
 
-      if(!isNaN(pv)&&pv!==d.balance){animateBalance(el,cur,nxt,d.balance>pv);return}
+      if(!isNaN(pv)&&pv!==d.balance){animateBalance(el,cur,nxt,d.balance>pv);document.getElementById('ticketsDisplay').textContent='🎟️ '+(d.tickets||0);return}
 
 
     }
 
 
     el.textContent=nxt;
+    document.getElementById('ticketsDisplay').textContent='🎟️ '+(d.tickets||0);
 
 
     document.getElementById('yourName').textContent = S.username;
@@ -2808,81 +2820,69 @@ function buildRoundChips(opts) {
 
 
 
+let _battleCasesData = [];
+let _battleFeaturedId = null;
+
+// Offer-based terminal cases (buy/skip a sequence of priced items, e.g. the
+// Dead Hand Terminal) don't produce a single random roll the way a battle
+// needs -- same set dashboard.js's TERMINAL_THEMED_CASES uses to route
+// these to the dedicated terminal flow instead of the normal case-open flow.
+const BATTLE_EXCLUDED_CASE_IDS = new Set(['dead_hand_terminal']);
+
 async function loadCases() {
-
-
   try {
-
-
     const d = await api('/api/cases');
-
-
-    const grid = document.getElementById('caseGrid');
-
-
-    grid.innerHTML = '';
-
-
-    (d.cases || []).forEach(c => {
-
-
-      const el = document.createElement('div');
-
-
-      el.className = 'case-card';
-
-
-      el.dataset.id = c.id;
-
-
-      el.innerHTML = `<img class="case-img" src="/api/case-image/${esc(c.id)}" alt="${esc(c.name)}" onerror="this.style.display='none'"><span class="name">${esc(c.name)}</span>`;
-
-
-      el.onclick = () => {
-
-
-        document.querySelectorAll('.case-card').forEach(x => x.classList.remove('active'));
-
-
-        el.classList.add('active');
-
-
-        S.caseId = c.id;
-
-
-        document.getElementById('sumCase').innerHTML = `<img src="/api/case-image/${esc(c.id)}" alt="${esc(c.name)}" style="height:20px;vertical-align:middle;object-fit:contain;" onerror="this.style.display='none'"> ${esc(c.name)}`;
-
-
-      };
-
-
-      grid.appendChild(el);
-
-
-    });
-
-
-    // Auto-select first featured case
-
-
-    const featured = d.featured?.[0];
-
-
-    const firstCard = featured
-
-
-      ? grid.querySelector(`[data-id="${featured}"]`)
-
-
-      : grid.querySelector('.case-card');
-
-
-    if (firstCard) firstCard.click();
-
-
+    // Souvenir packages can never drop Golds and are novelty items, not
+    // built for competitive battles -- keep them out of the battle picker
+    // (still fully available on the main dashboard's Cases tab).
+    _battleCasesData = (d.cases || []).filter(c =>
+      (c.category || 'case') !== 'souvenir' && !BATTLE_EXCLUDED_CASE_IDS.has(c.id)
+    );
+    _battleFeaturedId = d.featured?.[0] || null;
+    renderBattleCaseGrid(true);
   } catch(e) {}
+}
 
+function renderBattleCaseGrid(autoSelect) {
+  const grid = document.getElementById('caseGrid');
+  const term = (document.getElementById('caseSearchInput')?.value || '').trim().toLowerCase();
+  const filtered = term ? _battleCasesData.filter(c => c.name.toLowerCase().includes(term)) : _battleCasesData;
 
+  grid.innerHTML = '';
+
+  if (!filtered.length) {
+    grid.innerHTML = '<div style="color:var(--muted);font-size:11px;padding:8px;">No cases match your search.</div>';
+    return;
+  }
+
+  filtered.forEach(c => {
+    const el = document.createElement('div');
+    el.className = 'case-card';
+    el.dataset.id = c.id;
+    el.innerHTML = `<img class="case-img" src="/api/case-image/${esc(c.id)}" alt="${esc(c.name)}" onerror="this.style.display='none'"><span class="name">${esc(c.name)}</span>`;
+    el.onclick = () => {
+      document.querySelectorAll('.case-card').forEach(x => x.classList.remove('active'));
+      el.classList.add('active');
+      S.caseId = c.id;
+      document.getElementById('sumCase').innerHTML = `<img src="/api/case-image/${esc(c.id)}" alt="${esc(c.name)}" style="height:20px;vertical-align:middle;object-fit:contain;" onerror="this.style.display='none'"> ${esc(c.name)}`;
+    };
+    grid.appendChild(el);
+  });
+
+  if (autoSelect) {
+    // Auto-select first featured case
+    const firstCard = _battleFeaturedId
+      ? grid.querySelector(`[data-id="${_battleFeaturedId}"]`)
+      : grid.querySelector('.case-card');
+    if (firstCard) firstCard.click();
+  } else if (S.caseId) {
+    const current = grid.querySelector(`[data-id="${S.caseId}"]`);
+    if (current) current.classList.add('active');
+  }
+}
+
+function filterBattleCases() {
+  renderBattleCaseGrid(false);
 }
 
 

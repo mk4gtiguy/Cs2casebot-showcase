@@ -1919,7 +1919,10 @@ async def _refresh_game_enabled_cache():
     cache = {}
     for r in rows:
         try:
-            cache[r["game_name"]] = json.loads(r["settings"])
+            parsed = json.loads(r["settings"])
+            if not isinstance(parsed, dict):
+                raise ValueError(f"expected a JSON object, got {type(parsed).__name__}")
+            cache[r["game_name"]] = parsed
         except Exception:
             cache[r["game_name"]] = {}
     _game_enabled_cache = cache

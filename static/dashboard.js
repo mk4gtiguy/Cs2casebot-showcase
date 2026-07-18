@@ -64,9 +64,6 @@
     let powerupInsurance = false;
     let isOpening = false;
     let lastCapsuleId = null;
-    let leaderboardType = 'money';
-    let leaderboardCategory = 'overall';
-    let leaderboardGame = 'coinflip';
     let tradeItems = [];
 
     // ============================================
@@ -261,7 +258,6 @@
             try { await loadAchievements(); } catch(e) { console.warn('Achievements:', e); }
             try { await loadProfile(); } catch(e) { console.warn('Profile:', e); }
             try { await loadGameStats(); } catch(e) { console.warn('GameStats:', e); }
-            try { await loadLeaderboardData('money'); } catch(e) { console.warn('Leaderboard:', e); }
             try { await loadGoalData(); } catch(e) { console.warn('Goals:', e); }
             try { await maybeOpenDailySpin(); } catch(e) { console.warn('DailySpin:', e); }
             return true;
@@ -396,7 +392,6 @@
         if (tabElement) tabElement.classList.add('active');
         if (tab === 'cases') { loadFavorites(); loadCases(); }
         if (tab === 'inventory') { loadInventory(state.currentPage); loadLoadout(); }
-        if (tab === 'leaderboard') loadLeaderboard();
         if (tab === 'trade') loadTradeTab();
         if (tab === 'premium') { loadVIPStatus(); loadTicketBalance(); loadReferralInfo(); }
         if (tab === 'quests') loadQuests();
@@ -2752,9 +2747,9 @@ window.setInvTypeFilter = setInvTypeFilter;
         document.getElementById('popupBody').innerHTML = `
             <h3 style="color:#ffd700;text-align:center;margin-bottom:6px;">🎡 Daily Bonus Spin!</h3>
             <p style="color:#888;font-size:12px;text-align:center;margin-bottom:16px;">Spin once a day for free bonus tickets — everyone gets one.</p>
-            <div style="position:relative;width:240px;height:240px;margin:0 auto;">
+            <div id="dailySpinWheelWrap" style="position:relative;margin:0 auto;">
                 <div style="position:absolute;top:-8px;left:50%;transform:translateX(-50%);font-size:22px;color:#ffd700;z-index:2;">▼</div>
-                <div id="dailySpinWheel" style="width:240px;height:240px;border-radius:50%;border:4px solid #ffd700;position:relative;transition:transform 4.5s cubic-bezier(0.15,0.85,0.25,1);"></div>
+                <div id="dailySpinWheel" style="border-radius:50%;border:4px solid #ffd700;position:relative;transition:transform 4.5s cubic-bezier(0.15,0.85,0.25,1);"></div>
             </div>
             <div style="text-align:center;margin-top:20px;">
                 <button class="btn btn-gold" id="dailySpinBtn" onclick="spinDailyWheel()">🎡 SPIN FOR TICKETS</button>
@@ -2762,12 +2757,28 @@ window.setInvTypeFilter = setInvTypeFilter;
             <div id="dailySpinResult" style="text-align:center;margin-top:12px;font-size:14px;min-height:20px;"></div>
         `;
         document.getElementById('popupOverlay').classList.add('show');
-        renderDailySpinWheel(segments);
+        // Measure the real available width now that the modal is actually laid
+        // out, instead of guessing off window.innerWidth -- that guess ignored
+        // the popup's own padding/max-width math and stayed pinned near the old
+        // 240px on most real phones (~375-430px wide), which is why the wheel
+        // still looked cramped/off after the first pass at this fix.
+        const bodyWidth = document.getElementById('popupBody').clientWidth || window.innerWidth * 0.8;
+        const wheelSize = Math.round(Math.max(160, Math.min(260, bodyWidth * 0.86)));
+        const wrap = document.getElementById('dailySpinWheelWrap');
+        wrap.style.width = wheelSize + 'px';
+        wrap.style.height = wheelSize + 'px';
+        const wheel = document.getElementById('dailySpinWheel');
+        wheel.style.width = wheelSize + 'px';
+        wheel.style.height = wheelSize + 'px';
+        renderDailySpinWheel(segments, wheelSize);
     }
 
-    function renderDailySpinWheel(segments) {
+    function renderDailySpinWheel(segments, wheelSize) {
         const wheel = document.getElementById('dailySpinWheel');
         if (!wheel) return;
+        wheelSize = wheelSize || 240;
+        const labelRadius = Math.round(wheelSize * 0.383); // proportional to the original 92px @ 240px wheel
+        const fontSize = wheelSize < 200 ? 14 : 16;
         const n = segments.length;
         const slice = 360 / n;
         const stops = segments.map((_, i) => {
@@ -2775,10 +2786,16 @@ window.setInvTypeFilter = setInvTypeFilter;
             return `${color} ${i * slice}deg ${(i + 1) * slice}deg`;
         }).join(', ');
         wheel.style.background = `conic-gradient(${stops})`;
-        wheel.innerHTML = segments.map((amt, i) => {
+        // Numbers only in each slice -- a tiny inline 🎟️ per segment renders as
+        // an illegible box at this font size on some devices/browsers. A single
+        // larger ticket icon on the center hub gives the same context cleanly.
+        const labels = segments.map((amt, i) => {
             const angle = i * slice + slice / 2;
-            return `<div style="position:absolute;top:50%;left:50%;width:0;height:0;transform:rotate(${angle}deg) translate(0,-92px) rotate(${-angle}deg);color:#fff;font-weight:bold;font-size:13px;text-shadow:0 1px 2px rgba(0,0,0,0.8);">${amt}🎟️</div>`;
+            return `<div style="position:absolute;top:50%;left:50%;width:0;height:0;transform:rotate(${angle}deg) translate(0,-${labelRadius}px) rotate(${-angle}deg);color:#fff;font-weight:bold;font-size:${fontSize}px;text-shadow:0 1px 3px rgba(0,0,0,0.9);white-space:nowrap;">${amt}</div>`;
         }).join('');
+        const hubSize = Math.round(wheelSize * 0.22);
+        const hub = `<div style="position:absolute;top:50%;left:50%;width:${hubSize}px;height:${hubSize}px;margin:-${hubSize / 2}px 0 0 -${hubSize / 2}px;border-radius:50%;background:#1a1a2e;border:3px solid #ffd700;display:flex;align-items:center;justify-content:center;font-size:${Math.round(hubSize * 0.5)}px;box-shadow:0 0 12px rgba(0,0,0,0.6);">🎟️</div>`;
+        wheel.innerHTML = labels + hub;
     }
 
     async function spinDailyWheel() {
@@ -3214,208 +3231,6 @@ window.setInvTypeFilter = setInvTypeFilter;
         }
     }
 
-
-    // ============================================
-    // SECTION 22: LEADERBOARD (only one copy)
-    // ============================================
-    // ─── Leaderboard config ─────────────────────────────────────────────────
-    const LB_GAMES = [
-        { key:'coinflip',        label:'Coinflip',        icon:'🪙', group:'Coin & Dice' },
-        { key:'dice',            label:'Dice',            icon:'🎲', group:'Coin & Dice' },
-        { key:'blackjack',       label:'Blackjack',       icon:'🃏', group:'Card Games'  },
-        { key:'baccarat',        label:'Baccarat',        icon:'🎴', group:'Card Games'  },
-        { key:'dragon_tiger',    label:'Dragon Tiger',    icon:'🐉', group:'Card Games'  },
-        { key:'crash',           label:'Crash',           icon:'📈', group:'Live'        },
-        { key:'hilo',            label:'HiLo',            icon:'↕️', group:'Live'        },
-        { key:'limbo',           label:'Limbo',           icon:'🎯', group:'Live'        },
-        { key:'keno',            label:'Keno',            icon:'🔢', group:'Live'        },
-        { key:'live_race',       label:'Live Race',       icon:'🏎️', group:'Live'        },
-        { key:'mines',           label:'Mines',           icon:'⛏️', group:'Survival'    },
-        { key:'tower',           label:'Tower',           icon:'🗼', group:'Survival'    },
-        { key:'shotgun',         label:'Shotgun',         icon:'🔫', group:'Survival'    },
-        { key:'ladder',          label:'Ladder Climb',    icon:'🪜', group:'Survival'    },
-        { key:'russian_roulette',label:'Russian Roulette',icon:'🔴', group:'Survival'    },
-        { key:'plinko',          label:'Plinko',          icon:'🎰', group:'Other'       },
-        { key:'roulette',        label:'Roulette',        icon:'⚪', group:'Other'       },
-        { key:'slide',           label:'Slide',           icon:'🎢', group:'Other'       },
-        { key:'mystery_box',     label:'Mystery Box',     icon:'📦', group:'Other'       },
-        { key:'slots_classic',   label:'Classic Slots',   icon:'🍒', group:'Slots'       },
-        { key:'slots_cs2',       label:'CS2 Slots',       icon:'🔫', group:'Slots'       },
-        { key:'slots_jackpot',   label:'Jackpot Slots',   icon:'💎', group:'Slots'       },
-        { key:'slots_bomb',      label:'Bomb Slots',      icon:'💣', group:'Slots'       },
-    ];
-
-    const LB_OVERALL = [
-        { key:'money',       label:'Richest',        icon:'💰', fmt: v => '$'+Number(v).toFixed(2) },
-        { key:'profit',      label:'Most Profitable',icon:'📈', fmt: v => (v>=0?'+':'')+' $'+Number(v).toFixed(2) },
-        { key:'ticket_wins', label:'Tickets Earned', icon:'🎟️', fmt: v => v+' tickets' },
-        { key:'games',       label:'Most Games',     icon:'🎮', fmt: v => Number(v).toLocaleString()+' played' },
-        { key:'streak',      label:'Win Streak',     icon:'🔥', fmt: v => v+' wins' },
-    ];
-
-    const LB_CASES = [
-        { key:'opens',  label:'Most Opens',  icon:'🔑', fmt: v => Number(v).toLocaleString() },
-        { key:'golds',  label:'Most Golds',  icon:'⭐', fmt: v => Number(v).toLocaleString() },
-        { key:'trades', label:'Most Trades', icon:'🔄', fmt: v => Number(v).toLocaleString() },
-    ];
-
-    function _lbMedal(i) { return i===0?'🥇':i===1?'🥈':i===2?'🥉':`<span style="color:#666;font-weight:700;width:22px;display:inline-block;text-align:right">${i+1}</span>`; }
-
-    function _lbRow(u, i, fmtFn, valueKey='value') {
-        const name = esc((u.username||'Unknown').substring(0,22));
-        const val  = fmtFn ? fmtFn(u[valueKey]??u.wins??0) : u[valueKey]??u.wins??0;
-        return `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 12px;border-bottom:1px solid rgba(255,255,255,0.05);${i===0?'background:rgba(255,215,0,0.05);':i<3?'background:rgba(255,255,255,0.02);':''}">
-            <span style="display:flex;align-items:center;gap:8px;flex:1;min-width:0;">${_lbMedal(i)} <span style="color:#ccc;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${name}</span></span>
-            <span style="color:#ffd700;font-weight:700;font-size:13px;flex-shrink:0;">${val}</span>
-        </div>`;
-    }
-
-    function _lbCard(title, icon, rows, extra='') {
-        return `<div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;overflow:hidden;min-width:0">
-            <div style="padding:12px 14px;border-bottom:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;gap:8px;">
-                <span style="font-size:18px">${icon}</span>
-                <span style="font-weight:700;color:#fff;font-size:14px;">${title}</span>
-                ${extra}
-            </div>
-            <div>${rows.length ? rows.join('') : '<div style="padding:20px;color:#666;font-size:13px;text-align:center">No data yet</div>'}</div>
-        </div>`;
-    }
-
-    async function _fetchLb(type, limit=10) {
-        return apiCall(`/api/leaderboard/${type}?limit=${limit}`);
-    }
-
-    async function _fetchGameLb(game, limit=10) {
-        return apiCall(`/api/leaderboard/game-wins?game=${game}&limit=${limit}`);
-    }
-
-    function loadLeaderboard() {
-        leaderboardCategory = 'overall';
-        _renderLeaderboardShell();
-        _loadOverall();
-    }
-
-    function _renderLeaderboardShell() {
-        const container = document.getElementById('leaderboardContent');
-        const cats = [
-            { id:'overall',  label:'📊 Overall'       },
-            { id:'games',    label:'🎮 Game Wins'      },
-            { id:'cases',    label:'📦 Case Opening'   },
-        ];
-        const navBtns = cats.map(c =>
-            `<button onclick="lbSwitchCat('${c.id}')" id="lbcat-${c.id}"
-                style="padding:8px 16px;border-radius:6px;border:1px solid rgba(255,255,255,0.12);cursor:pointer;font-size:13px;font-weight:600;transition:all .15s;
-                background:${leaderboardCategory===c.id?'rgba(255,215,0,0.15)':'rgba(255,255,255,0.05)'};
-                color:${leaderboardCategory===c.id?'#ffd700':'#aaa'};">${c.label}</button>`
-        ).join('');
-
-        container.innerHTML = `
-            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;">${navBtns}</div>
-            <div id="lbBody"></div>
-        `;
-    }
-
-    function lbSwitchCat(cat) {
-        leaderboardCategory = cat;
-        _renderLeaderboardShell();
-        if (cat === 'overall') _loadOverall();
-        else if (cat === 'games')  _renderGameWins();
-        else if (cat === 'cases')  _loadCases();
-    }
-
-    async function _loadOverall() {
-        const body = document.getElementById('lbBody');
-        body.innerHTML = `<div style="color:#888;padding:20px;text-align:center">Loading…</div>`;
-        try {
-            const results = await Promise.all(LB_OVERALL.map(b => _fetchLb(b.key)));
-            let html = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;">`;
-            LB_OVERALL.forEach((b, i) => {
-                const users = results[i].users || [];
-                const rows = users.map((u, j) => _lbRow(u, j, b.fmt));
-                html += _lbCard(b.label, b.icon, rows);
-            });
-            html += '</div>';
-            body.innerHTML = html;
-        } catch(e) {
-            body.innerHTML = `<div style="color:#e74c3c;padding:20px">Failed to load: ${esc(e.message||'')}</div>`;
-        }
-    }
-
-    async function _loadCases() {
-        const body = document.getElementById('lbBody');
-        body.innerHTML = `<div style="color:#888;padding:20px;text-align:center">Loading…</div>`;
-        try {
-            const results = await Promise.all(LB_CASES.map(b => _fetchLb(b.key)));
-            let html = `<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px;">`;
-            LB_CASES.forEach((b, i) => {
-                const users = results[i].users || [];
-                const rows = users.map((u, j) => _lbRow(u, j, b.fmt));
-                html += _lbCard(b.label, b.icon, rows);
-            });
-            html += '</div>';
-            body.innerHTML = html;
-        } catch(e) {
-            body.innerHTML = `<div style="color:#e74c3c;padding:20px">Failed to load: ${esc(e.message||'')}</div>`;
-        }
-    }
-
-    function _renderGameWins() {
-        const body = document.getElementById('lbBody');
-        const groups = [...new Set(LB_GAMES.map(g => g.group))];
-        const gameGrid = groups.map(grp => {
-            const btns = LB_GAMES.filter(g => g.group === grp).map(g =>
-                `<button onclick="lbSelectGame('${g.key}')" id="lbgame-${g.key}"
-                    style="padding:6px 12px;border-radius:6px;border:1px solid rgba(255,255,255,0.1);cursor:pointer;
-                    font-size:12px;display:flex;align-items:center;gap:5px;transition:all .15s;
-                    background:${leaderboardGame===g.key?'rgba(255,215,0,0.15)':'rgba(255,255,255,0.05)'};
-                    color:${leaderboardGame===g.key?'#ffd700':'#aaa'};">
-                    <span>${g.icon}</span>${g.label}
-                </button>`
-            ).join('');
-            return `<div style="margin-bottom:12px;">
-                <div style="font-size:11px;text-transform:uppercase;letter-spacing:.7px;color:#666;margin-bottom:6px;">${grp}</div>
-                <div style="display:flex;flex-wrap:wrap;gap:6px;">${btns}</div>
-            </div>`;
-        }).join('');
-
-        const narrow = window.innerWidth < 680;
-        body.innerHTML = `
-            <div style="display:${narrow?'flex':'grid'};${narrow?'flex-direction:column;':'grid-template-columns:260px 1fr;'}gap:16px;align-items:start;">
-                <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:10px;padding:14px;">
-                    <div style="font-weight:700;color:#fff;margin-bottom:12px;font-size:13px;">Select Game</div>
-                    ${gameGrid}
-                </div>
-                <div id="lbGamePanel"><div style="color:#888;padding:20px;text-align:center">Select a game to see the leaderboard</div></div>
-            </div>
-        `;
-        if (leaderboardGame) lbSelectGame(leaderboardGame);
-    }
-
-    async function lbSelectGame(game) {
-        leaderboardGame = game;
-        // Update active button styling
-        document.querySelectorAll('[id^="lbgame-"]').forEach(el => {
-            const isActive = el.id === `lbgame-${game}`;
-            el.style.background = isActive ? 'rgba(255,215,0,0.15)' : 'rgba(255,255,255,0.05)';
-            el.style.color = isActive ? '#ffd700' : '#aaa';
-        });
-        const panel = document.getElementById('lbGamePanel');
-        if (!panel) return;
-        panel.innerHTML = `<div style="color:#888;padding:20px;text-align:center">Loading…</div>`;
-        try {
-            const meta = LB_GAMES.find(g => g.key === game) || { label: game, icon: '🎮' };
-            const data = await _fetchGameLb(game);
-            const users = data.users || [];
-            const rows = users.map((u, i) => _lbRow(u, i, v => Number(v).toLocaleString()+' wins', 'wins'));
-            panel.innerHTML = _lbCard(`${meta.label} — Top Players`, meta.icon, rows,
-                `<span style="font-size:11px;color:#666;margin-left:auto">Most Wins</span>`);
-        } catch(e) {
-            panel.innerHTML = `<div style="color:#e74c3c;padding:20px">Failed to load: ${esc(e.message||'')}</div>`;
-        }
-    }
-
-    // Legacy no-op — real load happens via loadLeaderboard() when the tab is opened
-    async function loadLeaderboardData(type) {}
 
     // ============================================
     // SECTION 23: TRADE - FIXED: IDs as Strings (only one copy)
