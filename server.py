@@ -938,6 +938,7 @@ async def _init_all_tables(pool):
             "ALTER TABLE users ADD COLUMN IF NOT EXISTS agent_phrases_seen INTEGER DEFAULT 0",
             "ALTER TABLE users ADD COLUMN IF NOT EXISTS last_daily_spin TIMESTAMP",
             "ALTER TABLE users ADD COLUMN IF NOT EXISTS login_count INTEGER NOT NULL DEFAULT 0",
+            "ALTER TABLE users ADD COLUMN IF NOT EXISTS preferred_mode TEXT NOT NULL DEFAULT 'cs2'",
         ]:
             try:
                 await conn.execute(col_sql)
@@ -1969,6 +1970,7 @@ async def get_me(request: Request):
         "google_email":     user.get("google_email") or "",
         "is_google":        primary == "google",
         "is_admin":         user_id in ADMIN_USER_IDS,
+        "preferred_mode":   user.get("preferred_mode") or "cs2",
     }
 
 # Alias for frontend compatibility
@@ -2441,6 +2443,20 @@ async def save_user_settings(request: Request):
             except Exception as e:
                 logger.warning(f"Failed to persist user_settings for user {user_id}: {e}")
     return {"success": True}
+
+@app.post("/api/user/mode")
+async def set_preferred_mode(request: Request):
+    """Switch between site modes (cs2/turbo) — written by the header pill and
+    directly editable in Settings, both hitting this same endpoint/column."""
+    user_id = await require_auth(request)
+    body = await request.json()
+    mode = body.get("mode")
+    if mode not in ("cs2", "turbo"):
+        raise HTTPException(400, "mode must be 'cs2' or 'turbo'")
+    pool = await get_db()
+    async with pool.acquire() as conn:
+        await conn.execute("UPDATE users SET preferred_mode=$1 WHERE user_id=$2", mode, user_id)
+    return {"success": True, "mode": mode}
 
 @app.get("/api/user/streak")
 async def get_user_streak(request: Request):

@@ -225,6 +225,7 @@
             state.balance = data.balance ?? 0;
             document.getElementById('balance').textContent = '$' + Number(state.balance).toFixed(2);
             document.getElementById('userInfo').classList.remove('hidden');
+            try { applySiteMode(data.preferred_mode || 'cs2'); } catch(e) {}
             document.getElementById('userName').textContent = data.username || 'User';
             document.getElementById('authBadge').textContent = state.isGoogleUser ? '🔗 Google' : '🔗 Discord';
             // Use server-resolved avatar_url (handles both Discord and Google avatars)
@@ -237,6 +238,11 @@
             if (urlParams.get('error') === 'google_already_linked') showToast('❌ That Google account is already linked to another user.', 'error');
             if (urlParams.get('error') === 'discord_already_linked') showToast('❌ That Discord account is already linked to another user.', 'error');
             if (urlParams.get('linked') || urlParams.get('error')) window.history.replaceState({}, '', '/');
+            // Deep-link support: /?tab=inventory jumps straight to a tab (used
+            // by the Discord bot's "manage this on the dashboard" links).
+            const deepLinkTab = urlParams.get('tab');
+            const validTabs = ['cases', 'inventory', 'trade', 'premium', 'quests', 'capsules', 'armory', 'achievements', 'games', 'profile', 'battles', 'friends'];
+            if (deepLinkTab && validTabs.includes(deepLinkTab)) window.history.replaceState({}, '', '/');
             document.getElementById('loginSection').classList.add('hidden');
             document.getElementById('dashboard').classList.remove('hidden');
             try { maybeShowWelcomeModal(data.login_count); } catch(e) {}
@@ -260,6 +266,7 @@
             try { await loadGameStats(); } catch(e) { console.warn('GameStats:', e); }
             try { await loadGoalData(); } catch(e) { console.warn('Goals:', e); }
             try { await maybeOpenDailySpin(); } catch(e) { console.warn('DailySpin:', e); }
+            if (deepLinkTab && validTabs.includes(deepLinkTab)) { try { switchTab(deepLinkTab); } catch(e) { console.warn('DeepLinkTab:', e); } }
             return true;
         } catch (e) {
             console.error('Auth check error:', e);
@@ -402,6 +409,32 @@
         if (tab === 'battles') { loadBattleHistory(); loadBattleFeeOptions(); }
         if (tab === 'friends') loadFriendsTab();
     }
+
+    // Turbo League toggle (header pill). The mode itself isn't built yet --
+    // 'turbo' just shows a coming-soon overlay over the existing dashboard.
+    function applySiteMode(mode) {
+        const overlay = document.getElementById('turboComingSoonOverlay');
+        const btnCs2 = document.getElementById('modeBtnCs2');
+        const btnTurbo = document.getElementById('modeBtnTurbo');
+        if (!overlay || !btnCs2 || !btnTurbo) return;
+        const isTurbo = mode === 'turbo';
+        overlay.classList.toggle('hidden', !isTurbo);
+        [[btnTurbo, isTurbo], [btnCs2, !isTurbo]].forEach(([btn, active]) => {
+            btn.classList.toggle('active', active);
+            btn.style.background = active ? 'linear-gradient(135deg,#ffd700,#f0a500)' : 'transparent';
+            btn.style.color = active ? '#0a0a0f' : '#888';
+            btn.style.fontWeight = active ? 'bold' : 'normal';
+        });
+        state.siteMode = mode;
+    }
+    window.applySiteMode = applySiteMode;
+
+    async function setSiteMode(mode) {
+        applySiteMode(mode);
+        try { await apiCall('/api/user/mode', { method: 'POST', body: JSON.stringify({ mode }) }); }
+        catch (e) { console.warn('setSiteMode error:', e); }
+    }
+    window.setSiteMode = setSiteMode;
 
     // ============================================
     // SECTION 5: BALANCE, TICKETS, STREAK

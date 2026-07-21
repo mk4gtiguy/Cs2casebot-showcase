@@ -20,7 +20,7 @@ from shared import (
     RARITY_EMOJIS, TRADE_UP_PROGRESSION, DROP_RATES,
     generate_skin_float, get_skin_condition, calculate_item_value,
     get_random_item, get_random_sticker, CASES, STICKER_CAPSULES,
-    QUEST_TYPES, ALL_ITEMS_BY_RARITY,
+    QUEST_TYPES, ALL_ITEMS_BY_RARITY, GOLD_ITEMS_POOL,
     FEATURED_CASES, get_effective_case, get_effective_capsule,
     fix_surrogate_emoji, GAME_CATALOG, get_sticker_image, get_skin_image_filename,
 )
@@ -61,6 +61,7 @@ ANNOUNCEMENTS_CHANNEL_ID = 1516670527391928330
 
 KO_FI_URL = "https://ko-fi.com/mk4gtiguy"
 DASHBOARD_URL = "https://cs2casebot.xyz/"
+DASHBOARD_INVENTORY_URL = f"{DASHBOARD_URL}?tab=inventory"
 DISCORD_INVITE_URL = "https://discord.gg/mU33pc7TDE"
 
 bot = commands.Bot(command_prefix='!', intents=discord.Intents.all())
@@ -1419,28 +1420,47 @@ async def transfer(interaction: discord.Interaction, user: discord.User, amount:
 # CASE COMMANDS
 # ============================================
 
+# Discord hard-caps autocomplete at 25 choices, full stop -- there's no way
+# to show more. Once a catalog outgrows that, an untyped query silently
+# shows only the first 25 in dict order with no indication more exist.
+# _cap_autocomplete_choices sacrifices the last slot for a non-functional
+# hint pointing at the browse_cmd (/cases, /capsules, /inventory) whenever
+# real matches were actually truncated -- but only then, so short result
+# sets stay uncluttered. Selecting the hint sends a sentinel value that
+# every consumer's normal "not found" branch already handles.
+_AUTOCOMPLETE_MORE_STR = "__more__"
+_AUTOCOMPLETE_MORE_INT = -1
+
+
+def _cap_autocomplete_choices(matches: list, browse_cmd: str, sentinel):
+    if len(matches) <= 25:
+        return matches
+    shown = matches[:24]
+    shown.append(app_commands.Choice(
+        name=f"⚠️ +{len(matches) - 24} more — keep typing to narrow, or use {browse_cmd} to see them all",
+        value=sentinel,
+    ))
+    return shown
+
+
 async def _case_id_autocomplete(interaction: discord.Interaction, current: str):
     current = (current or "").lower()
-    choices = []
+    matches = []
     for cid, data in CASES.items():
         name = data.get('name', cid)
         if current in cid.lower() or current in name.lower():
-            choices.append(app_commands.Choice(name=f"{data.get('emoji', '📦')} {name} (${data.get('price', 0):.2f})", value=cid))
-        if len(choices) >= 25:
-            break
-    return choices
+            matches.append(app_commands.Choice(name=f"{data.get('emoji', '📦')} {name} (${data.get('price', 0):.2f})", value=cid))
+    return _cap_autocomplete_choices(matches, "`/cases`", _AUTOCOMPLETE_MORE_STR)
 
 
 async def _capsule_id_autocomplete(interaction: discord.Interaction, current: str):
     current = (current or "").lower()
-    choices = []
+    matches = []
     for cid, data in STICKER_CAPSULES.items():
         name = data.get('name', cid)
         if current in cid.lower() or current in name.lower():
-            choices.append(app_commands.Choice(name=f"{fix_surrogate_emoji(data.get('emoji', '📦'))} {name} (${data.get('price', 0):.2f})", value=cid))
-        if len(choices) >= 25:
-            break
-    return choices
+            matches.append(app_commands.Choice(name=f"{fix_surrogate_emoji(data.get('emoji', '📦'))} {name} (${data.get('price', 0):.2f})", value=cid))
+    return _cap_autocomplete_choices(matches, "`/capsules`", _AUTOCOMPLETE_MORE_STR)
 
 
 def _make_own_inventory_autocomplete(item_type: str = None):
@@ -1458,14 +1478,12 @@ def _make_own_inventory_autocomplete(item_type: str = None):
         query += " ORDER BY created_at DESC LIMIT 200"
         async with db_pool.acquire() as conn:
             rows = await conn.fetch(query, *params)
-        choices = []
+        matches = []
         for row in rows:
             if current_lower in row['item_name'].lower() or current_lower in str(row['id']):
                 label = f"#{row['id']} {row['item_name']} (${float(row['price']):.2f})"
-                choices.append(app_commands.Choice(name=label[:100], value=row['id']))
-            if len(choices) >= 25:
-                break
-        return choices
+                matches.append(app_commands.Choice(name=label[:100], value=row['id']))
+        return _cap_autocomplete_choices(matches, "`/inventory`", _AUTOCOMPLETE_MORE_INT)
     return _autocomplete
 
 
@@ -1650,7 +1668,7 @@ async def open_case(interaction: discord.Interaction, case: str):
         result = await _do_open_case(interaction.user.id, interaction.user.display_name, case_id)
         if not result["ok"]:
             if result["reason"] == "invalid_case":
-                await interaction.followup.send("❌ Unknown case. Start typing a case name and pick one from the list that pops up.", ephemeral=True)
+                await interaction.followup.send("❌ Unknown case. Start typing a case name and pick one from the list that pops up, or use `/cases` to browse the full list.", ephemeral=True)
             elif result["reason"] == "insufficient_balance":
                 embed = _themed_embed("❌ Insufficient Balance", description=f"You need ${result['price']:.2f} to open this case!", color=discord.Color.red())
                 await interaction.followup.send(embed=embed, ephemeral=True)
@@ -1794,7 +1812,7 @@ async def bulk_open(interaction: discord.Interaction, case: str, quantity: int):
         result = await _do_bulk_open_case(interaction.user.id, interaction.user.display_name, case_id, quantity)
         if not result["ok"]:
             if result["reason"] == "invalid_case":
-                await interaction.followup.send("❌ Unknown case. Start typing a case name and pick one from the list that pops up.", ephemeral=True)
+                await interaction.followup.send("❌ Unknown case. Start typing a case name and pick one from the list that pops up, or use `/cases` to browse the full list.", ephemeral=True)
             elif result["reason"] == "insufficient_balance":
                 embed = _themed_embed("❌ Insufficient Balance", description=f"You need ${result['total_cost']:.2f} to open {quantity} {result['case_data']['name']}s!", color=discord.Color.red())
                 await interaction.followup.send(embed=embed, ephemeral=True)
@@ -1817,12 +1835,59 @@ async def list_capsules(interaction: discord.Interaction):
 
     await interaction.response.defer()
 
-    embed = discord.Embed(title=f"📦 Available Sticker Capsules ({len(STICKER_CAPSULES)})", color=discord.Color.purple())
-    for capsule_id, capsule_data in STICKER_CAPSULES.items():
-        price = (await get_effective_capsule(capsule_id, capsule_data['price']))['price']
-        embed.add_field(name=f"{fix_surrogate_emoji(capsule_data['emoji'])} {capsule_data['name']}", value=f"Price: ${price:.2f}\nUse: `/sticker {capsule_id}`", inline=True)
-    embed.set_footer(text=f"💖 Support us: {KO_FI_URL} | 🌐 Dashboard: {DASHBOARD_URL}")
-    await interaction.followup.send(embed=embed)
+    capsule_items = list(STICKER_CAPSULES.items())
+    chunks = [capsule_items[i:i+20] for i in range(0, len(capsule_items), 20)]
+
+    # Resolve admin price overrides once up front so the (synchronous)
+    # paginated view doesn't need to await mid-render.
+    prices = {}
+    for capsule_id, capsule_data in capsule_items:
+        prices[capsule_id] = (await get_effective_capsule(capsule_id, capsule_data['price']))['price']
+
+    class CapsuleView(discord.ui.View):
+        def __init__(self, chunks_data):
+            super().__init__(timeout=120)
+            self.chunks = chunks_data
+            self.current_page = 0
+            self.total_pages = len(chunks_data)
+            self.message = None
+
+        def get_embed(self):
+            embed = discord.Embed(
+                title=f"📦 Available Sticker Capsules ({len(STICKER_CAPSULES)}) - Page {self.current_page + 1}/{self.total_pages}",
+                color=discord.Color.purple()
+            )
+            for capsule_id, capsule_data in self.chunks[self.current_page]:
+                embed.add_field(
+                    name=f"{fix_surrogate_emoji(capsule_data['emoji'])} {capsule_data['name']}",
+                    value=f"Price: ${prices[capsule_id]:.2f}\nUse: `/sticker {capsule_id}`",
+                    inline=True
+                )
+            embed.set_footer(text=f"💖 Support us: {KO_FI_URL} | 🌐 Dashboard: {DASHBOARD_URL}")
+            return embed
+
+        @discord.ui.button(label="◀ Previous", style=discord.ButtonStyle.secondary)
+        async def previous_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+            self.current_page = (self.current_page - 1) % self.total_pages
+            await interaction.response.edit_message(embed=self.get_embed(), view=self)
+
+        @discord.ui.button(label="Next ▶", style=discord.ButtonStyle.secondary)
+        async def next_button(self, interaction: discord.Interaction, button: discord.ui.Button):
+            self.current_page = (self.current_page + 1) % self.total_pages
+            await interaction.response.edit_message(embed=self.get_embed(), view=self)
+
+        async def on_timeout(self):
+            for item in self.children:
+                item.disabled = True
+            if self.message:
+                try:
+                    await self.message.edit(view=self)
+                except Exception:
+                    pass
+
+    view = CapsuleView(chunks)
+    response = await interaction.followup.send(embed=view.get_embed(), view=view)
+    view.message = response
 
 STICKER_RARITY_COLORS = {"👑 Legendary": 0xffd700, "👑 Epic": 0xaa00ff, "👑 Rare": 0x0066cc, "👑 Common": 0x00aa00, "🔥": 0xff4444, "💫": 0xff69b4, "✨": 0xaa00ff, "⭐": 0x0066cc}
 
@@ -1914,7 +1979,7 @@ async def open_sticker(interaction: discord.Interaction, capsule: str):
         result = await _do_open_sticker(interaction.user.id, interaction.user.display_name, capsule_id)
         if not result["ok"]:
             if result["reason"] == "invalid_capsule":
-                await interaction.followup.send("❌ Unknown capsule. Start typing a capsule name and pick one from the list that pops up.", ephemeral=True)
+                await interaction.followup.send("❌ Unknown capsule. Start typing a capsule name and pick one from the list that pops up, or use `/capsules` to browse the full list.", ephemeral=True)
             elif result["reason"] == "insufficient_balance":
                 embed = _themed_embed("❌ Insufficient Balance", description=f"You need ${result['price']:.2f} to open this capsule!", color=discord.Color.red())
                 await interaction.followup.send(embed=embed, ephemeral=True)
@@ -2061,7 +2126,7 @@ async def cmd_apply_sticker(interaction: discord.Interaction, weapon_id: int, st
                     weapon_id, interaction.user.id
                 )
                 if not weapon:
-                    await interaction.followup.send(f"❌ Weapon ID {weapon_id} not found in your inventory.", ephemeral=True)
+                    await interaction.followup.send(f"❌ Weapon ID {weapon_id} not found in your inventory. Use `/inventory` to see your items.", ephemeral=True)
                     return
                 if (weapon["item_type"] or "weapon") not in ("weapon", "gold"):
                     await interaction.followup.send("❌ You can only apply stickers to weapons.", ephemeral=True)
@@ -2071,7 +2136,7 @@ async def cmd_apply_sticker(interaction: discord.Interaction, weapon_id: int, st
                     sticker_id, interaction.user.id
                 )
                 if not sticker:
-                    await interaction.followup.send(f"❌ Sticker ID {sticker_id} not found in your inventory.", ephemeral=True)
+                    await interaction.followup.send(f"❌ Sticker ID {sticker_id} not found in your inventory. Use `/inventory` to see your items.", ephemeral=True)
                     return
                 raw = weapon["applied_stickers"]
                 current = _json.loads(raw) if isinstance(raw, str) else (list(raw) if raw else [])
@@ -2122,7 +2187,7 @@ async def cmd_remove_sticker(interaction: discord.Interaction, weapon_id: int, s
                     weapon_id, interaction.user.id
                 )
                 if not weapon:
-                    await interaction.followup.send(f"❌ Weapon ID {weapon_id} not found.", ephemeral=True)
+                    await interaction.followup.send(f"❌ Weapon ID {weapon_id} not found. Use `/inventory` to see your items.", ephemeral=True)
                     return
                 raw = weapon["applied_stickers"]
                 current = _json.loads(raw) if isinstance(raw, str) else (list(raw) if raw else [])
@@ -2203,7 +2268,7 @@ async def cmd_loadout_toggle(interaction: discord.Interaction, item_id: int):
     try:
         result = await _do_toggle_loadout(interaction.user.id, item_id)
         if not result["ok"]:
-            await interaction.followup.send(f"❌ Item ID {item_id} not found.", ephemeral=True)
+            await interaction.followup.send(f"❌ Item ID {item_id} not found. Use `/inventory` to see your items.", ephemeral=True)
             return
         action = "added to" if result["in_loadout"] else "removed from"
         embed = discord.Embed(
@@ -2518,120 +2583,30 @@ async def jackpot(interaction: discord.Interaction, amount: float):
         await interaction.followup.send(embed=embed)
 
 # ============================================
-# TRADE-UP COMMANDS
+# QUICK TRADE-UP COMMAND
 # ============================================
+# Only one trade-up command now: /quicktrade covers the full chain (Blue ->
+# Purple -> Pink -> Red -> Gold). It always consumes the WORST-condition
+# (highest float_value) items of the chosen rarity first -- Battle-Scarred,
+# then Well-Worn, then Field-Tested, then Minimal Wear, then Factory New --
+# so a trade-up eats the junk in your inventory before anything with a float
+# worth keeping. Which specific skins that ends up being is effectively
+# random since it depends on whatever you happen to own.
 
-# ============================================
-# TRADE-UP COMMANDS  (Fix 15: unified helper)
-# ============================================
+QUICKTRADE_TIERS = {
+    'blue':   {'rarity': 'Blue',   'next': 'Purple', 'count': 10, 'emoji': '🟦'},
+    'purple': {'rarity': 'Purple', 'next': 'Pink',   'count': 10, 'emoji': '🟪'},
+    'pink':   {'rarity': 'Pink',   'next': 'Red',    'count': 10, 'emoji': '💗'},
+    'red':    {'rarity': 'Red',    'next': 'Gold',   'count': 10, 'emoji': '🔴'},
+}
 
-async def _run_tradeup(
-    interaction: discord.Interaction,
-    input_rarity: str,
-    required_count: int = 10
-):
-    """
-    Fix 2 + Fix 15: Generic trade-up with FOR UPDATE SKIP LOCKED to prevent
-    race conditions, and a single code path for all rarity levels.
-    """
-    output_rarity = TRADE_UP_PROGRESSION.get(input_rarity)
-    if not output_rarity:
-        await interaction.response.send_message("❌ Invalid rarity for trade-up.", ephemeral=True)
-        return
-
-    await interaction.response.defer()
-
-    try:
-        async with db_pool.acquire() as conn:
-            async with conn.transaction():
-                await ensure_user_exists(interaction.user.id, interaction.user.display_name, conn)
-
-                items = await conn.fetch("""
-                    SELECT id, item_name, price FROM inventory
-                    WHERE user_id = $1 AND rarity = $2 AND status = 'kept'
-                    ORDER BY price ASC
-                    LIMIT $3
-                    FOR UPDATE SKIP LOCKED
-                """, interaction.user.id, input_rarity, required_count)
-
-                if len(items) < required_count:
-                    await interaction.followup.send(
-                        f"❌ You need {required_count} {input_rarity} items. You only have {len(items)} available.",
-                        ephemeral=True
-                    )
-                    return
-
-                item_ids_to_delete = [r['id'] for r in items]
-                await conn.execute("DELETE FROM inventory WHERE id = ANY($1::int[])", item_ids_to_delete)
-
-                possible_items = list(ALL_ITEMS_BY_RARITY.get(output_rarity, []))
-                if not possible_items:
-                    possible_items = [{"name": f"Mystery {output_rarity} Item", "condition": "Field-Tested", "tier": None}]
-
-                new_item_template = secure_choice(possible_items)
-                float_value       = generate_skin_float()
-                condition         = get_skin_condition(float_value)
-                is_stattrak       = secure_random() < 0.1
-                new_value         = calculate_item_value(output_rarity, condition, None, is_stattrak)
-                name              = f"{'StatTrak™ ' if is_stattrak else ''}{new_item_template['name']}"
-
-                await conn.execute("""
-                    INSERT INTO inventory
-                        (user_id, item_name, item_type, rarity, price, condition, is_stattrak, float_value)
-                    VALUES ($1, $2, 'weapon', $3, $4, $5, $6, $7)
-                """, interaction.user.id, name, output_rarity, new_value, condition, is_stattrak, float_value)
-                await conn.execute(
-                    "UPDATE users SET total_trades = total_trades + 1 WHERE user_id = $1",
-                    interaction.user.id
-                )
-                await update_quest_progress(interaction.user.id, "trade_up", 1, conn)
-
-        rarity_emoji = RARITY_EMOJIS.get(output_rarity, "")
-        embed = discord.Embed(
-            title=f"🔄 Trade-Up Complete! ({input_rarity} → {output_rarity})",
-            color=discord.Color.purple()
-        )
-        embed.add_field(name="Received",    value=f"{rarity_emoji} **{name}**", inline=False)
-        embed.add_field(name="Rarity",      value=f"{rarity_emoji} {output_rarity}", inline=True)
-        embed.add_field(name="🔢 Float",    value=f"{float_value:.4f}",  inline=True)
-        embed.add_field(name="Value",       value=f"${new_value:,.2f}",  inline=True)
-        if is_stattrak:
-            embed.add_field(name="🔥 StatTrak™", value="Rare variant!", inline=False)
-        embed.set_footer(text=f"💖 Support us: {KO_FI_URL} | 🌐 Dashboard: {DASHBOARD_URL}")
-        await interaction.followup.send(embed=embed)
-
-    except Exception as e:
-        logger.error(f"Tradeup error ({input_rarity}→{output_rarity}): {e}")
-        await interaction.followup.send(f"❌ Error during trade-up: {str(e)[:100]}", ephemeral=True)
-
-@bot.tree.command(name="tradeup", description="Trade 10 Blue weapons for 1 Purple weapon")
-async def tradeup_weapons(interaction: discord.Interaction):
-    if not await is_bot_channel(interaction):
-        return
-    await _run_tradeup(interaction, "Blue")
-
-@bot.tree.command(name="tradeup_purple", description="Trade 10 Purple weapons for 1 Pink weapon")
-async def tradeup_purple(interaction: discord.Interaction):
-    if not await is_bot_channel(interaction):
-        return
-    await _run_tradeup(interaction, "Purple")
-
-@bot.tree.command(name="tradeup_pink", description="Trade 10 Pink weapons for 1 Red weapon")
-async def tradeup_pink(interaction: discord.Interaction):
-    if not await is_bot_channel(interaction):
-        return
-    await _run_tradeup(interaction, "Pink")
-
-# ============================================
-# QUICK TRADE COMMAND
-# ============================================
-
-@bot.tree.command(name="quicktrade", description="Quick trade-up - randomly selects items from your inventory")
+@bot.tree.command(name="quicktrade", description="Trade 10 weapons of one rarity for 1 of the next tier")
 @app_commands.describe(rarity="Rarity tier to trade up from")
 @app_commands.choices(rarity=[
     app_commands.Choice(name="🟦 Blue → Purple", value="blue"),
     app_commands.Choice(name="🟪 Purple → Pink", value="purple"),
     app_commands.Choice(name="💗 Pink → Red", value="pink"),
+    app_commands.Choice(name="🔴 Red → Gold", value="red"),
 ])
 async def quick_tradeup(interaction: discord.Interaction, rarity: str):
     if not await is_bot_channel(interaction):
@@ -2639,25 +2614,21 @@ async def quick_tradeup(interaction: discord.Interaction, rarity: str):
 
     await interaction.response.defer()
 
-    rarity_map = {
-        'blue': {'rarity': 'Blue', 'next': 'Purple', 'count': 10, 'emoji': '🟦'},
-        'purple': {'rarity': 'Purple', 'next': 'Pink', 'count': 10, 'emoji': '🟪'},
-        'pink': {'rarity': 'Pink', 'next': 'Red', 'count': 10, 'emoji': '💗'}
-    }
-
-    if rarity.lower() not in rarity_map:
-        await interaction.followup.send("❌ Invalid rarity! Use: `blue`, `purple`, or `pink`", ephemeral=True)
+    config = QUICKTRADE_TIERS.get(rarity.lower())
+    if not config:
+        await interaction.followup.send("❌ Invalid rarity! Use: `blue`, `purple`, `pink`, or `red`", ephemeral=True)
         return
-
-    config = rarity_map[rarity.lower()]
 
     try:
         async with db_pool.acquire() as conn:
             async with conn.transaction():
                 await ensure_user_exists(interaction.user.id, interaction.user.display_name, conn)
-                
+
                 items = await conn.fetch(
-                    "SELECT id, item_name FROM inventory WHERE user_id = $1 AND rarity = $2 AND item_type = 'weapon' AND status = 'kept' LIMIT $3 FOR UPDATE SKIP LOCKED",
+                    """SELECT id, item_name, condition, float_value FROM inventory
+                       WHERE user_id = $1 AND rarity = $2 AND item_type = 'weapon' AND status = 'kept'
+                       ORDER BY float_value DESC NULLS LAST
+                       LIMIT $3 FOR UPDATE SKIP LOCKED""",
                     interaction.user.id, config['rarity'], config['count']
                 )
 
@@ -2665,48 +2636,50 @@ async def quick_tradeup(interaction: discord.Interaction, rarity: str):
                     await interaction.followup.send(f"❌ You need {config['count']} {config['rarity']} items for quick trade-up! Only {len(items)} available (other items may be locked).", ephemeral=True)
                     return
 
-                selected_items = list(items)
-                selected_ids = [item['id'] for item in selected_items]
+                traded_ids = [item['id'] for item in items]
+                await conn.execute("DELETE FROM inventory WHERE id = ANY($1::int[])", traded_ids)
 
-                for item_id in selected_ids:
-                    await conn.execute("DELETE FROM inventory WHERE id = $1", item_id)
-
-                is_stattrak = secure_random() < 0.1
-                possible_items = list(ALL_ITEMS_BY_RARITY.get(config['next'], []))
-
+                # Gold (knives/gloves) isn't in ALL_ITEMS_BY_RARITY -- it has
+                # no collection of its own, so it needs its own pool, same as
+                # case-opening's get_random_item() uses.
+                if config['next'] == 'Gold':
+                    possible_items = list(GOLD_ITEMS_POOL)
+                else:
+                    possible_items = list(ALL_ITEMS_BY_RARITY.get(config['next'], []))
                 if not possible_items:
-                    possible_items = [{"name": f"Mystery {config['next']} Item", "condition": "Field-Tested"}]
+                    possible_items = [{"name": f"Mystery {config['next']} Item", "is_glove": False}]
 
                 new_item_template = secure_choice(possible_items)
-
+                # Real CS2 gloves never roll StatTrak -- same rule case-opening enforces.
+                is_stattrak = (not new_item_template.get('is_glove')) and secure_random() < 0.1
                 float_value = generate_skin_float()
-                condition_from_float = get_skin_condition(float_value)
-                
-                new_value = calculate_item_value(config['next'], condition_from_float, None, is_stattrak)
-                
+                condition = get_skin_condition(float_value)
+                new_value = calculate_item_value(config['next'], condition, None, is_stattrak)
                 name = f"{'StatTrak™ ' if is_stattrak else ''}{new_item_template['name']}"
 
-                await conn.execute("""INSERT INTO inventory 
-                    (user_id, item_name, item_type, rarity, price, condition, is_stattrak, float_value) 
+                await conn.execute("""INSERT INTO inventory
+                    (user_id, item_name, item_type, rarity, price, condition, is_stattrak, float_value)
                     VALUES ($1, $2, 'weapon', $3, $4, $5, $6, $7)""",
-                    interaction.user.id, name, config['next'], new_value, condition_from_float, is_stattrak, float_value)
+                    interaction.user.id, name, config['next'], new_value, condition, is_stattrak, float_value)
                 await conn.execute("UPDATE users SET total_trades = total_trades + 1 WHERE user_id = $1", interaction.user.id)
                 await update_quest_progress(interaction.user.id, "trade_up", 1, conn)
 
-                rarity_emoji = RARITY_EMOJIS.get(config['next'], config['emoji'])
+        rarity_emoji = RARITY_EMOJIS.get(config['next'], config['emoji'])
+        traded_list = "\n".join(
+            f"• {i['item_name']} ({i['condition'] or '?'}, {float(i['float_value'] or 0):.4f})" for i in items
+        )
 
-                embed = discord.Embed(title=f"🔄 Quick Trade-Up Complete! ({config['rarity']} → {config['next']})", color=discord.Color.purple())
-                embed.add_field(name="Traded Items", value=f"{config['count']} random {config['rarity']} items", inline=False)
-                embed.add_field(name="Traded IDs", value=", ".join(str(id) for id in selected_ids), inline=False)
-                embed.add_field(name="Received", value=f"{rarity_emoji} **{name}**", inline=False)
-                embed.add_field(name="Rarity", value=f"{rarity_emoji} {config['next']}", inline=True)
-                embed.add_field(name="🔢 Float", value=f"{float_value:.4f}", inline=True)
-                embed.add_field(name="Value", value=f"${new_value:,.2f}", inline=True)
-                if is_stattrak:
-                    embed.add_field(name="🔥 StatTrak™", value="Rare variant!", inline=False)
-                embed.set_footer(text=f"💖 Support us: {KO_FI_URL} | 🌐 Dashboard: {DASHBOARD_URL}")
+        embed = discord.Embed(title=f"🔄 Trade-Up Complete! ({config['rarity']} → {config['next']})", color=discord.Color.purple())
+        embed.add_field(name=f"Traded Away ({config['count']} {config['rarity']} items)", value=traded_list[:1024], inline=False)
+        embed.add_field(name="Received", value=f"{rarity_emoji} **{name}**", inline=False)
+        embed.add_field(name="Rarity", value=f"{rarity_emoji} {config['next']}", inline=True)
+        embed.add_field(name="🔢 Float", value=f"{float_value:.4f}", inline=True)
+        embed.add_field(name="Value", value=f"${new_value:,.2f}", inline=True)
+        if is_stattrak:
+            embed.add_field(name="🔥 StatTrak™", value="Rare variant!", inline=False)
+        embed.set_footer(text=f"💖 Support us: {KO_FI_URL} | 🌐 Dashboard: {DASHBOARD_URL}")
 
-                await interaction.followup.send(embed=embed)
+        await interaction.followup.send(embed=embed)
     except Exception as e:
         logger.error(f"Quick trade error: {e}")
         await interaction.followup.send(f"❌ Error during trade-up: {str(e)[:100]}", ephemeral=True)
@@ -3245,7 +3218,7 @@ async def help_command(interaction: discord.Interaction):
     embed.add_field(name="💰 Economy", value="`/balance` `/daily` `/hourly` `/weekly` `/transfer`", inline=False)
     embed.add_field(name="📦 Cases (37)", value="`/cases` `/open <case>` `/bulkopen <case> 5/10/15/20/25`", inline=False)
     embed.add_field(name="⭐ Stickers (5)", value="`/capsules` `/sticker <capsule>`", inline=False)
-    embed.add_field(name="🔄 Trade-Up", value="`/tradeup` (10 cheapest Blue→Purple)\n`/tradeup_purple` (10 cheapest Purple→Pink)\n`/tradeup_pink` (10 cheapest Pink→Red)\n`/quicktrade blue/purple/pink` (same, pick the tier)", inline=False)
+    embed.add_field(name="🔄 Trade-Up", value="`/quicktrade blue/purple/pink/red` — trade 10 of a rarity (worst condition first) for 1 of the next tier, up to Gold", inline=False)
     embed.add_field(name="📋 Quests", value="`/quests` `/claim`", inline=False)
     embed.add_field(name="🎁 Giveaways", value="`/giveaway_create` `/giveaway_reroll` (Admin)", inline=False)
     embed.add_field(name="📦 Inventory", value="`/inventory` `/sell <id>` `/profile`", inline=False)
@@ -3762,7 +3735,7 @@ async def cmd_case_auction(interaction: discord.Interaction, case_id: str):
         return
     await interaction.response.defer()
     if case_id not in CASES:
-        await interaction.followup.send("❌ Unknown case. Start typing a case name and pick one from the list that pops up.", ephemeral=True)
+        await interaction.followup.send("❌ Unknown case. Start typing a case name and pick one from the list that pops up, or use `/cases` to browse the full list.", ephemeral=True)
         return
 
     deadline = datetime.now(timezone.utc) + timedelta(seconds=DISCORD_AUCTION_BIDDING_SECS)
@@ -3983,6 +3956,7 @@ async def cmd_upgrade(interaction: discord.Interaction, item_id: int):
             color=discord.Color.red()
         )
         embed.add_field(name="Cost", value=f"${result['cost']:,.2f}", inline=True)
+    embed.add_field(name="⬆️ Upgrade More", value=f"[Open your Inventory on the dashboard]({DASHBOARD_INVENTORY_URL})", inline=False)
 
     await interaction.followup.send(embed=embed)
 
@@ -4169,7 +4143,7 @@ async def skin_upgrade(user_id: int, item_id: int) -> dict:
                 item_id, user_id
             )
             if not item:
-                return {'success': False, 'error': 'Item not found in inventory'}
+                return {'success': False, 'error': 'Item not found in inventory. Use /inventory to see your items.'}
             if item['protected']:
                 return {'success': False, 'error': 'This item is protected — unprotect it first to upgrade'}
             if item['item_type'] != 'weapon':

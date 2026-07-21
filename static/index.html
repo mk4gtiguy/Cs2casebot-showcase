@@ -75,6 +75,38 @@
 
     <!-- ============================================
 
+    TURBO LEAGUE — COMING SOON OVERLAY
+
+    Covers the whole dashboard when preferred_mode='turbo'. Deliberately
+
+    light on detail — no art, no catalog, no dates — since the mode itself
+
+    isn't built yet. Toggling back to CS2 just hides this again.
+
+    ============================================ -->
+
+    <div id="turboComingSoonOverlay" class="hidden" style="position:fixed;inset:0;z-index:100000;background:rgba(8,8,12,0.97);display:flex;align-items:center;justify-content:center;padding:20px;">
+
+        <div class="card" style="max-width:560px;text-align:center;">
+
+            <h2 style="margin-bottom:6px;">🚀 Turbo League</h2>
+
+            <p style="color:#ffd700;font-size:13px;letter-spacing:1px;margin-bottom:18px;">COMING SOON</p>
+
+            <p style="color:#ccc;line-height:1.6;margin-bottom:14px;">A brand-new game mode is in the garage. Turbo League brings boost-powered arena vehicles to CS2CaseBot — its own cases, capsules, and a 6-tier rarity ladder from <strong>Rookie</strong> all the way up to <strong>Hall of Fame</strong>.</p>
+
+            <p style="color:#888;font-size:13px;line-height:1.6;margin-bottom:22px;">We're still finishing the art and tuning the economy, so there's nothing to open yet — check back soon!</p>
+
+            <button class="btn btn-primary" onclick="setSiteMode('cs2')">⬅ Back to CS2CaseBot</button>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- ============================================
+
     HTML - ALL YOUR ORIGINAL HTML (unchanged)
 
     ============================================ -->
@@ -94,6 +126,14 @@
                 <span class="username" id="userName"></span>
 
                 <span id="authBadge" style="font-size:10px;color:#888;"></span>
+
+                <div id="siteModeToggle" style="display:flex;align-items:center;gap:2px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,215,0,0.25);border-radius:20px;padding:3px;margin:0 6px;">
+
+                    <button type="button" id="modeBtnCs2" class="mode-toggle-btn active" onclick="setSiteMode('cs2')" title="CS2CaseBot" style="border:none;border-radius:16px;padding:5px 12px;font-size:11px;font-family:'Orbitron',sans-serif;cursor:pointer;transition:all 0.2s;background:linear-gradient(135deg,#ffd700,#f0a500);color:#0a0a0f;font-weight:bold;">🎮 CS2</button>
+
+                    <button type="button" id="modeBtnTurbo" class="mode-toggle-btn" onclick="setSiteMode('turbo')" title="Turbo League (Coming Soon)" style="border:none;border-radius:16px;padding:5px 12px;font-size:11px;font-family:'Orbitron',sans-serif;cursor:pointer;transition:all 0.2s;background:transparent;color:#888;">🚀 Turbo</button>
+
+                </div>
 
                 <button class="btn btn-sm btn-outline" onclick="openSettings()" style="font-size:16px;padding:4px 10px;">⚙️</button>
 
